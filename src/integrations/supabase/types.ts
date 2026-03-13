@@ -14,7 +14,146 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          subscription_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          subscription_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          subscription_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          billing_cycle: string
+          category: string
+          created_at: string
+          id: string
+          is_trial: boolean
+          is_unused: boolean
+          logo_url: string | null
+          name: string
+          next_billing_date: string
+          price: number
+          start_date: string
+          status: string
+          trial_end_date: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_cycle: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_trial?: boolean
+          is_unused?: boolean
+          logo_url?: string | null
+          name: string
+          next_billing_date: string
+          price: number
+          start_date?: string
+          status?: string
+          trial_end_date?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_cycle?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_trial?: boolean
+          is_unused?: boolean
+          logo_url?: string | null
+          name?: string
+          next_billing_date?: string
+          price?: number
+          start_date?: string
+          status?: string
+          trial_end_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          merchant: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date: string
+          id?: string
+          merchant: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          merchant?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
