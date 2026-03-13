@@ -11,8 +11,8 @@ import { addMonths, addYears, format } from "date-fns";
 interface SubscriptionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: SubscriptionInsert) => Promise<void>;
-  onUpdate?: (data: Partial<Subscription> & { id: string }) => Promise<void>;
+  onSubmit: (data: SubscriptionInsert) => Promise<any>;
+  onUpdate?: (data: Partial<Subscription> & { id: string }) => Promise<any>;
   editing?: Subscription | null;
 }
 
