@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { Subscription, SubscriptionInsert } from "@/hooks/useSubscriptions";
+import { useServicePricing } from "@/hooks/useServicePricing";
 import { addMonths, addYears, format } from "date-fns";
 
 interface SubscriptionFormProps {
