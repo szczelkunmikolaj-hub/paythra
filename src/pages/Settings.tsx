@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import CSVImport from "@/components/dashboard/CSVImport";
 import { useAuth } from "@/contexts/AuthContext";
