@@ -26,8 +26,11 @@ const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionC
   return (
     <Card className="shadow-card transition-shadow hover:shadow-elevated">
       <CardContent className="flex items-center gap-4 p-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-primary">
-          <CreditCard className="h-5 w-5 text-primary-foreground" />
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-primary">
+          {sub.logo_url ? (
+            <img src={sub.logo_url} alt={sub.name} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }} />
+          ) : null}
+          <CreditCard className={`h-5 w-5 text-primary-foreground ${sub.logo_url ? 'hidden' : ''}`} />
         </div>
 
         <div className="flex-1 min-w-0">
