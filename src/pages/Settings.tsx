@@ -27,12 +27,12 @@ const Settings = () => {
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Sync when profile loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setIncome(profile.monthly_income?.toString() ?? "");
       setIsStudent(profile.is_student);
     }
-  });
+  }, [profile]);
 
   const handleSaveProfile = async () => {
     setSavingProfile(true);
