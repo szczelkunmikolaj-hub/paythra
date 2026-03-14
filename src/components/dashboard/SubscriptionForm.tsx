@@ -18,6 +18,7 @@ interface SubscriptionFormProps {
 }
 
 const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: SubscriptionFormProps) => {
+  const { services } = useServicePricing();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
