@@ -1,32 +1,35 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SpendingChart from "@/components/dashboard/SpendingChart";
 import CategoryChart from "@/components/dashboard/CategoryChart";
+import ForecastChart from "@/components/dashboard/ForecastChart";
+import SavingsPanel from "@/components/dashboard/SavingsPanel";
+import HealthScoreCard from "@/components/dashboard/HealthScoreCard";
+import OverloadIndexCard from "@/components/dashboard/OverloadIndexCard";
+import TrialCountdown from "@/components/dashboard/TrialCountdown";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { useServicePricing } from "@/hooks/useServicePricing";
+import { useProfile } from "@/hooks/useProfile";
+import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, AlertCircle } from "lucide-react";
+import { TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
 
 const Analytics = () => {
   const { subscriptions, isLoading } = useSubscriptions();
+  const { services } = useServicePricing();
+  const { profile } = useProfile();
 
-  const active = subscriptions.filter((s) => s.status === "active");
-  const monthlyTotal = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
-  const yearlyProjected = monthlyTotal * 12;
-  const unused = active.filter((s) => s.is_unused);
-  const duplicateCategories = new Map<string, number>();
-  active.forEach((s) => duplicateCategories.set(s.category, (duplicateCategories.get(s.category) || 0) + 1));
-
-  const insights: string[] = [];
-  if (yearlyProjected > 700) insights.push(`Your yearly subscription cost (€${yearlyProjected.toFixed(0)}) is above the European average of €700.`);
-  unused.forEach((s) => insights.push(`You marked ${s.name} as unused. Consider cancelling to save €${s.billing_cycle === "monthly" ? (s.price * 12).toFixed(0) : s.price.toFixed(0)}/year.`));
-  duplicateCategories.forEach((count, cat) => {
-    if (count >= 2) insights.push(`You have ${count} ${cat} subscriptions. Consider consolidating.`);
-  });
-  if (insights.length === 0 && active.length > 0) insights.push("Your subscription spending looks optimized!");
+  const { insights, totalSavings, healthScore, overloadIndex, activeCount, monthlySpend, yearlyProjected } =
+    useSubscriptionIntelligence({
+      subscriptions,
+      services,
+      isStudent: profile?.is_student ?? false,
+      monthlyIncome: profile?.monthly_income ?? null,
+    });
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="font-display text-2xl font-bold text-foreground">Analytics & Insights</h1>
+        <h1 className="font-display text-2xl font-bold text-foreground">Insights & Analytics</h1>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -34,36 +37,80 @@ const Analytics = () => {
           </div>
         ) : (
           <>
-            <Card className="border-primary/20 shadow-card">
-              <CardContent className="flex items-center gap-4 p-6">
-                <TrendingUp className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Projected yearly spending</p>
-                  <p className="text-3xl font-bold text-foreground">€{yearlyProjected.toFixed(2)}</p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Financial Overview */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card className="border-primary/20 shadow-card">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Projected Yearly</p>
+                    <p className="text-2xl font-bold text-foreground">€{yearlyProjected.toFixed(0)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-card">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <Target className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Monthly Spend</p>
+                    <p className="text-2xl font-bold text-foreground">€{monthlySpend.toFixed(2)}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-card">
+                <CardContent className="flex items-center gap-4 p-5">
+                  <div className="rounded-lg bg-primary/10 p-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Active Subs</p>
+                    <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              {totalSavings > 0 && (
+                <Card className="border-green-200 shadow-card dark:border-green-800/30">
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <div className="rounded-lg bg-green-100 p-2 dark:bg-green-900/30">
+                      <Lightbulb className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Potential Savings</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">€{totalSavings.toFixed(0)}/yr</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
 
+            {/* Health & Overload */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <HealthScoreCard
+                score={healthScore}
+                monthlySpend={monthlySpend}
+                monthlyIncome={profile?.monthly_income ?? null}
+              />
+              <OverloadIndexCard activeCount={activeCount} />
+            </div>
+
+            {/* Trial Protection */}
+            <TrialCountdown subscriptions={subscriptions} />
+
+            {/* Forecast */}
+            <ForecastChart subscriptions={subscriptions} />
+
+            {/* Charts */}
             <div className="grid gap-6 lg:grid-cols-2">
               <SpendingChart subscriptions={subscriptions} />
               <CategoryChart subscriptions={subscriptions} />
             </div>
 
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 font-display text-lg">
-                  <AlertCircle className="h-4 w-4 text-primary" />
-                  Optimization Insights
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {insights.map((insight, i) => (
-                  <div key={i} className="rounded-lg bg-muted/50 p-3 text-sm text-foreground">
-                    {insight}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            {/* Intelligence */}
+            <SavingsPanel insights={insights} totalSavings={totalSavings} />
           </>
         )}
       </div>

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { Subscription, SubscriptionInsert } from "@/hooks/useSubscriptions";
+import { useServicePricing } from "@/hooks/useServicePricing";
 import { addMonths, addYears, format } from "date-fns";
 
 interface SubscriptionFormProps {
@@ -17,6 +18,7 @@ interface SubscriptionFormProps {
 }
 
 const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: SubscriptionFormProps) => {
+  const { services } = useServicePricing();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -53,6 +55,15 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     const start = new Date(startDate);
     const nextBilling = billingCycle === "monthly" ? addMonths(start, 1) : addYears(start, 1);
 
+    // Find matching service for logo
+    const match = services.find(
+      (sp) => sp.service_name.toLowerCase() === name.toLowerCase() ||
+        name.toLowerCase().includes(sp.service_name.toLowerCase())
+    );
+    const logoUrl = match
+      ? `https://logo.clearbit.com/${match.service_domain}`
+      : null;
+
     const data: SubscriptionInsert = {
       name,
       price: parseFloat(price),
@@ -62,6 +73,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
       next_billing_date: format(nextBilling, "yyyy-MM-dd"),
       is_trial: isTrial,
       trial_end_date: isTrial && trialEndDate ? trialEndDate : null,
+      logo_url: logoUrl,
     };
 
     try {

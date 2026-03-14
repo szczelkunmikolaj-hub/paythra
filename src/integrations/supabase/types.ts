@@ -58,6 +58,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_student: boolean
+          monthly_income: number | null
           user_id: string
         }
         Insert: {
@@ -65,6 +67,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_student?: boolean
+          monthly_income?: number | null
           user_id: string
         }
         Update: {
@@ -72,9 +76,88 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_student?: boolean
+          monthly_income?: number | null
           user_id?: string
         }
         Relationships: []
+      }
+      service_pricing: {
+        Row: {
+          category: string
+          cheapest_plan_name: string | null
+          cheapest_plan_price: number | null
+          country: string
+          family_price: number | null
+          id: string
+          last_updated: string
+          service_domain: string
+          service_name: string
+          standard_price: number
+          student_price: number | null
+        }
+        Insert: {
+          category?: string
+          cheapest_plan_name?: string | null
+          cheapest_plan_price?: number | null
+          country?: string
+          family_price?: number | null
+          id?: string
+          last_updated?: string
+          service_domain: string
+          service_name: string
+          standard_price?: number
+          student_price?: number | null
+        }
+        Update: {
+          category?: string
+          cheapest_plan_name?: string | null
+          cheapest_plan_price?: number | null
+          country?: string
+          family_price?: number | null
+          id?: string
+          last_updated?: string
+          service_domain?: string
+          service_name?: string
+          standard_price?: number
+          student_price?: number | null
+        }
+        Relationships: []
+      }
+      subscription_price_history: {
+        Row: {
+          date_changed: string
+          id: string
+          new_price: number
+          old_price: number
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          date_changed?: string
+          id?: string
+          new_price: number
+          old_price: number
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          date_changed?: string
+          id?: string
+          new_price?: number
+          old_price?: number
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_price_history_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {

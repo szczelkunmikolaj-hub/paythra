@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { recordPriceChange } from "./usePriceHistory";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 export type Subscription = Tables<"subscriptions">;
@@ -43,6 +44,14 @@ export const useSubscriptions = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Subscription> & { id: string }) => {
+      // Track price changes
+      if (updates.price !== undefined && user) {
+        const existing = query.data?.find((s) => s.id === id);
+        if (existing && existing.price !== updates.price) {
+          await recordPriceChange(user.id, id, existing.price, updates.price);
+        }
+      }
+
       const { data, error } = await supabase
         .from("subscriptions")
         .update(updates)
@@ -54,6 +63,7 @@ export const useSubscriptions = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["price_history"] });
       toast({ title: "Subscription updated" });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
