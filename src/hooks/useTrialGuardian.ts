@@ -19,7 +19,7 @@ export const useTrialGuardian = (subscriptions: Subscription[]) => {
         const endDate = new Date(trial.trial_end_date!);
         const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-        if (daysLeft === 3 || daysLeft === 1 || daysLeft <= 0) {
+        if (daysLeft === 7 || daysLeft === 3 || daysLeft === 1 || daysLeft <= 0) {
           // Check if notification already exists for today
           const today = new Date().toISOString().split("T")[0];
           const { data: existing } = await supabase

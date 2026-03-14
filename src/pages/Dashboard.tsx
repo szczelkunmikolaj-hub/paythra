@@ -6,21 +6,40 @@ import CategoryChart from "@/components/dashboard/CategoryChart";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import DetectedSubscriptions from "@/components/dashboard/DetectedSubscriptions";
+import HealthScoreCard from "@/components/dashboard/HealthScoreCard";
+import OverloadIndexCard from "@/components/dashboard/OverloadIndexCard";
+import SavingsPanel from "@/components/dashboard/SavingsPanel";
+import TrialCountdown from "@/components/dashboard/TrialCountdown";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { useTransactions, type DetectedSubscription } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
+import { useUnusedDetection } from "@/hooks/useUnusedDetection";
+import { useServicePricing } from "@/hooks/useServicePricing";
+import { useProfile } from "@/hooks/useProfile";
+import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
 import { Button } from "@/components/ui/button";
 import { Plus, CreditCard } from "lucide-react";
 import { format, addMonths } from "date-fns";
 
 const Dashboard = () => {
   const { subscriptions, isLoading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
-  const { detectSubscriptions } = useTransactions();
+  const { detectSubscriptions, transactions } = useTransactions();
+  const { services } = useServicePricing();
+  const { profile } = useProfile();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
 
   useTrialGuardian(subscriptions);
+  useUnusedDetection(subscriptions, transactions);
+
+  const { insights, totalSavings, healthScore, overloadIndex, activeCount, monthlySpend } =
+    useSubscriptionIntelligence({
+      subscriptions,
+      services,
+      isStudent: profile?.is_student ?? false,
+      monthlyIncome: profile?.monthly_income ?? null,
+    });
 
   const detected = detectSubscriptions().filter((d) => !dismissed.includes(d.merchant));
 
@@ -59,17 +78,43 @@ const Dashboard = () => {
           <>
             <StatsCards subscriptions={subscriptions} />
 
+            {/* Intelligence Cards */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <HealthScoreCard
+                score={healthScore}
+                monthlySpend={monthlySpend}
+                monthlyIncome={profile?.monthly_income ?? null}
+              />
+              <OverloadIndexCard activeCount={activeCount} />
+              {totalSavings > 0 && (
+                <div className="flex items-center rounded-xl border border-primary/20 bg-accent/30 p-6 shadow-card">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Potential Savings</p>
+                    <p className="text-3xl font-bold text-primary">€{totalSavings.toFixed(0)}<span className="text-sm font-normal text-muted-foreground">/year</span></p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Trial Countdowns */}
+            <TrialCountdown subscriptions={subscriptions} />
+
             <DetectedSubscriptions
               detected={detected}
               onConfirm={handleConfirmDetected}
               onDismiss={(m) => setDismissed((prev) => [...prev, m])}
             />
 
+            {/* Charts */}
             <div className="grid gap-6 lg:grid-cols-2">
               <SpendingChart subscriptions={subscriptions} />
               <CategoryChart subscriptions={subscriptions} />
             </div>
 
+            {/* Intelligence Panel */}
+            <SavingsPanel insights={insights} totalSavings={totalSavings} />
+
+            {/* Subscriptions List */}
             <div>
               <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Your Subscriptions</h2>
               {subscriptions.length === 0 ? (
