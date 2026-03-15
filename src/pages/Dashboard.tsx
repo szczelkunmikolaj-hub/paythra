@@ -10,6 +10,7 @@ import HealthScoreCard from "@/components/dashboard/HealthScoreCard";
 import OverloadIndexCard from "@/components/dashboard/OverloadIndexCard";
 import SavingsPanel from "@/components/dashboard/SavingsPanel";
 import TrialCountdown from "@/components/dashboard/TrialCountdown";
+import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { useTransactions, type DetectedSubscription } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
@@ -42,6 +43,7 @@ const Dashboard = () => {
     });
 
   const detected = detectSubscriptions().filter((d) => !dismissed.includes(d.merchant));
+  const unusedCount = subscriptions.filter((s) => s.is_unused).length;
 
   const handleConfirmDetected = async (d: DetectedSubscription) => {
     await addSubscription({
@@ -76,14 +78,17 @@ const Dashboard = () => {
           </div>
         ) : (
           <>
+            {/* Financial Overview */}
             <StatsCards subscriptions={subscriptions} />
 
-            {/* Intelligence Cards */}
+            {/* Subscription Intelligence */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <HealthScoreCard
                 score={healthScore}
                 monthlySpend={monthlySpend}
                 monthlyIncome={profile?.monthly_income ?? null}
+                activeCount={activeCount}
+                unusedCount={unusedCount}
               />
               <OverloadIndexCard activeCount={activeCount} />
               {totalSavings > 0 && (
@@ -96,9 +101,10 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Trial Countdowns */}
+            {/* Trial Protection */}
             <TrialCountdown subscriptions={subscriptions} />
 
+            {/* Detected Subscriptions */}
             <DetectedSubscriptions
               detected={detected}
               onConfirm={handleConfirmDetected}
@@ -111,12 +117,12 @@ const Dashboard = () => {
               <CategoryChart subscriptions={subscriptions} />
             </div>
 
-            {/* Intelligence Panel */}
+            {/* Savings Opportunities */}
             <SavingsPanel insights={insights} totalSavings={totalSavings} />
 
-            {/* Subscriptions List */}
+            {/* Active Subscriptions */}
             <div>
-              <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Your Subscriptions</h2>
+              <h2 className="mb-4 font-display text-lg font-semibold text-foreground">Active Subscriptions</h2>
               {subscriptions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 text-center">
                   <CreditCard className="mb-3 h-10 w-10 text-muted-foreground" />
@@ -133,6 +139,9 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* Future Integrations */}
+            <ConnectAccounts />
           </>
         )}
 

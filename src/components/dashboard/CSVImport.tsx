@@ -161,13 +161,6 @@ const CSVImport = () => {
             {importing ? "Importing..." : "Drop your CSV file here"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">or click to browse</p>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleInputChange}
-            className="absolute inset-0 cursor-pointer opacity-0"
-            disabled={importing}
-          />
           <Button
             variant="outline"
             size="sm"

@@ -15,6 +15,7 @@ const categoryColors: Record<string, string> = {
   gaming: "bg-accent text-accent-foreground",
   software: "bg-secondary text-secondary-foreground",
   productivity: "bg-muted text-muted-foreground",
+  sports: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   other: "bg-muted text-muted-foreground",
 };
 
