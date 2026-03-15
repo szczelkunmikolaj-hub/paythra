@@ -2,13 +2,14 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, CheckCheck, AlertTriangle, Clock, CreditCard } from "lucide-react";
+import { Bell, CheckCheck, AlertTriangle, Clock, CreditCard, TrendingUp, Eye } from "lucide-react";
 
-const typeIcons: Record<string, typeof Bell> = {
-  upcoming_charge: CreditCard,
-  trial_ending: Clock,
-  unused_subscription: AlertTriangle,
-  price_increase: AlertTriangle,
+const typeConfig: Record<string, { icon: typeof Bell; label: string; color: string }> = {
+  upcoming_charge: { icon: CreditCard, label: "Upcoming Charge", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
+  trial_ending: { icon: Clock, label: "Trial Ending Soon", color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" },
+  unused_subscription: { icon: Eye, label: "Unused Subscription", color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" },
+  price_increase: { icon: TrendingUp, label: "Price Increase", color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
+  subscription_detected: { icon: AlertTriangle, label: "Subscription Detected", color: "bg-primary/10 text-primary" },
 };
 
 const Notifications = () => {
@@ -39,7 +40,8 @@ const Notifications = () => {
         ) : (
           <div className="space-y-2">
             {notifications.map((n) => {
-              const Icon = typeIcons[n.type] || Bell;
+              const config = typeConfig[n.type] || { icon: Bell, label: n.type, color: "bg-muted text-muted-foreground" };
+              const Icon = config.icon;
               return (
                 <Card
                   key={n.id}
@@ -47,16 +49,19 @@ const Notifications = () => {
                   onClick={() => !n.is_read && markAsRead(n.id)}
                 >
                   <CardContent className="flex items-start gap-3 p-4 cursor-pointer">
-                    <div className={`mt-0.5 rounded-lg p-2 ${!n.is_read ? "bg-primary/10" : "bg-muted"}`}>
-                      <Icon className={`h-4 w-4 ${!n.is_read ? "text-primary" : "text-muted-foreground"}`} />
+                    <div className={`mt-0.5 rounded-lg p-2 ${config.color}`}>
+                      <Icon className="h-4 w-4" />
                     </div>
                     <div className="flex-1">
-                      <p className={`text-sm ${!n.is_read ? "font-medium text-foreground" : "text-muted-foreground"}`}>{n.message}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{config.label}</span>
+                        {!n.is_read && <div className="h-2 w-2 rounded-full bg-primary" />}
+                      </div>
+                      <p className={`mt-0.5 text-sm ${!n.is_read ? "font-medium text-foreground" : "text-muted-foreground"}`}>{n.message}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {new Date(n.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </p>
                     </div>
-                    {!n.is_read && <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-primary" />}
                   </CardContent>
                 </Card>
               );

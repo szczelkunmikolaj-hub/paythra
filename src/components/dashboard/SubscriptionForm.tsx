@@ -7,7 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import type { Subscription, SubscriptionInsert } from "@/hooks/useSubscriptions";
 import { useServicePricing } from "@/hooks/useServicePricing";
+import { useUserCategories } from "@/hooks/useUserCategories";
 import { addMonths, addYears, format } from "date-fns";
+import { Plus } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface SubscriptionFormProps {
   open: boolean;
@@ -19,6 +22,7 @@ interface SubscriptionFormProps {
 
 const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: SubscriptionFormProps) => {
   const { services } = useServicePricing();
+  const { categories, addCategory } = useUserCategories();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
@@ -27,6 +31,8 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
   const [isTrial, setIsTrial] = useState(false);
   const [trialEndDate, setTrialEndDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
+  const [showNewCategory, setShowNewCategory] = useState(false);
 
   useEffect(() => {
     if (editing) {
@@ -46,7 +52,21 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
       setIsTrial(false);
       setTrialEndDate("");
     }
+    setShowNewCategory(false);
+    setNewCategory("");
   }, [editing, open]);
+
+  const handleAddCategory = async () => {
+    if (!newCategory.trim()) return;
+    try {
+      await addCategory(newCategory);
+      setCategory(newCategory.toLowerCase().trim());
+      setNewCategory("");
+      setShowNewCategory(false);
+    } catch {
+      // Error handled by hook
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +75,6 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     const start = new Date(startDate);
     const nextBilling = billingCycle === "monthly" ? addMonths(start, 1) : addYears(start, 1);
 
-    // Find matching service for logo
     const match = services.find(
       (sp) => sp.service_name.toLowerCase() === name.toLowerCase() ||
         name.toLowerCase().includes(sp.service_name.toLowerCase())
@@ -120,16 +139,41 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="streaming">Streaming</SelectItem>
-                  <SelectItem value="gaming">Gaming</SelectItem>
-                  <SelectItem value="software">Software</SelectItem>
-                  <SelectItem value="productivity">Productivity</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              {showNewCategory ? (
+                <div className="flex gap-2">
+                  <Input
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    placeholder="Category name"
+                    className="flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
+                  />
+                  <Button type="button" size="sm" variant="outline" onClick={handleAddCategory}>
+                    Add
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-10 w-10 shrink-0"
+                    onClick={() => setShowNewCategory(true)}
+                    title="Add custom category"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="startDate">Start Date</Label>

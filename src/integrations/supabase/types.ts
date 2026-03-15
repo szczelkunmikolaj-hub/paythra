@@ -237,6 +237,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_categories: {
+        Row: {
+          category_name: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          category_name: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          category_name?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
