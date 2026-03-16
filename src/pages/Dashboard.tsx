@@ -19,8 +19,9 @@ import { useServicePricing } from "@/hooks/useServicePricing";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
 import { Button } from "@/components/ui/button";
-import { Plus, CreditCard } from "lucide-react";
+import { Plus, CreditCard, Upload } from "lucide-react";
 import { format, addMonths } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const { subscriptions, isLoading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
@@ -30,6 +31,7 @@ const Dashboard = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [dismissed, setDismissed] = useState<string[]>([]);
+  const navigate = useNavigate();
 
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
@@ -126,10 +128,16 @@ const Dashboard = () => {
               {subscriptions.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 text-center">
                   <CreditCard className="mb-3 h-10 w-10 text-muted-foreground" />
-                  <p className="text-muted-foreground">No subscriptions yet</p>
-                  <Button variant="link" className="mt-2 text-primary" onClick={() => setFormOpen(true)}>
-                    Add your first subscription
-                  </Button>
+                  <p className="font-medium text-foreground">No subscriptions yet</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Add your first subscription or import from a bank statement</p>
+                  <div className="mt-4 flex gap-3">
+                    <Button onClick={() => setFormOpen(true)} className="bg-gradient-primary hover:opacity-90 transition-opacity">
+                      <Plus className="mr-2 h-4 w-4" /> Add Subscription
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/settings")}>
+                      <Upload className="mr-2 h-4 w-4" /> Upload Statement
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">

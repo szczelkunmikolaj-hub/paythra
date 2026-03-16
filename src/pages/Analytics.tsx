@@ -10,7 +10,7 @@ import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { useServicePricing } from "@/hooks/useServicePricing";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
 
 const Analytics = () => {
@@ -18,13 +18,15 @@ const Analytics = () => {
   const { services } = useServicePricing();
   const { profile } = useProfile();
 
-  const { insights, totalSavings, healthScore, overloadIndex, activeCount, monthlySpend, yearlyProjected } =
+  const { insights, totalSavings, healthScore, activeCount, monthlySpend, yearlyProjected } =
     useSubscriptionIntelligence({
       subscriptions,
       services,
       isStudent: profile?.is_student ?? false,
       monthlyIncome: profile?.monthly_income ?? null,
     });
+
+  const unusedCount = subscriptions.filter((s) => s.is_unused).length;
 
   return (
     <DashboardLayout>
@@ -93,6 +95,8 @@ const Analytics = () => {
                 score={healthScore}
                 monthlySpend={monthlySpend}
                 monthlyIncome={profile?.monthly_income ?? null}
+                activeCount={activeCount}
+                unusedCount={unusedCount}
               />
               <OverloadIndexCard activeCount={activeCount} />
             </div>
