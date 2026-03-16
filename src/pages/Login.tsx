@@ -30,11 +30,15 @@ const Login = () => {
   };
 
   const handleOAuth = async (provider: "google" | "apple") => {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
-    });
-    if (error) {
-      toast({ title: "Login failed", description: String(error), variant: "destructive" });
+    try {
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin + "/dashboard",
+      });
+      if (result?.error) {
+        toast({ title: "Login failed", description: String(result.error), variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Login failed", description: err.message || "Something went wrong", variant: "destructive" });
     }
   };
 

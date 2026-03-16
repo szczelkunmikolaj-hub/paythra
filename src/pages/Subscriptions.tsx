@@ -6,7 +6,8 @@ import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, CreditCard } from "lucide-react";
+import { Plus, Search, CreditCard, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Subscriptions = () => {
   const { subscriptions, isLoading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
@@ -14,6 +15,7 @@ const Subscriptions = () => {
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const navigate = useNavigate();
 
   const filtered = subscriptions.filter((s) => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase());
@@ -49,6 +51,7 @@ const Subscriptions = () => {
               <SelectItem value="gaming">Gaming</SelectItem>
               <SelectItem value="software">Software</SelectItem>
               <SelectItem value="productivity">Productivity</SelectItem>
+              <SelectItem value="sports">Sports</SelectItem>
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
@@ -61,7 +64,22 @@ const Subscriptions = () => {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 text-center">
             <CreditCard className="mb-3 h-10 w-10 text-muted-foreground" />
-            <p className="text-muted-foreground">{search || categoryFilter !== "all" ? "No matching subscriptions" : "No subscriptions yet"}</p>
+            <p className="font-medium text-foreground">
+              {search || categoryFilter !== "all" ? "No matching subscriptions" : "No subscriptions yet"}
+            </p>
+            {!search && categoryFilter === "all" && (
+              <>
+                <p className="mt-1 text-sm text-muted-foreground">Add your first subscription or import from a bank statement</p>
+                <div className="mt-4 flex gap-3">
+                  <Button onClick={() => setFormOpen(true)} className="bg-gradient-primary hover:opacity-90 transition-opacity">
+                    <Plus className="mr-2 h-4 w-4" /> Add Subscription
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/settings")}>
+                    <Upload className="mr-2 h-4 w-4" /> Import CSV
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
