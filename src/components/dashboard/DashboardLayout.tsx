@@ -1,14 +1,16 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "./NotificationBell";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/subscriptions", icon: CreditCard, label: "Subscriptions" },
+  { to: "/calendar", icon: CalendarDays, label: "Calendar" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/notifications", icon: Bell, label: "Notifications" },
   { to: "/settings", icon: Settings, label: "Settings" },
@@ -18,9 +20,10 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const { signOut, user } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isDark, toggle: toggleDark } = useDarkMode();
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background transition-colors duration-300">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
@@ -28,7 +31,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card transition-transform duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card transition-all duration-300 md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -73,7 +76,18 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             <Menu className="h-5 w-5 text-foreground" />
           </button>
           <div />
-          <NotificationBell />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDark}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Toggle dark mode"
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            <NotificationBell />
+          </div>
         </header>
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
