@@ -2,32 +2,32 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Link2, Smartphone, Globe, Monitor } from "lucide-react";
+import { Link2 } from "lucide-react";
 
 const integrations = [
   {
-    name: "Apple Subscriptions",
-    description: "Automatically detect App Store subscriptions.",
-    icon: Smartphone,
+    name: "Apple",
+    description: "Detect App Store & iCloud subscriptions.",
     logo: "https://logo.clearbit.com/apple.com",
+    accent: "bg-black",
   },
   {
-    name: "Google Play Subscriptions",
-    description: "Detect Play Store and YouTube subscriptions.",
-    icon: Globe,
+    name: "Google",
+    description: "Detect Play Store & YouTube subscriptions.",
     logo: "https://logo.clearbit.com/google.com",
+    accent: "bg-blue-500",
   },
   {
-    name: "Microsoft Subscriptions",
-    description: "Detect Microsoft 365, Xbox, and more.",
-    icon: Monitor,
+    name: "Microsoft",
+    description: "Detect Microsoft 365, Xbox & more.",
     logo: "https://logo.clearbit.com/microsoft.com",
+    accent: "bg-sky-600",
   },
   {
     name: "Open Banking",
-    description: "Detect subscriptions directly from your bank account.",
-    icon: Link2,
-    logo: null,
+    description: "Detect subscriptions from your bank.",
+    logo: "https://logo.clearbit.com/plaid.com",
+    accent: "bg-emerald-600",
   },
 ];
 
@@ -40,50 +40,38 @@ const ConnectAccounts = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Link2 className="h-5 w-5 text-primary" />
-            Future Automatic Detection
+            Connect Your Accounts
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Connect your accounts to automatically detect subscriptions.
+            Automatically detect subscriptions from your connected accounts.
           </p>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
-            {integrations.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.name}
-                  className="flex items-center gap-3 rounded-xl border border-border p-4 transition-colors hover:bg-accent/30"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
-                    {item.logo ? (
-                      <img
-                        src={item.logo}
-                        alt={item.name}
-                        className="h-6 w-6 object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <Icon className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 text-xs"
-                    onClick={() => setModalOpen(true)}
-                  >
-                    Coming Soon
-                  </Button>
+            {integrations.map((item) => (
+              <button
+                key={item.name}
+                type="button"
+                onClick={() => setModalOpen(true)}
+                className="group flex items-center gap-4 rounded-xl border border-border p-4 text-left transition-all hover:border-primary/30 hover:shadow-card hover:-translate-y-0.5"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted">
+                  <img
+                    src={item.logo}
+                    alt={item.name}
+                    className="h-7 w-7 object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
                 </div>
-              );
-            })}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Connect {item.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                  Soon
+                </span>
+              </button>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -93,8 +81,8 @@ const ConnectAccounts = () => {
           <DialogHeader>
             <DialogTitle className="font-display">Coming Soon</DialogTitle>
             <DialogDescription>
-              This feature will use secure integrations to detect subscriptions automatically in the future.
-              SubSense will notify you when it becomes available.
+              Future versions of SubSense will automatically detect subscriptions from connected accounts using secure integrations.
+              We'll notify you when this feature is available.
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setModalOpen(false)} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
