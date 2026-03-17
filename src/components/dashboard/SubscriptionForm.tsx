@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import type { Subscription, SubscriptionInsert } from "@/hooks/useSubscriptions";
 import { useUserCategories } from "@/hooks/useUserCategories";
 import { SERVICE_REGISTRY, searchServices, findService } from "@/lib/serviceRegistry";
+import { getPlansForService, getCountriesForService, getPlansForCountry, getCurrencyForCountry, type ServicePlan } from "@/lib/servicePlans";
 import { addMonths, addYears, format } from "date-fns";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Globe, Tag } from "lucide-react";
 
 interface SubscriptionFormProps {
   open: boolean;
@@ -35,7 +36,24 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Country + plan selection state
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [isCustomPrice, setIsCustomPrice] = useState(false);
+
   const searchResults = useMemo(() => searchServices(searchQuery), [searchQuery]);
+
+  // Derived data for country/plan selection
+  const availableCountries = useMemo(() => getCountriesForService(name), [name]);
+  const availablePlans = useMemo(() => {
+    if (!selectedCountry || !name) return [];
+    return getPlansForCountry(name, selectedCountry);
+  }, [name, selectedCountry]);
+  const hasPlanData = availableCountries.length > 0;
+  const currency = useMemo(() => {
+    if (!selectedCountry || !name) return "€";
+    return getCurrencyForCountry(name, selectedCountry);
+  }, [name, selectedCountry]);
 
   useEffect(() => {
     if (editing) {
@@ -47,6 +65,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
       setIsTrial(editing.is_trial);
       setTrialEndDate(editing.trial_end_date ?? "");
       setSearchQuery(editing.name);
+      setIsCustomPrice(true);
     } else {
       setName("");
       setPrice("");
@@ -56,7 +75,10 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
       setIsTrial(false);
       setTrialEndDate("");
       setSearchQuery("");
+      setIsCustomPrice(false);
     }
+    setSelectedCountry("");
+    setSelectedPlan("");
     setShowNewCategory(false);
     setNewCategory("");
     setShowDropdown(false);
@@ -77,6 +99,18 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     setSearchQuery(service.name);
     setCategory(service.category);
     setShowDropdown(false);
+    // Reset country/plan when service changes
+    setSelectedCountry("");
+    setSelectedPlan("");
+    setPrice("");
+    setIsCustomPrice(false);
+  };
+
+  const selectPlan = (plan: ServicePlan) => {
+    setPrice(plan.price.toString());
+    setBillingCycle(plan.billingCycle);
+    setSelectedPlan(plan.name);
+    setIsCustomPrice(false);
   };
 
   const handleAddCategory = async () => {
@@ -127,7 +161,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display">{editing ? "Edit Subscription" : "Add Subscription"}</DialogTitle>
         </DialogHeader>
@@ -144,6 +178,9 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                   setSearchQuery(e.target.value);
                   setName(e.target.value);
                   setShowDropdown(true);
+                  setSelectedCountry("");
+                  setSelectedPlan("");
+                  setIsCustomPrice(false);
                 }}
                 onFocus={() => setShowDropdown(true)}
                 placeholder="Search services (e.g. Spotify, Netflix...)"
@@ -171,32 +208,89 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                       <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
                       <p className="text-xs text-muted-foreground capitalize">{s.category}</p>
                     </div>
-                    <div
-                      className="h-3 w-3 rounded-full shrink-0"
-                      style={{ backgroundColor: s.color }}
-                    />
+                    <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price (€)</Label>
-              <Input id="price" type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="9.99" required />
+          {/* Country + Plan selection (shown only when plan data exists for this service) */}
+          {hasPlanData && !editing && (
+            <>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1.5">
+                  <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                  Country
+                </Label>
+                <Select value={selectedCountry} onValueChange={(v) => { setSelectedCountry(v); setSelectedPlan(""); setPrice(""); }}>
+                  <SelectTrigger><SelectValue placeholder="Select your country" /></SelectTrigger>
+                  <SelectContent>
+                    {availableCountries.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {availablePlans.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5">
+                    <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                    Plan
+                  </Label>
+                  <div className="grid gap-2">
+                    {availablePlans.map((plan) => (
+                      <button
+                        key={plan.name}
+                        type="button"
+                        onClick={() => selectPlan(plan)}
+                        className={`flex items-center justify-between rounded-lg border p-3 text-left transition-all ${
+                          selectedPlan === plan.name
+                            ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                            : "border-border hover:border-primary/40 hover:bg-accent/30"
+                        }`}
+                      >
+                        <span className="text-sm font-medium text-foreground">{plan.name}</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          {currency}{plan.price.toFixed(2)}<span className="text-xs font-normal text-muted-foreground">/{plan.billingCycle === "monthly" ? "mo" : "yr"}</span>
+                        </span>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setIsCustomPrice(true); setSelectedPlan("custom"); setPrice(""); }}
+                      className={`flex items-center justify-center rounded-lg border border-dashed p-2.5 text-xs transition-colors ${
+                        isCustomPrice ? "border-primary text-primary" : "border-border text-muted-foreground hover:border-primary/40"
+                      }`}
+                    >
+                      Enter custom price
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Price + Billing (manual entry when no plan data or custom price) */}
+          {(isCustomPrice || !hasPlanData || editing) && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price ({currency})</Label>
+                <Input id="price" type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="9.99" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Billing Cycle</Label>
+                <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as "monthly" | "yearly")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Billing Cycle</Label>
-              <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as "monthly" | "yearly")}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="yearly">Yearly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -255,7 +349,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
             </div>
           )}
 
-          <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading || (!price && !selectedPlan)}>
             {loading ? "Saving..." : editing ? "Update" : "Add Subscription"}
           </Button>
         </form>

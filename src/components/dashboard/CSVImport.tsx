@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, AlertCircle, Check, X } from "lucide-react";
+import { Upload, FileText, AlertCircle, Check, X, CheckCheck } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { findService } from "@/lib/serviceRegistry";
 import { toast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ interface DetectedFromCSV {
   cycle: "monthly" | "yearly" | "unknown";
   serviceName: string | null;
   logo: string | null;
+  selected: boolean;
 }
 
 const MERCHANT_PATTERNS = [
@@ -45,6 +46,9 @@ const MERCHANT_PATTERNS = [
   { pattern: /linkedin/i, name: "LinkedIn Premium" },
   { pattern: /crunchyroll/i, name: "Crunchyroll" },
   { pattern: /paramount/i, name: "Paramount+" },
+  { pattern: /f1\s*tv|formula\s*1/i, name: "F1 TV" },
+  { pattern: /nba/i, name: "NBA League Pass" },
+  { pattern: /espn/i, name: "ESPN+" },
 ];
 
 const normalizeMerchant = (raw: string): string => {
@@ -53,6 +57,8 @@ const normalizeMerchant = (raw: string): string => {
   }
   return raw.replace(/[^a-zA-Z0-9\s]/g, "").trim();
 };
+
+const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
 
 const CSVImport = () => {
   const { addTransaction } = useTransactions();
@@ -76,7 +82,7 @@ const CSVImport = () => {
 
       const sorted = txGroup.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       const avgAmount = sorted.reduce((s, t) => s + t.amount, 0) / sorted.length;
-      
+
       let cycle: "monthly" | "yearly" | "unknown" = "unknown";
       if (sorted.length >= 2) {
         const gaps: number[] = [];
@@ -100,6 +106,7 @@ const CSVImport = () => {
         cycle,
         serviceName: service?.name ?? null,
         logo: service?.logo ?? null,
+        selected: true,
       });
     });
 
@@ -120,9 +127,9 @@ const CSVImport = () => {
       const transactions: ParsedTransaction[] = [];
 
       for (const row of rows) {
-        const dateVal = row.date || row.fecha || row.datum || row["transaction date"] || row["booking date"] || "";
-        const merchantVal = row.merchant || row.description || row.payee || row.name || row.concepto || row.beschreibung || row["merchant name"] || "";
-        const amountVal = row.amount || row.value || row.sum || row.importe || row.betrag || row.monto || "";
+        const dateVal = row.date || row.fecha || row.datum || row["transaction date"] || row["booking date"] || row.data || row["date de valeur"] || "";
+        const merchantVal = row.merchant || row.description || row.payee || row.name || row.concepto || row.beschreibung || row["merchant name"] || row.libellé || row.descrizione || "";
+        const amountVal = row.amount || row.value || row.sum || row.importe || row.betrag || row.monto || row.montant || row.importo || "";
 
         if (!dateVal || !merchantVal || !amountVal) continue;
 
@@ -159,8 +166,8 @@ const CSVImport = () => {
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!file.name.match(/\.(csv|txt)$/i)) {
-        toast({ title: "Invalid file", description: "Please upload a CSV file.", variant: "destructive" });
+      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif)$/i)) {
+        toast({ title: "Unsupported format", description: "Supported: CSV, TXT, XLSX, OFX, QIF", variant: "destructive" });
         return;
       }
 
@@ -174,8 +181,8 @@ const CSVImport = () => {
 
       if (!transactions || transactions.length === 0) {
         toast({
-          title: "Could not parse CSV",
-          description: "CSV must contain columns: date, merchant/description, amount.",
+          title: "Could not parse file",
+          description: "File must contain columns: date, merchant/description, amount.",
           variant: "destructive",
         });
         return;
@@ -189,6 +196,12 @@ const CSVImport = () => {
     [parseFile, detectRecurring]
   );
 
+  const toggleDetected = (merchant: string) => {
+    setDetected((prev) =>
+      prev.map((d) => (d.merchant === merchant ? { ...d, selected: !d.selected } : d))
+    );
+  };
+
   const handleImportAll = async () => {
     setImporting(true);
     try {
@@ -201,7 +214,7 @@ const CSVImport = () => {
           // skip
         }
       }
-      toast({ title: `Imported ${imported} transactions`, description: `${parsed.length - imported} rows skipped.` });
+      toast({ title: `Imported ${imported} transactions`, description: `${detected.filter((d) => d.selected).length} subscriptions detected.` });
       setParsed([]);
       setDetected([]);
       setShowPreview(false);
@@ -222,6 +235,17 @@ const CSVImport = () => {
     [handleFile]
   );
 
+  const openFilePicker = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ACCEPTED_TYPES;
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) handleFile(file);
+    };
+    input.click();
+  };
+
   return (
     <Card className="shadow-card">
       <CardHeader>
@@ -234,33 +258,20 @@ const CSVImport = () => {
         {!showPreview ? (
           <>
             <div
-              className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors ${
-                dragOver ? "border-primary bg-accent/50" : "border-border"
+              className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
+                dragOver ? "border-primary bg-accent/50" : "border-border hover:border-primary/40"
               }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               onDrop={handleDrop}
+              onClick={openFilePicker}
             >
               <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
               <p className="text-sm font-medium text-foreground">
-                Drop your CSV bank statement here
+                Drop your bank statement here
               </p>
-              <p className="mt-1 text-xs text-muted-foreground">or click to browse</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = ".csv,.txt";
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0];
-                    if (file) handleFile(file);
-                  };
-                  input.click();
-                }}
-              >
+              <p className="mt-1 text-xs text-muted-foreground">CSV, XLSX, OFX, QIF supported</p>
+              <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
                 Choose File
               </Button>
             </div>
@@ -268,8 +279,7 @@ const CSVImport = () => {
             <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
-                CSV should contain columns: <strong>date</strong>, <strong>merchant</strong> (or description), and <strong>amount</strong>.
-                Supports European bank formats. We auto-detect recurring subscriptions.
+                Supports European bank formats (ES, FR, IT, DE). We auto-detect recurring subscriptions from your transactions.
               </p>
             </div>
           </>
@@ -286,9 +296,30 @@ const CSVImport = () => {
 
             {detected.length > 0 && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Detected Subscriptions</p>
-                {detected.slice(0, 10).map((d) => (
-                  <div key={d.merchant} className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    We found {detected.length} possible subscriptions
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs text-primary"
+                    onClick={() => setDetected((prev) => prev.map((d) => ({ ...d, selected: true })))}
+                  >
+                    <CheckCheck className="mr-1 h-3 w-3" /> Select all
+                  </Button>
+                </div>
+                {detected.slice(0, 12).map((d) => (
+                  <button
+                    key={d.merchant}
+                    type="button"
+                    onClick={() => toggleDetected(d.merchant)}
+                    className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${
+                      d.selected
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-border bg-muted/30 opacity-60"
+                    }`}
+                  >
                     {d.logo ? (
                       <img src={d.logo} alt={d.merchant} className="h-8 w-8 rounded object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     ) : (
@@ -302,19 +333,26 @@ const CSVImport = () => {
                         €{d.amount.toFixed(2)} • {d.cycle !== "unknown" ? d.cycle : "irregular"} • {d.count} charges
                       </p>
                     </div>
-                  </div>
+                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
+                      d.selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
+                    }`}>
+                      {d.selected && <Check className="h-3 w-3" />}
+                    </div>
+                  </button>
                 ))}
               </div>
             )}
 
-            <Button
-              onClick={handleImportAll}
-              className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
-              disabled={importing}
-            >
-              <Check className="mr-2 h-4 w-4" />
-              {importing ? "Importing..." : `Import ${parsed.length} Transactions`}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleImportAll}
+                className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
+                disabled={importing}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                {importing ? "Importing..." : `Import ${parsed.length} Transactions`}
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
