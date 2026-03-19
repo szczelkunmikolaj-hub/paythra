@@ -40,6 +40,7 @@ const App = () => (
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/secret" element={<Secret />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
