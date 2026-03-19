@@ -7,9 +7,9 @@ const Footer = () => {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-xs font-bold text-primary-foreground">S</span>
+              <span className="text-xs font-bold text-primary-foreground">P</span>
             </div>
-            <span className="font-display text-lg font-bold text-foreground">SubSense</span>
+            <span className="font-display text-lg font-bold text-foreground">Paythra</span>
           </div>
           <div className="flex gap-8 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
