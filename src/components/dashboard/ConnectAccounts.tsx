@@ -81,7 +81,7 @@ const ConnectAccounts = () => {
           <DialogHeader>
             <DialogTitle className="font-display">Coming Soon</DialogTitle>
             <DialogDescription>
-              Future versions of SubSense will automatically detect subscriptions from connected accounts using secure integrations.
+              Future versions of Paythra will automatically detect subscriptions from connected accounts using secure integrations.
               We'll notify you when this feature is available.
             </DialogDescription>
           </DialogHeader>

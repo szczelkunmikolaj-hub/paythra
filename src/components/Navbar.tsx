@@ -11,9 +11,9 @@ const Navbar = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-            <span className="text-sm font-bold text-primary-foreground">S</span>
+            <span className="text-sm font-bold text-primary-foreground">P</span>
           </div>
-          <span className="font-display text-xl font-bold text-foreground">SubSense</span>
+          <span className="font-display text-xl font-bold text-foreground">Paythra</span>
         </Link>
 
         {/* Desktop nav */}

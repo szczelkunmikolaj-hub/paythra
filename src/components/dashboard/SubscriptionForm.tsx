@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import type { Subscription, SubscriptionInsert } from "@/hooks/useSubscriptions";
 import { useUserCategories } from "@/hooks/useUserCategories";
 import { SERVICE_REGISTRY, searchServices, findService } from "@/lib/serviceRegistry";
-import { getPlansForService, getCountriesForService, getPlansForCountry, getCurrencyForCountry, type ServicePlan } from "@/lib/servicePlans";
+import { getPlansForService, getCountriesForService, getPlansForCountry, getCurrencyForCountry, suggestPlanByPrice, type ServicePlan } from "@/lib/servicePlans";
 import { addMonths, addYears, format } from "date-fns";
 import { Plus, Search, Globe, Tag } from "lucide-react";
 

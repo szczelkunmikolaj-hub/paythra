@@ -48,9 +48,9 @@ const Login = () => {
         <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">S</span>
+              <span className="text-sm font-bold text-primary-foreground">P</span>
             </div>
-            <span className="font-display text-xl font-bold text-foreground">SubSense</span>
+            <span className="font-display text-xl font-bold text-foreground">Paythra</span>
           </Link>
           <CardTitle className="font-display text-2xl">Welcome back</CardTitle>
           <CardDescription>Log in to your account to continue</CardDescription>

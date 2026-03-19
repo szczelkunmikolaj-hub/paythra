@@ -37,9 +37,9 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-            <span className="text-sm font-bold text-primary-foreground">S</span>
+            <span className="text-sm font-bold text-primary-foreground">P</span>
           </div>
-          <span className="font-display text-xl font-bold text-foreground">SubSense</span>
+          <span className="font-display text-xl font-bold text-foreground">Paythra</span>
         </div>
 
         <nav className="flex flex-col gap-1 p-4">

@@ -19,7 +19,7 @@ const CTASection = () => {
             <span className="text-gradient">today</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Start saving money with SubSense. No credit card required.
+            Start saving money with Paythra. No credit card required.
           </p>
           <Link to="/signup" className="mt-8 inline-block">
             <Button size="lg" className="bg-gradient-primary px-10 text-base shadow-glow hover:opacity-90 transition-opacity">

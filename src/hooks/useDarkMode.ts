@@ -3,17 +3,17 @@ import { useState, useEffect } from "react";
 export const useDarkMode = () => {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === "undefined") return false;
-    return localStorage.getItem("subsense-theme") === "dark";
+    return localStorage.getItem("paythra-theme") === "dark";
   });
 
   useEffect(() => {
     const root = document.documentElement;
     if (isDark) {
       root.classList.add("dark");
-      localStorage.setItem("subsense-theme", "dark");
+      localStorage.setItem("paythra-theme", "dark");
     } else {
       root.classList.remove("dark");
-      localStorage.setItem("subsense-theme", "light");
+      localStorage.setItem("paythra-theme", "light");
     }
   }, [isDark]);
 
