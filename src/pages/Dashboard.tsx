@@ -3,18 +3,26 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
-import { useTransactions, type DetectedSubscription } from "@/hooks/useTransactions";
+import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
 import { useUnusedDetection } from "@/hooks/useUnusedDetection";
+import { useProfile } from "@/hooks/useProfile";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, CreditCard, Zap, Link2 } from "lucide-react";
+import { Plus, CreditCard, Zap, Link2, Bell } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const { subscriptions, isLoading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
   const { transactions } = useTransactions();
+  const { profile } = useProfile();
+  const { user } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
+  const [sendingTest, setSendingTest] = useState(false);
 
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
@@ -22,12 +30,37 @@ const Dashboard = () => {
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
 
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "there";
+
+  const sendTestNotification = async () => {
+    if (!user) return;
+    setSendingTest(true);
+    try {
+      await supabase.from("notifications").insert({
+        user_id: user.id,
+        type: "upcoming_charge",
+        message: "🔔 This is a test notification! Your notification system is working perfectly.",
+      });
+      toast({ title: "Test notification sent!", description: "Check your notifications tab." });
+    } catch {
+      toast({ title: "Failed to send", variant: "destructive" });
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="font-display text-3xl font-bold text-foreground">Welcome to Paythra</h1>
-          <p className="text-muted-foreground">Your subscription command center</p>
+        {/* Gradient Hero Header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-8 text-primary-foreground shadow-glow">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)]" />
+          <div className="relative z-10 text-center space-y-2">
+            <h1 className="font-display text-3xl font-bold">
+              Welcome back, {displayName} 👋
+            </h1>
+            <p className="text-primary-foreground/70 text-sm">Your subscription command center</p>
+          </div>
         </div>
 
         {/* Add Subscription CTA */}
@@ -82,6 +115,20 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Test Notification Button */}
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={sendTestNotification}
+                disabled={sendingTest}
+                className="gap-2"
+              >
+                <Bell className="h-4 w-4" />
+                {sendingTest ? "Sending..." : "Send Test Notification"}
+              </Button>
             </div>
 
             {/* Connect Accounts */}
