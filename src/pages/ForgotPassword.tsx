@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const { resetPassword } = useAuth();
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +22,7 @@ const ForgotPassword = () => {
       await resetPassword(email);
       setSent(true);
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -36,23 +38,23 @@ const ForgotPassword = () => {
             </div>
             <span className="font-display text-xl font-bold text-foreground">Paythra</span>
           </Link>
-          <CardTitle className="font-display text-2xl">Reset password</CardTitle>
-          <CardDescription>We'll send you a link to reset your password</CardDescription>
+          <CardTitle className="font-display text-2xl">{t("resetPassword")}</CardTitle>
+          <CardDescription>{t("resetSubtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           {sent ? (
             <div className="text-center">
-              <p className="text-sm text-muted-foreground">Check your email for a password reset link.</p>
-              <Link to="/login" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">Back to login</Link>
+              <p className="text-sm text-muted-foreground">{t("checkEmailReset")}</p>
+              <Link to="/login" className="mt-4 inline-block text-sm font-medium text-primary hover:underline">{t("backToLogin")}</Link>
             </div>
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t("email")}</Label>
                 <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
-                {loading ? "Sending..." : "Send reset link"}
+                {loading ? t("sending") : t("sendResetLink")}
               </Button>
             </form>
           )}

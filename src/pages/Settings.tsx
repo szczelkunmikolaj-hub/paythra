@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import CSVImport from "@/components/dashboard/CSVImport";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ const Settings = () => {
   const { user } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { addTransaction } = useTransactions();
+  const { t } = useTranslation();
 
   const [merchant, setMerchant] = useState("");
   const [amount, setAmount] = useState("");
@@ -26,7 +28,6 @@ const Settings = () => {
   const [isStudent, setIsStudent] = useState(profile?.is_student ?? false);
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Sync when profile loads
   useEffect(() => {
     if (profile) {
       setIncome(profile.monthly_income?.toString() ?? "");
@@ -56,7 +57,7 @@ const Settings = () => {
       setAmount("");
       setDate(format(new Date(), "yyyy-MM-dd"));
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -65,93 +66,71 @@ const Settings = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="font-display text-2xl font-bold text-foreground">Settings</h1>
+        <h1 className="font-display text-2xl font-bold text-foreground">{t("settings")}</h1>
 
-        {/* Account */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="font-display text-lg">Account</CardTitle>
+            <CardTitle className="font-display text-lg">{t("account")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center gap-3">
-              <Label className="w-20 text-muted-foreground">Email</Label>
+              <Label className="w-20 text-muted-foreground">{t("email")}</Label>
               <span className="text-foreground">{user?.email}</span>
             </div>
             <div className="flex items-center gap-3">
-              <Label className="w-20 text-muted-foreground">Joined</Label>
+              <Label className="w-20 text-muted-foreground">{t("joined")}</Label>
               <span className="text-foreground">{user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Intelligence Settings */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="font-display text-lg">Intelligence Settings</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Configure your profile to unlock personalized insights and savings recommendations.
-            </p>
+            <CardTitle className="font-display text-lg">{t("intelligenceSettings")}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t("intelligenceDesc")}</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="income">Monthly Income (€) — optional</Label>
-              <Input
-                id="income"
-                type="number"
-                step="0.01"
-                min="0"
-                value={income}
-                onChange={(e) => setIncome(e.target.value)}
-                placeholder="3000"
-              />
-              <p className="text-xs text-muted-foreground">Used to calculate your subscription health score. Never shared.</p>
+              <Label htmlFor="income">{t("monthlyIncome")}</Label>
+              <Input id="income" type="number" step="0.01" min="0" value={income} onChange={(e) => setIncome(e.target.value)} placeholder="3000" />
+              <p className="text-xs text-muted-foreground">{t("incomeHelp")}</p>
             </div>
-
             <div className="flex items-center gap-3">
               <Switch id="student" checked={isStudent} onCheckedChange={setIsStudent} />
-              <Label htmlFor="student">I'm a student</Label>
+              <Label htmlFor="student">{t("imStudent")}</Label>
             </div>
-            <p className="text-xs text-muted-foreground">Enable to see student discount recommendations.</p>
-
-            <Button
-              onClick={handleSaveProfile}
-              className="bg-gradient-primary hover:opacity-90 transition-opacity"
-              disabled={savingProfile}
-            >
-              {savingProfile ? "Saving..." : "Save Settings"}
+            <p className="text-xs text-muted-foreground">{t("studentHelp")}</p>
+            <Button onClick={handleSaveProfile} className="bg-gradient-primary hover:opacity-90 transition-opacity" disabled={savingProfile}>
+              {savingProfile ? t("saving") : t("saveSettings")}
             </Button>
           </CardContent>
         </Card>
 
-        {/* CSV Import */}
         <CSVImport />
 
-        {/* Manual Transaction Entry */}
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="font-display text-lg">Add Transaction Manually</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Add transactions to enable automatic subscription detection.
-            </p>
+            <CardTitle className="font-display text-lg">{t("addTransactionManually")}</CardTitle>
+            <p className="text-sm text-muted-foreground">{t("transactionDesc")}</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddTransaction} className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="merchant">Merchant</Label>
+                  <Label htmlFor="merchant">{t("merchant")}</Label>
                   <Input id="merchant" value={merchant} onChange={(e) => setMerchant(e.target.value)} placeholder="Spotify" required maxLength={100} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (€)</Label>
+                  <Label htmlFor="amount">{t("amount")}</Label>
                   <Input id="amount" type="number" step="0.01" min="0" max="99999" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="9.99" required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="txDate">Date</Label>
+                  <Label htmlFor="txDate">{t("date")}</Label>
                   <Input id="txDate" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
                 </div>
               </div>
               <Button type="submit" className="bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
-                {loading ? "Adding..." : "Add Transaction"}
+                {loading ? t("adding") : t("addTransaction")}
               </Button>
             </form>
           </CardContent>

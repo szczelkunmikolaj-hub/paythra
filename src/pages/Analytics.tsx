@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SpendingChart from "@/components/dashboard/SpendingChart";
 import CategoryChart from "@/components/dashboard/CategoryChart";
@@ -11,7 +12,7 @@ import { useServicePricing } from "@/hooks/useServicePricing";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Shield, Target, Lightbulb, CreditCard, AlertTriangle } from "lucide-react";
+import { TrendingUp, Target, Lightbulb, CreditCard, AlertTriangle } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
@@ -21,6 +22,7 @@ const Analytics = () => {
   const { subscriptions, isLoading } = useSubscriptions();
   const { services } = useServicePricing();
   const { profile } = useProfile();
+  const { t } = useTranslation();
 
   const { insights, totalSavings, healthScore, activeCount, monthlySpend, yearlyProjected } =
     useSubscriptionIntelligence({
@@ -33,7 +35,6 @@ const Analytics = () => {
   const unusedCount = subscriptions.filter((s) => s.is_unused).length;
   const active = subscriptions.filter((s) => s.status === "active");
 
-  // Category spending data
   const categorySpending = active.reduce<Record<string, number>>((acc, s) => {
     const cat = s.category || "other";
     const monthlyPrice = s.billing_cycle === "monthly" ? s.price : s.price / 12;
@@ -52,7 +53,7 @@ const Analytics = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="font-display text-2xl font-bold text-foreground">Insights & Analytics</h1>
+        <h1 className="font-display text-2xl font-bold text-foreground">{t("insightsAnalytics")}</h1>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -60,55 +61,45 @@ const Analytics = () => {
           </div>
         ) : (
           <>
-            {/* Financial Overview */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Card className="shadow-card">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="rounded-xl bg-primary/10 p-2">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                  </div>
+                  <div className="rounded-xl bg-primary/10 p-2"><CreditCard className="h-5 w-5 text-primary" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Monthly Spend</p>
+                    <p className="text-xs text-muted-foreground">{t("monthlySpend")}</p>
                     <p className="text-2xl font-bold text-foreground">€{monthlySpend.toFixed(2)}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="rounded-xl bg-primary/10 p-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                  </div>
+                  <div className="rounded-xl bg-primary/10 p-2"><TrendingUp className="h-5 w-5 text-primary" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Yearly Total</p>
+                    <p className="text-xs text-muted-foreground">{t("yearlyTotal")}</p>
                     <p className="text-2xl font-bold text-foreground">€{yearlyProjected.toFixed(0)}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="rounded-xl bg-primary/10 p-2">
-                    <Target className="h-5 w-5 text-primary" />
-                  </div>
+                  <div className="rounded-xl bg-primary/10 p-2"><Target className="h-5 w-5 text-primary" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Active Subs</p>
+                    <p className="text-xs text-muted-foreground">{t("activeSubs")}</p>
                     <p className="text-2xl font-bold text-foreground">{activeCount}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardContent className="flex items-center gap-4 p-5">
-                  <div className="rounded-xl bg-destructive/10 p-2">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
-                  </div>
+                  <div className="rounded-xl bg-destructive/10 p-2"><AlertTriangle className="h-5 w-5 text-destructive" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Unused Alerts</p>
+                    <p className="text-xs text-muted-foreground">{t("unusedAlerts")}</p>
                     <p className="text-2xl font-bold text-foreground">{unusedCount}</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Savings */}
             {totalSavings > 0 && (
               <Card className="border-green-200 shadow-card dark:border-green-800/30">
                 <CardContent className="flex items-center gap-4 p-5">
@@ -116,33 +107,24 @@ const Analytics = () => {
                     <Lightbulb className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Potential Savings</p>
+                    <p className="text-xs text-muted-foreground">{t("potentialSavings")}</p>
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">€{totalSavings.toFixed(0)}/yr</p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            {/* Health & Overload */}
             <div className="grid gap-4 sm:grid-cols-2">
-              <HealthScoreCard
-                score={healthScore}
-                monthlySpend={monthlySpend}
-                monthlyIncome={profile?.monthly_income ?? null}
-                activeCount={activeCount}
-                unusedCount={unusedCount}
-              />
+              <HealthScoreCard score={healthScore} monthlySpend={monthlySpend} monthlyIncome={profile?.monthly_income ?? null} activeCount={activeCount} unusedCount={unusedCount} />
               <OverloadIndexCard activeCount={activeCount} />
             </div>
 
-            {/* Trial Protection */}
             <TrialCountdown subscriptions={subscriptions} />
 
-            {/* Spending by Category Bars */}
             {categoryBarData.length > 0 && (
               <Card className="shadow-card">
                 <CardHeader>
-                  <CardTitle className="font-display text-lg">Spending by Category</CardTitle>
+                  <CardTitle className="font-display text-lg">{t("spendingByCategory")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
@@ -161,16 +143,11 @@ const Analytics = () => {
               </Card>
             )}
 
-            {/* Forecast */}
             <ForecastChart subscriptions={subscriptions} />
-
-            {/* Charts */}
             <div className="grid gap-6 lg:grid-cols-2">
               <SpendingChart subscriptions={subscriptions} />
               <CategoryChart subscriptions={subscriptions} />
             </div>
-
-            {/* Intelligence */}
             <SavingsPanel insights={insights} totalSavings={totalSavings} />
           </>
         )}

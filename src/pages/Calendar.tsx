@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import SubscriptionIcon from "@/components/dashboard/SubscriptionIcon";
@@ -26,6 +27,7 @@ interface DayEntry { subscription: Subscription; date: Date; }
 
 const Calendar = () => {
   const { subscriptions, isLoading } = useSubscriptions();
+  const { t } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -68,24 +70,25 @@ const Calendar = () => {
   const selectedEntries = selectedDate ? dayMap.get(format(selectedDate, "yyyy-MM-dd")) ?? [] : [];
   const selectedTotal = selectedEntries.reduce((s, e) => s + e.subscription.price, 0);
 
+  const weekDays = [t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat"), t("sun")];
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <h1 className="font-display text-2xl font-bold text-foreground">Payment Calendar</h1>
+        <h1 className="font-display text-2xl font-bold text-foreground">{t("paymentCalendar")}</h1>
 
-        {/* Upcoming Payments */}
         {upcoming.length > 0 && (
           <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-display text-sm font-semibold text-foreground">Upcoming Payments</h2>
+              <h2 className="font-display text-sm font-semibold text-foreground">{t("upcomingPayments")}</h2>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                💸 €{weekTotal.toFixed(2)} this week
+                💸 €{weekTotal.toFixed(2)} {t("thisWeek")}
               </span>
             </div>
             <div className="flex flex-wrap gap-3">
               {upcoming.slice(0, 6).map((entry, i) => {
                 const daysAway = differenceInDays(entry.date, new Date());
-                const label = daysAway === 0 ? "Today" : daysAway === 1 ? "Tomorrow" : `In ${daysAway} days`;
+                const label = daysAway === 0 ? t("today") : daysAway === 1 ? t("tomorrow") : t("inDays", { count: daysAway });
                 return (
                   <div key={i} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
                     <SubscriptionIcon name={entry.subscription.name} category={entry.subscription.category} size="sm" />
@@ -100,7 +103,6 @@ const Calendar = () => {
           </div>
         )}
 
-        {/* Month Nav */}
         <div className="flex items-center justify-between">
           <Button variant="outline" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
             <ChevronLeft className="h-4 w-4" />
@@ -111,7 +113,6 @@ const Calendar = () => {
           </Button>
         </div>
 
-        {/* Calendar Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -119,7 +120,7 @@ const Calendar = () => {
         ) : (
           <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
             <div className="grid grid-cols-7 border-b border-border">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+              {weekDays.map((d) => (
                 <div key={d} className="py-3 text-center text-xs font-medium text-muted-foreground">{d}</div>
               ))}
             </div>
@@ -128,7 +129,7 @@ const Calendar = () => {
                 const key = format(date, "yyyy-MM-dd");
                 const entries = dayMap.get(key) ?? [];
                 const inMonth = isSameMonth(date, currentMonth);
-                const today = isToday(date);
+                const todayCheck = isToday(date);
                 const total = entries.reduce((s, e) => s + e.subscription.price, 0);
                 return (
                   <button
@@ -136,10 +137,10 @@ const Calendar = () => {
                     onClick={() => entries.length > 0 && setSelectedDate(date)}
                     className={`relative flex min-h-[88px] flex-col border-b border-r border-border p-2 text-left transition-all duration-200 hover:bg-accent/30 ${
                       !inMonth ? "opacity-30" : ""
-                    } ${today ? "bg-primary/5" : ""} ${entries.length > 0 ? "cursor-pointer" : "cursor-default"}`}
+                    } ${todayCheck ? "bg-primary/5" : ""} ${entries.length > 0 ? "cursor-pointer" : "cursor-default"}`}
                   >
                     <span className={`mb-1 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold ${
-                      today ? "bg-primary text-primary-foreground" : "text-foreground"
+                      todayCheck ? "bg-primary text-primary-foreground" : "text-foreground"
                     }`}>
                       {format(date, "d")}
                     </span>
@@ -165,16 +166,14 @@ const Calendar = () => {
           </div>
         )}
 
-        {/* Empty state */}
         {!isLoading && subscriptions.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center">
             <CalendarDays className="mb-3 h-10 w-10 text-muted-foreground" />
-            <p className="font-medium text-foreground">No upcoming payments</p>
-            <p className="mt-1 text-sm text-muted-foreground">Add your first subscription to see payment dates here.</p>
+            <p className="font-medium text-foreground">{t("noUpcomingPayments")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("addFirstSubCalendar")}</p>
           </div>
         )}
 
-        {/* Day Detail Modal */}
         <Dialog open={!!selectedDate} onOpenChange={() => setSelectedDate(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -194,7 +193,7 @@ const Calendar = () => {
               ))}
               {selectedEntries.length > 0 && (
                 <div className="flex items-center justify-between border-t border-border pt-3">
-                  <span className="text-sm font-medium text-muted-foreground">Total</span>
+                  <span className="text-sm font-medium text-muted-foreground">{t("total")}</span>
                   <span className="text-lg font-bold text-primary">€{selectedTotal.toFixed(2)}</span>
                 </div>
               )}

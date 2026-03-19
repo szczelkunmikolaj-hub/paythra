@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +12,9 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    // Check for recovery token in URL hash
     const hash = window.location.hash;
     if (!hash.includes("type=recovery")) {
       navigate("/login");
@@ -26,10 +27,10 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
-      toast({ title: "Password updated successfully!" });
+      toast({ title: t("passwordUpdated") });
       navigate("/dashboard");
     } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+      toast({ title: t("error"), description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -39,17 +40,17 @@ const ResetPassword = () => {
     <div className="flex min-h-screen items-center justify-center bg-gradient-hero px-4">
       <Card className="w-full max-w-md shadow-elevated">
         <CardHeader className="text-center">
-          <CardTitle className="font-display text-2xl">Set new password</CardTitle>
-          <CardDescription>Enter your new password below</CardDescription>
+          <CardTitle className="font-display text-2xl">{t("setNewPassword")}</CardTitle>
+          <CardDescription>{t("enterNewPassword")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password">{t("newPassword")}</Label>
               <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
             <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
-              {loading ? "Updating..." : "Update password"}
+              {loading ? t("updating") : t("updatePassword")}
             </Button>
           </form>
         </CardContent>

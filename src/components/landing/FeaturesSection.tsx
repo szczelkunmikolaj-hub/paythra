@@ -1,35 +1,18 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Scan, LayoutDashboard, ShieldAlert, BarChart3, Lightbulb } from "lucide-react";
 
-const features = [
-  {
-    icon: Scan,
-    title: "Automatic Subscription Detection",
-    description: "Connect your bank and instantly detect recurring payments without manual entry.",
-  },
-  {
-    icon: LayoutDashboard,
-    title: "Subscription Dashboard",
-    description: "See all subscriptions in one simple, beautiful view with all the details you need.",
-  },
-  {
-    icon: ShieldAlert,
-    title: "Free Trial Guardian",
-    description: "Get alerts before free trials convert to paid so you never get caught off guard.",
-  },
-  {
-    icon: BarChart3,
-    title: "Spending Insights",
-    description: "Understand exactly how much you spend per month and per year on subscriptions.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Optimization Suggestions",
-    description: "Find cheaper plans, bundles, or alternatives to reduce your subscription costs.",
-  },
-];
-
 const FeaturesSection = () => {
+  const { t } = useTranslation();
+
+  const features = [
+    { icon: Scan, title: t("autoDetection"), description: t("autoDetectionDesc") },
+    { icon: LayoutDashboard, title: t("subscriptionDashboard"), description: t("subscriptionDashboardDesc") },
+    { icon: ShieldAlert, title: t("trialGuardian"), description: t("trialGuardianDesc") },
+    { icon: BarChart3, title: t("spendingInsights"), description: t("spendingInsightsDesc") },
+    { icon: Lightbulb, title: t("optimizationSuggestions"), description: t("optimizationSuggestionsDesc") },
+  ];
+
   return (
     <section id="features" className="py-24">
       <div className="container mx-auto px-4">
@@ -41,12 +24,10 @@ const FeaturesSection = () => {
           className="mx-auto max-w-2xl text-center"
         >
           <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
-            Everything you need to{" "}
-            <span className="text-gradient">take control</span>
+            {t("featuresTitle1")}
+            <span className="text-gradient">{t("featuresTitle2")}</span>
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Powerful features designed to save you money, automatically.
-          </p>
+          <p className="mt-4 text-muted-foreground">{t("featuresSubtitle")}</p>
         </motion.div>
 
         <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

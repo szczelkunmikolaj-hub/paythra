@@ -2,28 +2,31 @@ import { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun } from "lucide-react";
 import NotificationBell from "./NotificationBell";
-
-const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/subscriptions", icon: CreditCard, label: "Subscriptions" },
-  { to: "/calendar", icon: CalendarDays, label: "Calendar" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
-  { to: "/notifications", icon: Bell, label: "Notifications" },
-  { to: "/settings", icon: Settings, label: "Settings" },
-];
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const { signOut, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isDark, toggle: toggleDark } = useDarkMode();
   const [logoClicks, setLogoClicks] = useState(0);
+
+  const navItems = [
+    { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
+    { to: "/subscriptions", icon: CreditCard, label: t("subscriptions") },
+    { to: "/calendar", icon: CalendarDays, label: t("calendar") },
+    { to: "/analytics", icon: BarChart3, label: t("analytics") },
+    { to: "/notifications", icon: Bell, label: t("notifications") },
+    { to: "/settings", icon: Settings, label: t("settings") },
+  ];
 
   const handleLogoClick = useCallback(() => {
     const next = logoClicks + 1;
@@ -36,12 +39,10 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
   return (
     <div className="flex min-h-screen bg-background transition-colors duration-300">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 border-r border-border bg-card transition-all duration-300 md:static md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -78,12 +79,11 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           <div className="mb-3 truncate px-3 text-sm text-muted-foreground">{user?.email}</div>
           <Button variant="ghost" size="sm" className="w-full justify-start gap-3 text-muted-foreground" onClick={signOut}>
             <LogOut className="h-4 w-4" />
-            Log out
+            {t("logOut")}
           </Button>
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex flex-1 flex-col">
         <header className="flex h-16 items-center justify-between border-b border-border px-4 md:px-6">
           <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
@@ -91,6 +91,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           </button>
           <div />
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <Button
               variant="ghost"
               size="icon"
