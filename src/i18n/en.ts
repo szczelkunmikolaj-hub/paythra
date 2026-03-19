@@ -1,0 +1,209 @@
+const en = {
+  // Navbar & common
+  features: "Features",
+  stats: "Stats",
+  logIn: "Log in",
+  getStartedFree: "Get Started Free",
+  home: "Home",
+  signUp: "Sign Up",
+  or: "or",
+  back: "Back",
+  loading: "Loading...",
+
+  // Landing - Hero
+  heroChip: "Smart subscription management",
+  heroTitle1: "See Every Subscription.",
+  heroTitle2: "Save Every Month.",
+  heroDescription: "Paythra gives you a clear view of all your subscriptions, helps prevent unwanted charges, and shows where you can save money.",
+  seeDemo: "See Demo",
+
+  // Landing - Problem
+  problemTitle1: "Why people ",
+  problemTitle2: "lose money",
+  problemTitle3: " on subscriptions",
+  problemSubtitle: "Most people don't realize how much they're wasting every month.",
+  blindSpots: "Blind Spots",
+  blindSpotsDesc: "People forget about subscriptions that renew automatically, leading to silent charges month after month.",
+  silentFreeTrials: "Silent Free Trials",
+  silentFreeTrialsDesc: "Free trials convert into paid subscriptions without users noticing until it's too late.",
+  inflationFog: "Inflation Fog",
+  inflationFogDesc: "Prices slowly increase over time and users rarely notice the creeping cost changes.",
+
+  // Landing - Target Users
+  targetTitle1: "Built for the ",
+  targetTitle2: "subscription generation",
+  targetDesc1: "Students and young professionals typically have 5–15 active subscriptions, including streaming platforms, gaming services, productivity tools, and digital apps.",
+  targetDesc2: "Paythra helps them organize and control their digital spending — finally.",
+  streaming: "Streaming",
+  gaming: "Gaming",
+  productivity: "Productivity",
+  music: "Music",
+
+  // Landing - Features
+  featuresTitle1: "Everything you need to ",
+  featuresTitle2: "take control",
+  featuresSubtitle: "Powerful features designed to save you money, automatically.",
+  autoDetection: "Automatic Subscription Detection",
+  autoDetectionDesc: "Connect your bank and instantly detect recurring payments without manual entry.",
+  subscriptionDashboard: "Subscription Dashboard",
+  subscriptionDashboardDesc: "See all subscriptions in one simple, beautiful view with all the details you need.",
+  trialGuardian: "Free Trial Guardian",
+  trialGuardianDesc: "Get alerts before free trials convert to paid so you never get caught off guard.",
+  spendingInsights: "Spending Insights",
+  spendingInsightsDesc: "Understand exactly how much you spend per month and per year on subscriptions.",
+  optimizationSuggestions: "Optimization Suggestions",
+  optimizationSuggestionsDesc: "Find cheaper plans, bundles, or alternatives to reduce your subscription costs.",
+
+  // Landing - Stats
+  statsTitle: "The numbers don't lie",
+  statsSubtitle: "Subscription spending is a bigger problem than most people think.",
+  stat1Label: "Average yearly spend on subscriptions in Europe",
+  stat2Label: "of people have at least one unused subscription",
+  stat3Label: "Most people underestimate monthly subscription spending",
+
+  // Landing - CTA
+  ctaTitle1: "Take control of your subscriptions ",
+  ctaTitle2: "today",
+  ctaSubtitle: "Start saving money with Paythra. No credit card required.",
+  createFreeAccount: "Create Free Account",
+
+  // Footer
+  allRightsReserved: "All rights reserved.",
+
+  // Auth - Login
+  welcomeBack: "Welcome back",
+  loginSubtitle: "Log in to your account to continue",
+  continueWithGoogle: "Continue with Google",
+  continueWithApple: "Continue with Apple",
+  email: "Email",
+  password: "Password",
+  forgotPassword: "Forgot password?",
+  loggingIn: "Logging in...",
+  loginFailed: "Login failed",
+  noAccount: "Don't have an account?",
+
+  // Auth - Signup
+  createYourAccount: "Create your account",
+  signupSubtitle: "Start managing your subscriptions for free",
+  fullName: "Full name",
+  creatingAccount: "Creating account...",
+  createAccount: "Create account",
+  accountCreated: "Account created!",
+  checkEmail: "Check your email to confirm your account.",
+  signupFailed: "Signup failed",
+  alreadyHaveAccount: "Already have an account?",
+
+  // Auth - Forgot Password
+  resetPassword: "Reset password",
+  resetSubtitle: "We'll send you a link to reset your password",
+  checkEmailReset: "Check your email for a password reset link.",
+  backToLogin: "Back to login",
+  sending: "Sending...",
+  sendResetLink: "Send reset link",
+
+  // Auth - Reset Password
+  setNewPassword: "Set new password",
+  enterNewPassword: "Enter your new password below",
+  newPassword: "New Password",
+  updating: "Updating...",
+  updatePassword: "Update password",
+  passwordUpdated: "Password updated successfully!",
+
+  // Dashboard
+  welcomeBackUser: "Welcome back, {{name}} 👋",
+  commandCenter: "Your subscription command center",
+  addSubscription: "Add Subscription",
+  monthlySpend: "Monthly Spend",
+  activeSubscriptions: "Active Subscriptions",
+  connectedAccounts: "Connected Accounts",
+  sendTestNotification: "Send Test Notification",
+  sendingNotification: "Sending...",
+  testNotificationSent: "Test notification sent!",
+  checkNotifications: "Check your notifications tab.",
+  failedToSend: "Failed to send",
+
+  // Sidebar nav
+  dashboard: "Dashboard",
+  subscriptions: "Subscriptions",
+  calendar: "Calendar",
+  analytics: "Analytics",
+  notifications: "Notifications",
+  settings: "Settings",
+  logOut: "Log out",
+
+  // Subscriptions page
+  add: "Add",
+  searchSubscriptions: "Search subscriptions...",
+  category: "Category",
+  all: "All",
+  software: "Software",
+  sports: "Sports",
+  other: "Other",
+  noMatchingSubs: "No matching subscriptions",
+  noSubsYet: "No subscriptions yet",
+  addFirstSub: "Add your first subscription or import from a bank statement",
+  importCSV: "Import CSV",
+
+  // Calendar
+  paymentCalendar: "Payment Calendar",
+  upcomingPayments: "Upcoming Payments",
+  thisWeek: "this week",
+  today: "Today",
+  tomorrow: "Tomorrow",
+  inDays: "In {{count}} days",
+  noUpcomingPayments: "No upcoming payments",
+  addFirstSubCalendar: "Add your first subscription to see payment dates here.",
+  total: "Total",
+  mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun",
+
+  // Analytics
+  insightsAnalytics: "Insights & Analytics",
+  yearlyTotal: "Yearly Total",
+  activeSubs: "Active Subs",
+  unusedAlerts: "Unused Alerts",
+  potentialSavings: "Potential Savings",
+  spendingByCategory: "Spending by Category",
+
+  // Notifications
+  markAllRead: "Mark all read",
+  noNotificationsYet: "No notifications yet",
+  notificationsDesc: "Alerts about trials, charges, and unused subscriptions will appear here.",
+  upcomingCharge: "Upcoming Charge",
+  trialEnding: "Trial Ending Soon",
+  unusedSubscription: "Unused Subscription",
+  priceIncrease: "Price Increase",
+  priceDecrease: "Price Decrease",
+  subscriptionDetected: "Subscription Detected",
+  subscriptionAdded: "Subscription Added",
+
+  // Settings
+  account: "Account",
+  joined: "Joined",
+  intelligenceSettings: "Intelligence Settings",
+  intelligenceDesc: "Configure your profile to unlock personalized insights and savings recommendations.",
+  monthlyIncome: "Monthly Income (€) — optional",
+  incomeHelp: "Used to calculate your subscription health score. Never shared.",
+  imStudent: "I'm a student",
+  studentHelp: "Enable to see student discount recommendations.",
+  saving: "Saving...",
+  saveSettings: "Save Settings",
+  addTransactionManually: "Add Transaction Manually",
+  transactionDesc: "Add transactions to enable automatic subscription detection.",
+  merchant: "Merchant",
+  amount: "Amount (€)",
+  date: "Date",
+  adding: "Adding...",
+  addTransaction: "Add Transaction",
+  error: "Error",
+
+  // Connect Accounts
+  connectAccounts: "Connect Accounts",
+  connectDesc: "Link your bank or payment services to auto-detect subscriptions.",
+  comingSoon: "Coming soon",
+
+  // 404
+  pageNotFound: "Oops! Page not found",
+  returnHome: "Return to Home",
+};
+
+export default en;
