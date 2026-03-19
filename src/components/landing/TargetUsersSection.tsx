@@ -19,7 +19,7 @@ const TargetUsersSection = () => {
               Students and young professionals typically have 5–15 active subscriptions, including streaming platforms, gaming services, productivity tools, and digital apps.
             </p>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              SubSense helps them organize and control their digital spending — finally.
+              Paythra helps them organize and control their digital spending — finally.
             </p>
           </motion.div>
 

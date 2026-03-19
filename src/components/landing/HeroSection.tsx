@@ -27,7 +27,7 @@ const HeroSection = () => {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-            SubSense gives you a clear view of all your subscriptions, helps prevent unwanted charges, and shows where you can save money.
+            Paythra gives you a clear view of all your subscriptions, helps prevent unwanted charges, and shows where you can save money.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">

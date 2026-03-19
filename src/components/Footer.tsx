@@ -18,7 +18,7 @@ const Footer = () => {
             <Link to="/signup" className="hover:text-foreground transition-colors">Sign Up</Link>
           </div>
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} SubSense. All rights reserved.
+            © {new Date().getFullYear()} Paythra. All rights reserved.
           </p>
         </div>
       </div>

@@ -10,10 +10,10 @@ export const useDarkMode = () => {
     const root = document.documentElement;
     if (isDark) {
       root.classList.add("dark");
-      localStorage.setItem("subsense-theme", "dark");
+      localStorage.setItem("paythra-theme", "dark");
     } else {
       root.classList.remove("dark");
-      localStorage.setItem("subsense-theme", "light");
+      localStorage.setItem("paythra-theme", "light");
     }
   }, [isDark]);
 
