@@ -1,25 +1,16 @@
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { EyeOff, Clock, TrendingUp } from "lucide-react";
 
-const problems = [
-  {
-    icon: EyeOff,
-    title: "Blind Spots",
-    description: "People forget about subscriptions that renew automatically, leading to silent charges month after month.",
-  },
-  {
-    icon: Clock,
-    title: "Silent Free Trials",
-    description: "Free trials convert into paid subscriptions without users noticing until it's too late.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Inflation Fog",
-    description: "Prices slowly increase over time and users rarely notice the creeping cost changes.",
-  },
-];
-
 const ProblemSection = () => {
+  const { t } = useTranslation();
+
+  const problems = [
+    { icon: EyeOff, title: t("blindSpots"), description: t("blindSpotsDesc") },
+    { icon: Clock, title: t("silentFreeTrials"), description: t("silentFreeTrialsDesc") },
+    { icon: TrendingUp, title: t("inflationFog"), description: t("inflationFogDesc") },
+  ];
+
   return (
     <section className="py-24">
       <div className="container mx-auto px-4">
@@ -31,11 +22,9 @@ const ProblemSection = () => {
           className="mx-auto max-w-2xl text-center"
         >
           <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
-            Why people <span className="text-gradient">lose money</span> on subscriptions
+            {t("problemTitle1")}<span className="text-gradient">{t("problemTitle2")}</span>{t("problemTitle3")}
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Most people don't realize how much they're wasting every month.
-          </p>
+          <p className="mt-4 text-muted-foreground">{t("problemSubtitle")}</p>
         </motion.div>
 
         <div className="mt-16 grid gap-6 md:grid-cols-3">
