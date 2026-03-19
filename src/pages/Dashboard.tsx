@@ -6,6 +6,7 @@ import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
 import { useUnusedDetection } from "@/hooks/useUnusedDetection";
+import { usePriceChangeDetection } from "@/hooks/usePriceChangeDetection";
 import { useProfile } from "@/hooks/useProfile";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
