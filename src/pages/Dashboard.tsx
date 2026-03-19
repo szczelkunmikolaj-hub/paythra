@@ -27,6 +27,7 @@ const Dashboard = () => {
 
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
+  usePriceChangeDetection(subscriptions);
 
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
