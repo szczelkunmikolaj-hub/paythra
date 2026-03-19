@@ -2,33 +2,13 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Link2 } from "lucide-react";
+import { Link2, Smartphone, Globe, Monitor, Building2 } from "lucide-react";
 
 const integrations = [
-  {
-    name: "Apple",
-    description: "Detect App Store & iCloud subscriptions.",
-    logo: "https://logo.clearbit.com/apple.com",
-    accent: "bg-black",
-  },
-  {
-    name: "Google",
-    description: "Detect Play Store & YouTube subscriptions.",
-    logo: "https://logo.clearbit.com/google.com",
-    accent: "bg-blue-500",
-  },
-  {
-    name: "Microsoft",
-    description: "Detect Microsoft 365, Xbox & more.",
-    logo: "https://logo.clearbit.com/microsoft.com",
-    accent: "bg-sky-600",
-  },
-  {
-    name: "Open Banking",
-    description: "Detect subscriptions from your bank.",
-    logo: "https://logo.clearbit.com/plaid.com",
-    accent: "bg-emerald-600",
-  },
+  { name: "Apple", description: "Detect App Store & iCloud subscriptions.", icon: Smartphone, },
+  { name: "Google", description: "Detect Play Store & YouTube subscriptions.", icon: Globe, },
+  { name: "Microsoft", description: "Detect Microsoft 365, Xbox & more.", icon: Monitor, },
+  { name: "Open Banking", description: "Detect subscriptions from your bank.", icon: Building2, },
 ];
 
 const ConnectAccounts = () => {
@@ -55,13 +35,8 @@ const ConnectAccounts = () => {
                 onClick={() => setModalOpen(true)}
                 className="group flex items-center gap-4 rounded-xl border border-border p-4 text-left transition-all hover:border-primary/30 hover:shadow-card hover:-translate-y-0.5"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted">
-                  <img
-                    src={item.logo}
-                    alt={item.name}
-                    className="h-7 w-7 object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <item.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-foreground">Connect {item.name}</p>
@@ -82,7 +57,6 @@ const ConnectAccounts = () => {
             <DialogTitle className="font-display">Coming Soon</DialogTitle>
             <DialogDescription>
               Future versions of Paythra will automatically detect subscriptions from connected accounts using secure integrations.
-              We'll notify you when this feature is available.
             </DialogDescription>
           </DialogHeader>
           <Button onClick={() => setModalOpen(false)} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
