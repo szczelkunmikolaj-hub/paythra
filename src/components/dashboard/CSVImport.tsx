@@ -1,9 +1,12 @@
 import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, AlertCircle, Check, X, CheckCheck } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, FileText, AlertCircle, Check, X, CheckCheck, Columns } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { findService } from "@/lib/serviceRegistry";
+import SubscriptionIcon from "./SubscriptionIcon";
+import { detectCategory } from "@/lib/categoryIcons";
 import { toast } from "@/hooks/use-toast";
 import Papa from "papaparse";
 
@@ -19,8 +22,14 @@ interface DetectedFromCSV {
   count: number;
   cycle: "monthly" | "yearly" | "unknown";
   serviceName: string | null;
-  logo: string | null;
+  category: string;
   selected: boolean;
+}
+
+interface ColumnMapping {
+  date: string;
+  merchant: string;
+  amount: string;
 }
 
 const MERCHANT_PATTERNS = [
@@ -58,6 +67,26 @@ const normalizeMerchant = (raw: string): string => {
   return raw.replace(/[^a-zA-Z0-9\s]/g, "").trim();
 };
 
+const DATE_KEYS = ["date", "fecha", "datum", "transaction date", "booking date", "data", "date de valeur", "valuta", "buchungstag"];
+const MERCHANT_KEYS = ["merchant", "description", "payee", "name", "concepto", "beschreibung", "merchant name", "libellé", "descrizione", "bezeichnung", "empfänger"];
+const AMOUNT_KEYS = ["amount", "value", "sum", "importe", "betrag", "monto", "montant", "importo", "umsatz"];
+
+function autoDetectColumns(headers: string[]): ColumnMapping | null {
+  const lowerHeaders = headers.map((h) => h.toLowerCase().trim());
+  const findCol = (keys: string[]) => {
+    for (const key of keys) {
+      const idx = lowerHeaders.findIndex((h) => h.includes(key));
+      if (idx >= 0) return headers[idx];
+    }
+    return null;
+  };
+  const date = findCol(DATE_KEYS);
+  const merchant = findCol(MERCHANT_KEYS);
+  const amount = findCol(AMOUNT_KEYS);
+  if (date && merchant && amount) return { date, merchant, amount };
+  return null;
+}
+
 const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
 
 const CSVImport = () => {
@@ -67,6 +96,11 @@ const CSVImport = () => {
   const [parsed, setParsed] = useState<ParsedTransaction[]>([]);
   const [detected, setDetected] = useState<DetectedFromCSV[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  // Column mapping state
+  const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
+  const [rawHeaders, setRawHeaders] = useState<string[]>([]);
+  const [showColumnMapper, setShowColumnMapper] = useState(false);
+  const [columnMapping, setColumnMapping] = useState<ColumnMapping>({ date: "", merchant: "", amount: "" });
 
   const detectRecurring = useCallback((txs: ParsedTransaction[]): DetectedFromCSV[] => {
     const grouped: Record<string, ParsedTransaction[]> = {};
@@ -79,7 +113,6 @@ const CSVImport = () => {
     const results: DetectedFromCSV[] = [];
     Object.entries(grouped).forEach(([, txGroup]) => {
       if (txGroup.length < 2) return;
-
       const sorted = txGroup.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       const avgAmount = sorted.reduce((s, t) => s + t.amount, 0) / sorted.length;
 
@@ -87,9 +120,7 @@ const CSVImport = () => {
       if (sorted.length >= 2) {
         const gaps: number[] = [];
         for (let i = 1; i < sorted.length; i++) {
-          gaps.push(
-            (new Date(sorted[i].date).getTime() - new Date(sorted[i - 1].date).getTime()) / (1000 * 60 * 60 * 24)
-          );
+          gaps.push((new Date(sorted[i].date).getTime() - new Date(sorted[i - 1].date).getTime()) / (1000 * 60 * 60 * 24));
         }
         const avgGap = gaps.reduce((a, b) => a + b, 0) / gaps.length;
         if (avgGap >= 25 && avgGap <= 35) cycle = "monthly";
@@ -105,7 +136,7 @@ const CSVImport = () => {
         count: txGroup.length,
         cycle,
         serviceName: service?.name ?? null,
-        logo: service?.logo ?? null,
+        category: service?.category ?? detectCategory(merchantName),
         selected: true,
       });
     });
@@ -113,56 +144,40 @@ const CSVImport = () => {
     return results.sort((a, b) => b.count - a.count);
   }, []);
 
-  const parseFile = useCallback(
-    (text: string) => {
-      const result = Papa.parse(text, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: (h: string) => h.toLowerCase().trim(),
-      });
+  const parseRows = useCallback((rows: Record<string, string>[], mapping: ColumnMapping): ParsedTransaction[] => {
+    const transactions: ParsedTransaction[] = [];
+    for (const row of rows) {
+      const dateVal = row[mapping.date] || "";
+      const merchantVal = row[mapping.merchant] || "";
+      const amountVal = row[mapping.amount] || "";
+      if (!dateVal || !merchantVal || !amountVal) continue;
 
-      if (result.errors.length > 0 && result.data.length === 0) return null;
+      const rawAmount = amountVal.replace(/[€$£,]/g, "").replace(",", ".").trim();
+      const amount = Math.abs(parseFloat(rawAmount));
+      if (isNaN(amount) || amount === 0) continue;
 
-      const rows = result.data as Record<string, string>[];
-      const transactions: ParsedTransaction[] = [];
-
-      for (const row of rows) {
-        const dateVal = row.date || row.fecha || row.datum || row["transaction date"] || row["booking date"] || row.data || row["date de valeur"] || "";
-        const merchantVal = row.merchant || row.description || row.payee || row.name || row.concepto || row.beschreibung || row["merchant name"] || row.libellé || row.descrizione || "";
-        const amountVal = row.amount || row.value || row.sum || row.importe || row.betrag || row.monto || row.montant || row.importo || "";
-
-        if (!dateVal || !merchantVal || !amountVal) continue;
-
-        const rawAmount = amountVal.replace(/[€$£,]/g, "").replace(",", ".").trim();
-        const amount = Math.abs(parseFloat(rawAmount));
-        if (isNaN(amount) || amount === 0) continue;
-
-        let parsedDate: Date | null = null;
-        const isoDate = new Date(dateVal.replace(/"/g, "").trim());
-        if (!isNaN(isoDate.getTime())) {
-          parsedDate = isoDate;
-        } else {
-          const parts = dateVal.replace(/"/g, "").trim().split(/[/.\-]/);
-          if (parts.length === 3) {
-            const [d, m, y] = parts;
-            const attempt = new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-            if (!isNaN(attempt.getTime())) parsedDate = attempt;
-          }
+      let parsedDate: Date | null = null;
+      const isoDate = new Date(dateVal.replace(/"/g, "").trim());
+      if (!isNaN(isoDate.getTime())) {
+        parsedDate = isoDate;
+      } else {
+        const parts = dateVal.replace(/"/g, "").trim().split(/[/.\-]/);
+        if (parts.length === 3) {
+          const [d, m, y] = parts;
+          const attempt = new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+          if (!isNaN(attempt.getTime())) parsedDate = attempt;
         }
-
-        if (!parsedDate) continue;
-
-        transactions.push({
-          date: parsedDate.toISOString().split("T")[0],
-          merchant: merchantVal.replace(/"/g, "").trim(),
-          amount,
-        });
       }
+      if (!parsedDate) continue;
 
-      return transactions;
-    },
-    []
-  );
+      transactions.push({
+        date: parsedDate.toISOString().split("T")[0],
+        merchant: merchantVal.replace(/"/g, "").trim(),
+        amount,
+      });
+    }
+    return transactions;
+  }, []);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -170,36 +185,64 @@ const CSVImport = () => {
         toast({ title: "Unsupported format", description: "Supported: CSV, TXT, XLSX, OFX, QIF", variant: "destructive" });
         return;
       }
-
       if (file.size > 10 * 1024 * 1024) {
         toast({ title: "File too large", description: "Maximum file size is 10MB.", variant: "destructive" });
         return;
       }
 
       const text = await file.text();
-      const transactions = parseFile(text);
+      const result = Papa.parse(text, { header: true, skipEmptyLines: true, transformHeader: (h: string) => h.trim() });
 
-      if (!transactions || transactions.length === 0) {
-        toast({
-          title: "Could not parse file",
-          description: "File must contain columns: date, merchant/description, amount.",
-          variant: "destructive",
-        });
+      if (result.data.length === 0) {
+        toast({ title: "Empty file", description: "No data rows found in this file.", variant: "destructive" });
+        return;
+      }
+
+      const rows = result.data as Record<string, string>[];
+      const headers = result.meta.fields ?? Object.keys(rows[0]);
+      const mapping = autoDetectColumns(headers);
+
+      if (!mapping) {
+        // Fallback: show column mapper
+        setRawRows(rows);
+        setRawHeaders(headers);
+        setColumnMapping({ date: headers[0] || "", merchant: headers[1] || "", amount: headers[2] || "" });
+        setShowColumnMapper(true);
+        return;
+      }
+
+      const transactions = parseRows(rows, mapping);
+      if (transactions.length === 0) {
+        // Still show mapper as fallback
+        setRawRows(rows);
+        setRawHeaders(headers);
+        setColumnMapping(mapping);
+        setShowColumnMapper(true);
+        toast({ title: "Auto-detection found 0 rows", description: "Please map columns manually.", variant: "default" });
         return;
       }
 
       setParsed(transactions);
-      const recurring = detectRecurring(transactions);
-      setDetected(recurring);
+      setDetected(detectRecurring(transactions));
       setShowPreview(true);
     },
-    [parseFile, detectRecurring]
+    [parseRows, detectRecurring]
   );
 
+  const applyColumnMapping = () => {
+    const transactions = parseRows(rawRows, columnMapping);
+    if (transactions.length === 0) {
+      toast({ title: "No valid rows", description: "Check your column mapping and try again.", variant: "destructive" });
+      return;
+    }
+    setParsed(transactions);
+    setDetected(detectRecurring(transactions));
+    setShowColumnMapper(false);
+    setShowPreview(true);
+  };
+
   const toggleDetected = (merchant: string) => {
-    setDetected((prev) =>
-      prev.map((d) => (d.merchant === merchant ? { ...d, selected: !d.selected } : d))
-    );
+    setDetected((prev) => prev.map((d) => (d.merchant === merchant ? { ...d, selected: !d.selected } : d)));
   };
 
   const handleImportAll = async () => {
@@ -207,43 +250,31 @@ const CSVImport = () => {
     try {
       let imported = 0;
       for (const tx of parsed) {
-        try {
-          await addTransaction(tx);
-          imported++;
-        } catch {
-          // skip
-        }
+        try { await addTransaction(tx); imported++; } catch { /* skip */ }
       }
       toast({ title: `Imported ${imported} transactions`, description: `${detected.filter((d) => d.selected).length} subscriptions detected.` });
-      setParsed([]);
-      setDetected([]);
-      setShowPreview(false);
+      setParsed([]); setDetected([]); setShowPreview(false);
     } catch (err: any) {
       toast({ title: "Import failed", description: err.message, variant: "destructive" });
-    } finally {
-      setImporting(false);
-    }
+    } finally { setImporting(false); }
   };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragOver(false);
-      const file = e.dataTransfer.files[0];
-      if (file) handleFile(file);
-    },
-    [handleFile]
-  );
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
 
   const openFilePicker = () => {
     const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ACCEPTED_TYPES;
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) handleFile(file);
-    };
+    input.type = "file"; input.accept = ACCEPTED_TYPES;
+    input.onchange = (e) => { const file = (e.target as HTMLInputElement).files?.[0]; if (file) handleFile(file); };
     input.click();
+  };
+
+  const resetAll = () => {
+    setShowPreview(false); setShowColumnMapper(false);
+    setParsed([]); setDetected([]); setRawRows([]); setRawHeaders([]);
   };
 
   return (
@@ -255,10 +286,64 @@ const CSVImport = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!showPreview ? (
+        {/* Column Mapper */}
+        {showColumnMapper && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Columns className="h-4 w-4 text-primary" />
+                <p className="text-sm font-medium text-foreground">Map your columns</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
+            </div>
+
+            {/* Preview first 3 rows */}
+            <div className="overflow-x-auto rounded-xl border border-border">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    {rawHeaders.slice(0, 6).map((h) => (
+                      <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rawRows.slice(0, 3).map((row, i) => (
+                    <tr key={i} className="border-b border-border last:border-0">
+                      {rawHeaders.slice(0, 6).map((h) => (
+                        <td key={h} className="px-3 py-2 text-foreground truncate max-w-[150px]">{row[h]}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {(["date", "merchant", "amount"] as const).map((field) => (
+                <div key={field}>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{field} Column</label>
+                  <Select value={columnMapping[field]} onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, [field]: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {rawHeaders.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+            </div>
+
+            <Button onClick={applyColumnMapping} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
+              <Check className="mr-2 h-4 w-4" /> Apply & Continue
+            </Button>
+          </div>
+        )}
+
+        {/* Upload Area */}
+        {!showPreview && !showColumnMapper && (
           <>
             <div
-              className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
+              className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
                 dragOver ? "border-primary bg-accent/50" : "border-border hover:border-primary/40"
               }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -267,66 +352,46 @@ const CSVImport = () => {
               onClick={openFilePicker}
             >
               <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">
-                Drop your bank statement here
-              </p>
+              <p className="text-sm font-medium text-foreground">Drop your bank statement here</p>
               <p className="mt-1 text-xs text-muted-foreground">CSV, XLSX, OFX, QIF supported</p>
               <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
                 Choose File
               </Button>
             </div>
-
-            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3">
+            <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
               <p className="text-xs text-muted-foreground">
-                Supports European bank formats (ES, FR, IT, DE). We auto-detect recurring subscriptions from your transactions.
+                Supports European bank formats (ES, FR, IT, DE). We auto-detect recurring subscriptions. If columns aren't detected, you can map them manually.
               </p>
             </div>
           </>
-        ) : (
+        )}
+
+        {/* Preview */}
+        {showPreview && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-foreground">
-                Found {parsed.length} transactions
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => { setShowPreview(false); setParsed([]); setDetected([]); }}>
-                <X className="mr-1 h-3.5 w-3.5" /> Cancel
-              </Button>
+              <p className="text-sm font-medium text-foreground">Found {parsed.length} transactions</p>
+              <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
             </div>
 
             {detected.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    We found {detected.length} possible subscriptions
+                    {detected.length} possible subscriptions
                   </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-primary"
-                    onClick={() => setDetected((prev) => prev.map((d) => ({ ...d, selected: true })))}
-                  >
+                  <Button variant="ghost" size="sm" className="h-7 text-xs text-primary"
+                    onClick={() => setDetected((prev) => prev.map((d) => ({ ...d, selected: true })))}>
                     <CheckCheck className="mr-1 h-3 w-3" /> Select all
                   </Button>
                 </div>
                 {detected.slice(0, 12).map((d) => (
-                  <button
-                    key={d.merchant}
-                    type="button"
-                    onClick={() => toggleDetected(d.merchant)}
-                    className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${
-                      d.selected
-                        ? "border-primary/30 bg-primary/5"
-                        : "border-border bg-muted/30 opacity-60"
-                    }`}
-                  >
-                    {d.logo ? (
-                      <img src={d.logo} alt={d.merchant} className="h-8 w-8 rounded object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded bg-primary/10">
-                        <FileText className="h-4 w-4 text-primary" />
-                      </div>
-                    )}
+                  <button key={d.merchant} type="button" onClick={() => toggleDetected(d.merchant)}
+                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                      d.selected ? "border-primary/30 bg-primary/5" : "border-border bg-muted/30 opacity-60"
+                    }`}>
+                    <SubscriptionIcon name={d.merchant} category={d.category} size="md" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{d.merchant}</p>
                       <p className="text-xs text-muted-foreground">
@@ -343,16 +408,10 @@ const CSVImport = () => {
               </div>
             )}
 
-            <div className="flex gap-3">
-              <Button
-                onClick={handleImportAll}
-                className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-                disabled={importing}
-              >
-                <Check className="mr-2 h-4 w-4" />
-                {importing ? "Importing..." : `Import ${parsed.length} Transactions`}
-              </Button>
-            </div>
+            <Button onClick={handleImportAll} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={importing}>
+              <Check className="mr-2 h-4 w-4" />
+              {importing ? "Importing..." : `Import ${parsed.length} Transactions`}
+            </Button>
           </div>
         )}
       </CardContent>
