@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
@@ -8,7 +9,6 @@ import { useTrialGuardian } from "@/hooks/useTrialGuardian";
 import { useUnusedDetection } from "@/hooks/useUnusedDetection";
 import { usePriceChangeDetection } from "@/hooks/usePriceChangeDetection";
 import { useProfile } from "@/hooks/useProfile";
-import { useNotifications } from "@/hooks/useNotifications";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,10 +17,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  const { subscriptions, isLoading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
+  const { subscriptions, isLoading, addSubscription, updateSubscription } = useSubscriptions();
   const { transactions } = useTransactions();
   const { profile } = useProfile();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
@@ -31,7 +32,6 @@ const Dashboard = () => {
 
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
-
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "there";
 
   const sendTestNotification = async () => {
@@ -43,9 +43,9 @@ const Dashboard = () => {
         type: "upcoming_charge",
         message: "🔔 This is a test notification! Your notification system is working perfectly.",
       });
-      toast({ title: "Test notification sent!", description: "Check your notifications tab." });
+      toast({ title: t("testNotificationSent"), description: t("checkNotifications") });
     } catch {
-      toast({ title: "Failed to send", variant: "destructive" });
+      toast({ title: t("failedToSend"), variant: "destructive" });
     } finally {
       setSendingTest(false);
     }
@@ -54,29 +54,26 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        {/* Gradient Hero Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-primary p-8 text-primary-foreground shadow-glow">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_60%)]" />
           <div className="relative z-10 text-center space-y-2">
             <h1 className="font-display text-3xl font-bold">
-              Welcome back, {displayName} 👋
+              {t("welcomeBackUser", { name: displayName })}
             </h1>
-            <p className="text-primary-foreground/70 text-sm">Your subscription command center</p>
+            <p className="text-primary-foreground/70 text-sm">{t("commandCenter")}</p>
           </div>
         </div>
 
-        {/* Add Subscription CTA */}
         <div className="flex justify-center">
           <Button
             size="lg"
             onClick={() => { setEditing(null); setFormOpen(true); }}
             className="bg-gradient-primary hover:opacity-90 transition-opacity text-lg px-8 py-6 rounded-2xl shadow-glow"
           >
-            <Plus className="mr-2 h-5 w-5" /> Add Subscription
+            <Plus className="mr-2 h-5 w-5" /> {t("addSubscription")}
           </Button>
         </div>
 
-        {/* Stats */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -86,65 +83,45 @@ const Dashboard = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-3xl mx-auto">
               <Card className="shadow-card">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <div className="rounded-xl bg-primary/10 p-3">
-                    <CreditCard className="h-6 w-6 text-primary" />
-                  </div>
+                  <div className="rounded-xl bg-primary/10 p-3"><CreditCard className="h-6 w-6 text-primary" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Monthly Spend</p>
+                    <p className="text-xs text-muted-foreground">{t("monthlySpend")}</p>
                     <p className="text-2xl font-bold text-foreground">€{monthly.toFixed(2)}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-card">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <div className="rounded-xl bg-primary/10 p-3">
-                    <Zap className="h-6 w-6 text-primary" />
-                  </div>
+                  <div className="rounded-xl bg-primary/10 p-3"><Zap className="h-6 w-6 text-primary" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Active Subscriptions</p>
+                    <p className="text-xs text-muted-foreground">{t("activeSubscriptions")}</p>
                     <p className="text-2xl font-bold text-foreground">{active.length}</p>
                   </div>
                 </CardContent>
               </Card>
               <Card className="shadow-card sm:col-span-2 lg:col-span-1">
                 <CardContent className="flex items-center gap-4 p-6">
-                  <div className="rounded-xl bg-primary/10 p-3">
-                    <Link2 className="h-6 w-6 text-primary" />
-                  </div>
+                  <div className="rounded-xl bg-primary/10 p-3"><Link2 className="h-6 w-6 text-primary" /></div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Connected Accounts</p>
+                    <p className="text-xs text-muted-foreground">{t("connectedAccounts")}</p>
                     <p className="text-2xl font-bold text-foreground">0</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Test Notification Button */}
             <div className="flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={sendTestNotification}
-                disabled={sendingTest}
-                className="gap-2"
-              >
+              <Button variant="outline" size="sm" onClick={sendTestNotification} disabled={sendingTest} className="gap-2">
                 <Bell className="h-4 w-4" />
-                {sendingTest ? "Sending..." : "Send Test Notification"}
+                {sendingTest ? t("sendingNotification") : t("sendTestNotification")}
               </Button>
             </div>
 
-            {/* Connect Accounts */}
             <ConnectAccounts />
           </>
         )}
 
-        <SubscriptionForm
-          open={formOpen}
-          onOpenChange={setFormOpen}
-          onSubmit={addSubscription}
-          onUpdate={updateSubscription}
-          editing={editing}
-        />
+        <SubscriptionForm open={formOpen} onOpenChange={setFormOpen} onSubmit={addSubscription} onUpdate={updateSubscription} editing={editing} />
       </div>
     </DashboardLayout>
   );

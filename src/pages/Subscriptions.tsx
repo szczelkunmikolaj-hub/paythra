@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionCard from "@/components/dashboard/SubscriptionCard";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
@@ -11,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 const Subscriptions = () => {
   const { subscriptions, isLoading, addSubscription, updateSubscription, deleteSubscription } = useSubscriptions();
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [search, setSearch] = useState("");
@@ -32,27 +34,27 @@ const Subscriptions = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold text-foreground">Subscriptions</h1>
+          <h1 className="font-display text-2xl font-bold text-foreground">{t("subscriptions")}</h1>
           <Button onClick={() => { setEditing(null); setFormOpen(true); }} className="bg-gradient-primary hover:opacity-90 transition-opacity">
-            <Plus className="mr-2 h-4 w-4" /> Add
+            <Plus className="mr-2 h-4 w-4" /> {t("add")}
           </Button>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search subscriptions..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+            <Input placeholder={t("searchSubscriptions")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Category" /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder={t("category")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="streaming">Streaming</SelectItem>
-              <SelectItem value="gaming">Gaming</SelectItem>
-              <SelectItem value="software">Software</SelectItem>
-              <SelectItem value="productivity">Productivity</SelectItem>
-              <SelectItem value="sports">Sports</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="all">{t("all")}</SelectItem>
+              <SelectItem value="streaming">{t("streaming")}</SelectItem>
+              <SelectItem value="gaming">{t("gaming")}</SelectItem>
+              <SelectItem value="software">{t("software")}</SelectItem>
+              <SelectItem value="productivity">{t("productivity")}</SelectItem>
+              <SelectItem value="sports">{t("sports")}</SelectItem>
+              <SelectItem value="other">{t("other")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -65,17 +67,17 @@ const Subscriptions = () => {
           <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 text-center">
             <CreditCard className="mb-3 h-10 w-10 text-muted-foreground" />
             <p className="font-medium text-foreground">
-              {search || categoryFilter !== "all" ? "No matching subscriptions" : "No subscriptions yet"}
+              {search || categoryFilter !== "all" ? t("noMatchingSubs") : t("noSubsYet")}
             </p>
             {!search && categoryFilter === "all" && (
               <>
-                <p className="mt-1 text-sm text-muted-foreground">Add your first subscription or import from a bank statement</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("addFirstSub")}</p>
                 <div className="mt-4 flex gap-3">
                   <Button onClick={() => setFormOpen(true)} className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                    <Plus className="mr-2 h-4 w-4" /> Add Subscription
+                    <Plus className="mr-2 h-4 w-4" /> {t("addSubscription")}
                   </Button>
                   <Button variant="outline" onClick={() => navigate("/settings")}>
-                    <Upload className="mr-2 h-4 w-4" /> Import CSV
+                    <Upload className="mr-2 h-4 w-4" /> {t("importCSV")}
                   </Button>
                 </div>
               </>
