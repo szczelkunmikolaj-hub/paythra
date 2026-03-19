@@ -2,14 +2,16 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Bell, CheckCheck, AlertTriangle, Clock, CreditCard, TrendingUp, Eye } from "lucide-react";
+import { Bell, CheckCheck, AlertTriangle, Clock, CreditCard, TrendingUp, TrendingDown, Eye, PlusCircle } from "lucide-react";
 
 const typeConfig: Record<string, { icon: typeof Bell; label: string; color: string }> = {
   upcoming_charge: { icon: CreditCard, label: "Upcoming Charge", color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
   trial_ending: { icon: Clock, label: "Trial Ending Soon", color: "bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400" },
   unused_subscription: { icon: Eye, label: "Unused Subscription", color: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400" },
   price_increase: { icon: TrendingUp, label: "Price Increase", color: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400" },
+  price_decrease: { icon: TrendingDown, label: "Price Decrease", color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" },
   subscription_detected: { icon: AlertTriangle, label: "Subscription Detected", color: "bg-primary/10 text-primary" },
+  subscription_added: { icon: PlusCircle, label: "Subscription Added", color: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" },
 };
 
 const Notifications = () => {

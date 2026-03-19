@@ -1,10 +1,11 @@
+import { useState, useCallback } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun } from "lucide-react";
-import { useState } from "react";
 import NotificationBell from "./NotificationBell";
 
 const navItems = [
@@ -19,8 +20,19 @@ const navItems = [
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const { signOut, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isDark, toggle: toggleDark } = useDarkMode();
+  const [logoClicks, setLogoClicks] = useState(0);
+
+  const handleLogoClick = useCallback(() => {
+    const next = logoClicks + 1;
+    setLogoClicks(next);
+    if (next >= 10) {
+      setLogoClicks(0);
+      navigate("/secret");
+    }
+  }, [logoClicks, navigate]);
 
   return (
     <div className="flex min-h-screen bg-background transition-colors duration-300">
@@ -36,10 +48,12 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         }`}
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-            <span className="text-sm font-bold text-primary-foreground">P</span>
-          </div>
-          <span className="font-display text-xl font-bold text-foreground">Paythra</span>
+          <button onClick={handleLogoClick} className="flex items-center gap-2 select-none">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
+              <span className="text-sm font-bold text-primary-foreground">P</span>
+            </div>
+            <span className="font-display text-xl font-bold text-foreground">Paythra</span>
+          </button>
         </div>
 
         <nav className="flex flex-col gap-1 p-4">

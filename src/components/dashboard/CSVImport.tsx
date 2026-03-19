@@ -2,13 +2,14 @@ import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, AlertCircle, Check, X, CheckCheck, Columns } from "lucide-react";
+import { Upload, FileText, AlertCircle, Check, X, Columns } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { findService } from "@/lib/serviceRegistry";
-import SubscriptionIcon from "./SubscriptionIcon";
 import { detectCategory } from "@/lib/categoryIcons";
 import { toast } from "@/hooks/use-toast";
 import Papa from "papaparse";
+import ImportConfirmModal from "./ImportConfirmModal";
 
 interface ParsedTransaction {
   date: string;
@@ -91,12 +92,12 @@ const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
 
 const CSVImport = () => {
   const { addTransaction } = useTransactions();
+  const { addSubscription } = useSubscriptions();
   const [importing, setImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState<ParsedTransaction[]>([]);
   const [detected, setDetected] = useState<DetectedFromCSV[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  // Column mapping state
+  const [showModal, setShowModal] = useState(false);
   const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [showColumnMapper, setShowColumnMapper] = useState(false);
@@ -203,7 +204,6 @@ const CSVImport = () => {
       const mapping = autoDetectColumns(headers);
 
       if (!mapping) {
-        // Fallback: show column mapper
         setRawRows(rows);
         setRawHeaders(headers);
         setColumnMapping({ date: headers[0] || "", merchant: headers[1] || "", amount: headers[2] || "" });
@@ -213,7 +213,6 @@ const CSVImport = () => {
 
       const transactions = parseRows(rows, mapping);
       if (transactions.length === 0) {
-        // Still show mapper as fallback
         setRawRows(rows);
         setRawHeaders(headers);
         setColumnMapping(mapping);
@@ -223,8 +222,9 @@ const CSVImport = () => {
       }
 
       setParsed(transactions);
-      setDetected(detectRecurring(transactions));
-      setShowPreview(true);
+      const det = detectRecurring(transactions);
+      setDetected(det);
+      setShowModal(true);
     },
     [parseRows, detectRecurring]
   );
@@ -236,27 +236,62 @@ const CSVImport = () => {
       return;
     }
     setParsed(transactions);
-    setDetected(detectRecurring(transactions));
+    const det = detectRecurring(transactions);
+    setDetected(det);
     setShowColumnMapper(false);
-    setShowPreview(true);
+    setShowModal(true);
   };
 
   const toggleDetected = (merchant: string) => {
     setDetected((prev) => prev.map((d) => (d.merchant === merchant ? { ...d, selected: !d.selected } : d)));
   };
 
-  const handleImportAll = async () => {
+  const updateCycle = (merchant: string, cycle: "monthly" | "yearly") => {
+    setDetected((prev) => prev.map((d) => (d.merchant === merchant ? { ...d, cycle } : d)));
+  };
+
+  const selectAll = () => {
+    setDetected((prev) => prev.map((d) => ({ ...d, selected: true })));
+  };
+
+  const handleConfirmImport = async () => {
     setImporting(true);
     try {
+      // Import all transactions
       let imported = 0;
       for (const tx of parsed) {
         try { await addTransaction(tx); imported++; } catch { /* skip */ }
       }
-      toast({ title: `Imported ${imported} transactions`, description: `${detected.filter((d) => d.selected).length} subscriptions detected.` });
-      setParsed([]); setDetected([]); setShowPreview(false);
+
+      // Add selected detected subscriptions
+      const selected = detected.filter((d) => d.selected && d.cycle !== "unknown");
+      for (const sub of selected) {
+        const today = new Date();
+        const nextBilling = new Date(today);
+        if (sub.cycle === "monthly") nextBilling.setMonth(nextBilling.getMonth() + 1);
+        else nextBilling.setFullYear(nextBilling.getFullYear() + 1);
+
+        try {
+          await addSubscription({
+            name: sub.merchant,
+            price: sub.amount,
+            billing_cycle: sub.cycle,
+            category: sub.category,
+            next_billing_date: nextBilling.toISOString().split("T")[0],
+          });
+        } catch { /* skip */ }
+      }
+
+      toast({
+        title: `Imported ${imported} transactions`,
+        description: selected.length > 0 ? `Added ${selected.length} subscriptions.` : undefined,
+      });
+      resetAll();
     } catch (err: any) {
       toast({ title: "Import failed", description: err.message, variant: "destructive" });
-    } finally { setImporting(false); }
+    } finally {
+      setImporting(false);
+    }
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -273,149 +308,114 @@ const CSVImport = () => {
   };
 
   const resetAll = () => {
-    setShowPreview(false); setShowColumnMapper(false);
+    setShowModal(false); setShowColumnMapper(false);
     setParsed([]); setDetected([]); setRawRows([]); setRawHeaders([]);
   };
 
   return (
-    <Card className="shadow-card">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 font-display text-lg">
-          <Upload className="h-5 w-5 text-primary" />
-          Import Bank Transactions
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Column Mapper */}
-        {showColumnMapper && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Columns className="h-4 w-4 text-primary" />
-                <p className="text-sm font-medium text-foreground">Map your columns</p>
+    <>
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
+            <Upload className="h-5 w-5 text-primary" />
+            Import Bank Transactions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Column Mapper */}
+          {showColumnMapper && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Columns className="h-4 w-4 text-primary" />
+                  <p className="text-sm font-medium text-foreground">Map your columns</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
               </div>
-              <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-            </div>
 
-            {/* Preview first 3 rows */}
-            <div className="overflow-x-auto rounded-xl border border-border">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    {rawHeaders.slice(0, 6).map((h) => (
-                      <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rawRows.slice(0, 3).map((row, i) => (
-                    <tr key={i} className="border-b border-border last:border-0">
+              <div className="overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
                       {rawHeaders.slice(0, 6).map((h) => (
-                        <td key={h} className="px-3 py-2 text-foreground truncate max-w-[150px]">{row[h]}</td>
+                        <th key={h} className="px-3 py-2 text-left font-medium text-muted-foreground">{h}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {rawRows.slice(0, 3).map((row, i) => (
+                      <tr key={i} className="border-b border-border last:border-0">
+                        {rawHeaders.slice(0, 6).map((h) => (
+                          <td key={h} className="px-3 py-2 text-foreground truncate max-w-[150px]">{row[h]}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {(["date", "merchant", "amount"] as const).map((field) => (
-                <div key={field}>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{field} Column</label>
-                  <Select value={columnMapping[field]} onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, [field]: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {rawHeaders.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
-            </div>
-
-            <Button onClick={applyColumnMapping} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
-              <Check className="mr-2 h-4 w-4" /> Apply & Continue
-            </Button>
-          </div>
-        )}
-
-        {/* Upload Area */}
-        {!showPreview && !showColumnMapper && (
-          <>
-            <div
-              className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
-                dragOver ? "border-primary bg-accent/50" : "border-border hover:border-primary/40"
-              }`}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              onClick={openFilePicker}
-            >
-              <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
-              <p className="text-sm font-medium text-foreground">Drop your bank statement here</p>
-              <p className="mt-1 text-xs text-muted-foreground">CSV, XLSX, OFX, QIF supported</p>
-              <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
-                Choose File
-              </Button>
-            </div>
-            <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-              <p className="text-xs text-muted-foreground">
-                Supports European bank formats (ES, FR, IT, DE). We auto-detect recurring subscriptions. If columns aren't detected, you can map them manually.
-              </p>
-            </div>
-          </>
-        )}
-
-        {/* Preview */}
-        {showPreview && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-foreground">Found {parsed.length} transactions</p>
-              <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
-            </div>
-
-            {detected.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {detected.length} possible subscriptions
-                  </p>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs text-primary"
-                    onClick={() => setDetected((prev) => prev.map((d) => ({ ...d, selected: true })))}>
-                    <CheckCheck className="mr-1 h-3 w-3" /> Select all
-                  </Button>
-                </div>
-                {detected.slice(0, 12).map((d) => (
-                  <button key={d.merchant} type="button" onClick={() => toggleDetected(d.merchant)}
-                    className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                      d.selected ? "border-primary/30 bg-primary/5" : "border-border bg-muted/30 opacity-60"
-                    }`}>
-                    <SubscriptionIcon name={d.merchant} category={d.category} size="md" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{d.merchant}</p>
-                      <p className="text-xs text-muted-foreground">
-                        €{d.amount.toFixed(2)} • {d.cycle !== "unknown" ? d.cycle : "irregular"} • {d.count} charges
-                      </p>
-                    </div>
-                    <div className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
-                      d.selected ? "border-primary bg-primary text-primary-foreground" : "border-border"
-                    }`}>
-                      {d.selected && <Check className="h-3 w-3" />}
-                    </div>
-                  </button>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {(["date", "merchant", "amount"] as const).map((field) => (
+                  <div key={field}>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{field} Column</label>
+                    <Select value={columnMapping[field]} onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, [field]: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {rawHeaders.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 ))}
               </div>
-            )}
 
-            <Button onClick={handleImportAll} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={importing}>
-              <Check className="mr-2 h-4 w-4" />
-              {importing ? "Importing..." : `Import ${parsed.length} Transactions`}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              <Button onClick={applyColumnMapping} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
+                <Check className="mr-2 h-4 w-4" /> Apply & Continue
+              </Button>
+            </div>
+          )}
+
+          {/* Upload Area */}
+          {!showColumnMapper && (
+            <>
+              <div
+                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
+                  dragOver ? "border-primary bg-accent/50" : "border-border hover:border-primary/40"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                onClick={openFilePicker}
+              >
+                <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="text-sm font-medium text-foreground">Drop your bank statement here</p>
+                <p className="mt-1 text-xs text-muted-foreground">CSV, XLSX, OFX, QIF supported</p>
+                <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
+                  Choose File
+                </Button>
+              </div>
+              <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">
+                  Supports European bank formats (ES, FR, IT, DE). We auto-detect recurring subscriptions. If columns aren't detected, you can map them manually.
+                </p>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <ImportConfirmModal
+        open={showModal}
+        onOpenChange={(open) => { if (!open) resetAll(); setShowModal(open); }}
+        detected={detected}
+        onToggle={toggleDetected}
+        onSelectAll={selectAll}
+        onUpdateCycle={updateCycle}
+        onConfirm={handleConfirmImport}
+        importing={importing}
+        transactionCount={parsed.length}
+      />
+    </>
   );
 };
 
