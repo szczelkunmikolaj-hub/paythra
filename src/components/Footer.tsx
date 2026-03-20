@@ -9,9 +9,8 @@ const Footer = () => {
     <footer className="border-t border-border bg-muted/30 py-12">
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="flex items-center gap-2">
-            <img src={paythraLogo} alt="Paythra" className="h-7 w-7 rounded-lg object-cover" />
-            <span className="font-display text-lg font-bold text-foreground">Paythra</span>
+          <div className="flex items-center">
+            <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg object-[center_35%] object-cover" />
           </div>
           <div className="flex gap-8 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">{t("home")}</Link>
