@@ -13,9 +13,8 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg object-cover" />
-          <span className="font-display text-xl font-bold text-foreground">Paythra</span>
+        <Link to="/" className="flex items-center">
+          <img src={paythraLogo} alt="Paythra" className="h-10 w-10 rounded-lg object-[center_35%] object-cover" />
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
