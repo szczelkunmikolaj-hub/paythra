@@ -183,6 +183,10 @@ const pl = {
 
   pageNotFound: "Ups! Nie znaleziono strony",
   returnHome: "Powrót do Strony Głównej",
+
+  premium: "Premium",
+  premiumEmailSent: "Powiadomienie Premium wysłane!",
+  premiumEmailDesc: "Wersja Premium już wkrótce! Sprawdź swoje powiadomienia.",
 };
 
 export default pl;
