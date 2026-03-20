@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import paythraLogo from "@/assets/paythra-logo.jpeg";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -9,9 +10,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-xs font-bold text-primary-foreground">P</span>
-            </div>
+            <img src={paythraLogo} alt="Paythra" className="h-7 w-7 rounded-lg object-cover" />
             <span className="font-display text-lg font-bold text-foreground">Paythra</span>
           </div>
           <div className="flex gap-8 text-sm text-muted-foreground">

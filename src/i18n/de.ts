@@ -183,6 +183,10 @@ const de = {
 
   pageNotFound: "Ups! Seite nicht gefunden",
   returnHome: "Zur Startseite",
+
+  premium: "Premium",
+  premiumEmailSent: "Premium-Benachrichtigung gesendet!",
+  premiumEmailDesc: "Premium-Version kommt bald! Überprüfe deine Benachrichtigungen.",
 };
 
 export default de;

@@ -8,7 +8,9 @@ import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun } from "lucide-react";
 import NotificationBell from "./NotificationBell";
+import PremiumButton from "./PremiumButton";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import paythraLogo from "@/assets/paythra-logo.jpeg";
 
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const { signOut, user } = useAuth();
@@ -50,9 +52,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
           <button onClick={handleLogoClick} className="flex items-center gap-2 select-none">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">P</span>
-            </div>
+            <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg object-cover" />
             <span className="font-display text-xl font-bold text-foreground">Paythra</span>
           </button>
         </div>
@@ -91,6 +91,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           </button>
           <div />
           <div className="flex items-center gap-2">
+            <PremiumButton />
             <LanguageSwitcher />
             <Button
               variant="ghost"

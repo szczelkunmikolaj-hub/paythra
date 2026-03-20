@@ -183,6 +183,10 @@ const es = {
 
   pageNotFound: "¡Ups! Página no encontrada",
   returnHome: "Volver al Inicio",
+
+  premium: "Premium",
+  premiumEmailSent: "¡Notificación Premium enviada!",
+  premiumEmailDesc: "¡La versión Premium llegará pronto! Revisa tus notificaciones.",
 };
 
 export default es;

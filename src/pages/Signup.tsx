@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
+import paythraLogo from "@/assets/paythra-logo.jpeg";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -47,9 +48,7 @@ const Signup = () => {
       <Card className="w-full max-w-md shadow-elevated">
         <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-              <span className="text-sm font-bold text-primary-foreground">P</span>
-            </div>
+            <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg object-cover" />
             <span className="font-display text-xl font-bold text-foreground">Paythra</span>
           </Link>
           <CardTitle className="font-display text-2xl">{t("createYourAccount")}</CardTitle>

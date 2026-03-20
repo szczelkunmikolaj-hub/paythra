@@ -204,6 +204,11 @@ const en = {
   // 404
   pageNotFound: "Oops! Page not found",
   returnHome: "Return to Home",
+
+  // Premium
+  premium: "Premium",
+  premiumEmailSent: "Premium notification sent!",
+  premiumEmailDesc: "Premium version coming soon! Check your notifications.",
 };
 
 export default en;
