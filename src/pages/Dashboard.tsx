@@ -24,9 +24,13 @@ const Dashboard = () => {
   const { profile } = useProfile();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { plan, limits } = useUserPlan();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
+
+  const atLimit = subscriptions.filter(s => s.status === "active").length >= limits.maxSubscriptions;
 
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
