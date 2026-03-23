@@ -220,6 +220,15 @@ const pl = {
   fullAccessActive: "Pełny Dostęp Aktywny",
   invalidCode: "Nieprawidłowy kod rabatowy",
   discountRemoved: "Kod rabatowy usunięty",
+  testMode: "Tryb Testowy",
+  testModeHint: "Odblokuj funkcje Premium do testowania bez płatności",
+  testModeActivated: "Tryb Testowy Aktywowany",
+  testModeDeactivated: "Tryb Testowy Dezaktywowany",
+  testModeDesc: "Funkcje Premium aktywne — Tryb Testowy",
+  testModeActive: "Funkcje Premium Aktywne — Tryb Testowy",
+  premiumActivated: "Premium Aktywowany! 🎉",
+  premiumActive: "Premium ✓",
+  viewFullPricing: "Zobacz pełne szczegóły cennika",
 };
 
 export default pl;

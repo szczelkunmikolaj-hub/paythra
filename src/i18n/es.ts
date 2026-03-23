@@ -220,6 +220,15 @@ const es = {
   fullAccessActive: "Acceso Completo Activo",
   invalidCode: "Código de descuento inválido",
   discountRemoved: "Código de descuento eliminado",
+  testMode: "Modo de Prueba",
+  testModeHint: "Desbloquea funciones Premium para pruebas sin pago",
+  testModeActivated: "Modo de Prueba Activado",
+  testModeDeactivated: "Modo de Prueba Desactivado",
+  testModeDesc: "Funciones Premium activas — Modo de Prueba",
+  testModeActive: "Funciones Premium Activas — Modo de Prueba",
+  premiumActivated: "¡Premium Activado! 🎉",
+  premiumActive: "Premium ✓",
+  viewFullPricing: "Ver detalles completos de precios",
 };
 
 export default es;
