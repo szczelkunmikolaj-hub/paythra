@@ -213,6 +213,13 @@ const fr = {
   planBusinessF4: "Catégoriser les abonnements",
   planBusinessF5: "Exporter les données (CSV/rapport)",
   planBusinessF6: "Analytique avancée et insights",
+  haveDiscountCode: "Vous avez un code promo ?",
+  enterDiscountCode: "Entrez le code...",
+  applyCode: "Appliquer",
+  discountApplied: "Code promo appliqué !",
+  fullAccessActive: "Accès Complet Actif",
+  invalidCode: "Code promo invalide",
+  discountRemoved: "Code promo supprimé",
 };
 
 export default fr;

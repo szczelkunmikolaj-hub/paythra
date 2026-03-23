@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type PlanType = "free" | "premium" | "business";
 
+const VALID_DISCOUNT_CODE = "TheLesters67";
+
 export interface PlanLimits {
   maxSubscriptions: number;
   autoDetection: boolean;
@@ -58,7 +60,8 @@ export const useUserPlan = () => {
     enabled: !!user,
   });
 
-  const plan: PlanType = (query.data?.plan as PlanType) ?? "free";
+  const hasValidDiscount = query.data?.discount_code === VALID_DISCOUNT_CODE;
+  const plan: PlanType = hasValidDiscount ? "business" : ((query.data?.plan as PlanType) ?? "free");
   const limits = PLAN_LIMITS[plan];
 
   const upgradeMutation = useMutation({
@@ -81,11 +84,42 @@ export const useUserPlan = () => {
     },
   });
 
+  const applyDiscountCode = async (code: string): Promise<boolean> => {
+    if (code !== VALID_DISCOUNT_CODE) return false;
+    if (query.data) {
+      const { error } = await supabase
+        .from("user_plans")
+        .update({ discount_code: code, plan: "business", updated_at: new Date().toISOString() })
+        .eq("user_id", user!.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from("user_plans")
+        .insert({ user_id: user!.id, plan: "business", discount_code: code });
+      if (error) throw error;
+    }
+    queryClient.invalidateQueries({ queryKey: ["user_plan"] });
+    return true;
+  };
+
+  const removeDiscountCode = async () => {
+    if (!query.data) return;
+    const { error } = await supabase
+      .from("user_plans")
+      .update({ discount_code: null, plan: "free", updated_at: new Date().toISOString() })
+      .eq("user_id", user!.id);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ["user_plan"] });
+  };
+
   return {
     plan,
     limits,
     isLoading: query.isLoading,
     upgradePlan: upgradeMutation.mutateAsync,
     isUpgrading: upgradeMutation.isPending,
+    hasValidDiscount,
+    applyDiscountCode,
+    removeDiscountCode,
   };
 };

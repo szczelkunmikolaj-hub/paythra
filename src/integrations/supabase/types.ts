@@ -260,6 +260,7 @@ export type Database = {
       }
       user_plans: {
         Row: {
+          discount_code: string | null
           id: string
           plan: string
           started_at: string
@@ -267,6 +268,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          discount_code?: string | null
           id?: string
           plan?: string
           started_at?: string
@@ -274,6 +276,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          discount_code?: string | null
           id?: string
           plan?: string
           started_at?: string

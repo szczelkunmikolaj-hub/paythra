@@ -213,6 +213,13 @@ const de = {
   planBusinessF4: "Abos kategorisieren",
   planBusinessF5: "Daten exportieren (CSV/Bericht)",
   planBusinessF6: "Erweiterte Analytik & Einblicke",
+  haveDiscountCode: "Hast du einen Rabattcode?",
+  enterDiscountCode: "Code eingeben...",
+  applyCode: "Anwenden",
+  discountApplied: "Rabatt angewendet!",
+  fullAccessActive: "Voller Zugang Aktiv",
+  invalidCode: "Ungültiger Rabattcode",
+  discountRemoved: "Rabattcode entfernt",
 };
 
 export default de;
