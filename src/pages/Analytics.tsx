@@ -25,6 +25,7 @@ const Analytics = () => {
   const { services } = useServicePricing();
   const { profile } = useProfile();
   const { t } = useTranslation();
+  const { limits } = useUserPlan();
 
   const { insights, totalSavings, healthScore, activeCount, monthlySpend, yearlyProjected } =
     useSubscriptionIntelligence({
