@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import paythraLogo from "@/assets/paythra-logo.jpeg";
+import paythraLogo from "@/assets/paythra-logo.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

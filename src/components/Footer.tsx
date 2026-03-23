@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import paythraLogo from "@/assets/paythra-logo.jpeg";
+import paythraLogo from "@/assets/paythra-logo.png";
 
 const Footer = () => {
   const { t } = useTranslation();
