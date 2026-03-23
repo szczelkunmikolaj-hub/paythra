@@ -146,12 +146,18 @@ const Analytics = () => {
               </Card>
             )}
 
-            <ForecastChart subscriptions={subscriptions} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <SpendingChart subscriptions={subscriptions} />
-              <CategoryChart subscriptions={subscriptions} />
-            </div>
-            <SavingsPanel insights={insights} totalSavings={totalSavings} />
+            {limits.advancedAnalytics ? (
+              <>
+                <ForecastChart subscriptions={subscriptions} />
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <SpendingChart subscriptions={subscriptions} />
+                  <CategoryChart subscriptions={subscriptions} />
+                </div>
+                <SavingsPanel insights={insights} totalSavings={totalSavings} />
+              </>
+            ) : (
+              <UpgradePrompt feature={t("planBusinessF6")} requiredPlan="business" />
+            )}
           </>
         )}
       </div>
