@@ -235,6 +235,13 @@ const en = {
   planBusinessF4: "Categorize subscriptions",
   planBusinessF5: "Export data (CSV/report)",
   planBusinessF6: "Advanced analytics & insights",
+  haveDiscountCode: "Have a discount code?",
+  enterDiscountCode: "Enter code...",
+  applyCode: "Apply",
+  discountApplied: "Discount applied!",
+  fullAccessActive: "Full Access Active",
+  invalidCode: "Invalid discount code",
+  discountRemoved: "Discount code removed",
 };
 
 export default en;
