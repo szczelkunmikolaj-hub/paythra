@@ -205,10 +205,36 @@ const en = {
   pageNotFound: "Oops! Page not found",
   returnHome: "Return to Home",
 
-  // Premium
+  // Premium & Pricing
   premium: "Premium",
   premiumEmailSent: "Premium notification sent!",
   premiumEmailDesc: "Premium version coming soon! Check your notifications.",
+  pricingTitle: "Choose Your Plan",
+  pricingSubtitle: "Start free, upgrade when you need more power.",
+  mostPopular: "Most Popular",
+  planFree: "Free",
+  planMonth: "month",
+  currentPlan: "Current Plan",
+  selectPlan: "Select Plan",
+  planUpdated: "Plan updated!",
+  planUpdatedDesc: "Your plan has been changed successfully.",
+  upgradeRequired: "Requires {{plan}} plan or higher",
+  upgradNow: "Upgrade Now",
+  upgradeToTrackMore: "Upgrade to track more subscriptions",
+  planFreeF1: "Up to 5 subscriptions",
+  planFreeF2: "Manual tracking only",
+  planFreeF3: "Basic notifications",
+  planPremiumF1: "Up to 20 subscriptions",
+  planPremiumF2: "Automatic subscription detection",
+  planPremiumF3: "Auto-update price & renewal dates",
+  planPremiumF4: "In-app + email notifications",
+  planPremiumF5: "Full dashboard access",
+  planBusinessF1: "Unlimited subscriptions",
+  planBusinessF2: "Automatic detection enabled",
+  planBusinessF3: "Multi-user / team support",
+  planBusinessF4: "Categorize subscriptions",
+  planBusinessF5: "Export data (CSV/report)",
+  planBusinessF6: "Advanced analytics & insights",
 };
 
 export default en;

@@ -7,10 +7,12 @@ import SavingsPanel from "@/components/dashboard/SavingsPanel";
 import HealthScoreCard from "@/components/dashboard/HealthScoreCard";
 import OverloadIndexCard from "@/components/dashboard/OverloadIndexCard";
 import TrialCountdown from "@/components/dashboard/TrialCountdown";
+import UpgradePrompt from "@/components/dashboard/UpgradePrompt";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { useServicePricing } from "@/hooks/useServicePricing";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Target, Lightbulb, CreditCard, AlertTriangle } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
@@ -23,6 +25,7 @@ const Analytics = () => {
   const { services } = useServicePricing();
   const { profile } = useProfile();
   const { t } = useTranslation();
+  const { limits } = useUserPlan();
 
   const { insights, totalSavings, healthScore, activeCount, monthlySpend, yearlyProjected } =
     useSubscriptionIntelligence({
@@ -143,12 +146,18 @@ const Analytics = () => {
               </Card>
             )}
 
-            <ForecastChart subscriptions={subscriptions} />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <SpendingChart subscriptions={subscriptions} />
-              <CategoryChart subscriptions={subscriptions} />
-            </div>
-            <SavingsPanel insights={insights} totalSavings={totalSavings} />
+            {limits.advancedAnalytics ? (
+              <>
+                <ForecastChart subscriptions={subscriptions} />
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <SpendingChart subscriptions={subscriptions} />
+                  <CategoryChart subscriptions={subscriptions} />
+                </div>
+                <SavingsPanel insights={insights} totalSavings={totalSavings} />
+              </>
+            ) : (
+              <UpgradePrompt feature={t("planBusinessF6")} requiredPlan="business" />
+            )}
           </>
         )}
       </div>

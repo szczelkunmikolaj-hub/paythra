@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
@@ -10,9 +11,10 @@ import { useUnusedDetection } from "@/hooks/useUnusedDetection";
 import { usePriceChangeDetection } from "@/hooks/usePriceChangeDetection";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, CreditCard, Zap, Link2, Bell } from "lucide-react";
+import { Plus, CreditCard, Zap, Link2, Bell, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -22,9 +24,13 @@ const Dashboard = () => {
   const { profile } = useProfile();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { plan, limits } = useUserPlan();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
+
+  const atLimit = subscriptions.filter(s => s.status === "active").length >= limits.maxSubscriptions;
 
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
@@ -64,14 +70,28 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-2">
           <Button
             size="lg"
-            onClick={() => { setEditing(null); setFormOpen(true); }}
+            onClick={() => {
+              if (atLimit) {
+                toast({ title: t("upgradeToTrackMore"), variant: "destructive" });
+                navigate("/pricing");
+                return;
+              }
+              setEditing(null);
+              setFormOpen(true);
+            }}
             className="bg-gradient-primary hover:opacity-90 transition-opacity text-lg px-8 py-6 rounded-2xl shadow-glow"
           >
             <Plus className="mr-2 h-5 w-5" /> {t("addSubscription")}
           </Button>
+          {atLimit && (
+            <button onClick={() => navigate("/pricing")} className="flex items-center gap-1 text-xs text-primary hover:underline">
+              <Lock className="h-3 w-3" />
+              {t("upgradeToTrackMore")}
+            </button>
+          )}
         </div>
 
         {isLoading ? (
