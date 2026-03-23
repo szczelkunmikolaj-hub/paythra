@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
@@ -10,9 +11,10 @@ import { useUnusedDetection } from "@/hooks/useUnusedDetection";
 import { usePriceChangeDetection } from "@/hooks/usePriceChangeDetection";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, CreditCard, Zap, Link2, Bell } from "lucide-react";
+import { Plus, CreditCard, Zap, Link2, Bell, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
