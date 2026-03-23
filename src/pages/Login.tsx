@@ -50,7 +50,7 @@ const Login = () => {
       <Card className="w-full max-w-md shadow-elevated">
         <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex items-center gap-2">
-            <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg object-cover" />
+            <img src={paythraLogo} alt="Paythra" className="h-12 w-12 rounded-xl" />
             <span className="font-display text-xl font-bold text-foreground">Paythra</span>
           </Link>
           <CardTitle className="font-display text-2xl">{t("welcomeBack")}</CardTitle>

@@ -52,7 +52,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
           <button onClick={handleLogoClick} className="flex items-center select-none">
-            <img src={paythraLogo} alt="Paythra" className="h-10 w-10 rounded-lg object-[center_35%] object-cover" />
+            <img src={paythraLogo} alt="Paythra" className="h-10 w-10 rounded-lg" />
           </button>
         </div>
 

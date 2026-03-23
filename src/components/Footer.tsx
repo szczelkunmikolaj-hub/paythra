@@ -10,7 +10,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center">
-            <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg object-[center_35%] object-cover" />
+            <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg" />
           </div>
           <div className="flex gap-8 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">{t("home")}</Link>
