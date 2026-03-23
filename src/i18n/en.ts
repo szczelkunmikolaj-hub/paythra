@@ -242,6 +242,15 @@ const en = {
   fullAccessActive: "Full Access Active",
   invalidCode: "Invalid discount code",
   discountRemoved: "Discount code removed",
+  testMode: "Test Mode",
+  testModeHint: "Unlock Premium features for testing without payment",
+  testModeActivated: "Test Mode Activated",
+  testModeDeactivated: "Test Mode Deactivated",
+  testModeDesc: "Premium features active — Test Mode",
+  testModeActive: "Premium Features Active — Test Mode",
+  premiumActivated: "Premium Activated! 🎉",
+  premiumActive: "Premium ✓",
+  viewFullPricing: "View full pricing details",
 };
 
 export default en;
