@@ -10,7 +10,7 @@ import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, C
 import NotificationBell from "./NotificationBell";
 import PremiumButton from "./PremiumButton";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import paythraLogo from "@/assets/paythra-logo.jpeg";
+import paythraLogo from "@/assets/paythra-logo.png";
 
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const { signOut, user } = useAuth();
@@ -52,7 +52,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-6">
           <button onClick={handleLogoClick} className="flex items-center select-none">
-            <img src={paythraLogo} alt="Paythra" className="h-10 w-10 rounded-lg object-[center_35%] object-cover" />
+            <img src={paythraLogo} alt="Paythra" className="h-10 w-10 rounded-lg" />
           </button>
         </div>
 
