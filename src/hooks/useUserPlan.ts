@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export type PlanType = "free" | "premium" | "business";
 
 const VALID_DISCOUNT_CODE = "TheLesters67";
+const TEST_MODE_KEY = "paythra_test_mode";
 
 export interface PlanLimits {
   maxSubscriptions: number;
