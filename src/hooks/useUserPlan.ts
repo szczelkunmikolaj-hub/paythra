@@ -47,6 +47,10 @@ export const useUserPlan = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const [isTestMode, setIsTestMode] = useState(() => {
+    try { return localStorage.getItem(TEST_MODE_KEY) === "true"; } catch { return false; }
+  });
+
   const query = useQuery({
     queryKey: ["user_plan", user?.id],
     queryFn: async () => {
@@ -62,7 +66,13 @@ export const useUserPlan = () => {
   });
 
   const hasValidDiscount = query.data?.discount_code === VALID_DISCOUNT_CODE;
-  const plan: PlanType = hasValidDiscount ? "business" : ((query.data?.plan as PlanType) ?? "free");
+
+  const plan: PlanType = hasValidDiscount
+    ? "business"
+    : isTestMode
+      ? "premium"
+      : ((query.data?.plan as PlanType) ?? "free");
+
   const limits = PLAN_LIMITS[plan];
 
   const upgradeMutation = useMutation({
@@ -113,6 +123,16 @@ export const useUserPlan = () => {
     queryClient.invalidateQueries({ queryKey: ["user_plan"] });
   };
 
+  const activateTestMode = async () => {
+    localStorage.setItem(TEST_MODE_KEY, "true");
+    setIsTestMode(true);
+  };
+
+  const deactivateTestMode = async () => {
+    localStorage.removeItem(TEST_MODE_KEY);
+    setIsTestMode(false);
+  };
+
   return {
     plan,
     limits,
@@ -122,5 +142,8 @@ export const useUserPlan = () => {
     hasValidDiscount,
     applyDiscountCode,
     removeDiscountCode,
+    isTestMode,
+    activateTestMode,
+    deactivateTestMode,
   };
 };
