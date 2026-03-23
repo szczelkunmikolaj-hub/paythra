@@ -213,6 +213,13 @@ const es = {
   planBusinessF4: "Categorizar suscripciones",
   planBusinessF5: "Exportar datos (CSV/informe)",
   planBusinessF6: "Analítica avanzada e información",
+  haveDiscountCode: "¿Tienes un código de descuento?",
+  enterDiscountCode: "Introduce el código...",
+  applyCode: "Aplicar",
+  discountApplied: "¡Descuento aplicado!",
+  fullAccessActive: "Acceso Completo Activo",
+  invalidCode: "Código de descuento inválido",
+  discountRemoved: "Código de descuento eliminado",
 };
 
 export default es;

@@ -213,6 +213,13 @@ const pl = {
   planBusinessF4: "Kategoryzacja subskrypcji",
   planBusinessF5: "Eksport danych (CSV/raport)",
   planBusinessF6: "Zaawansowana analityka i statystyki",
+  haveDiscountCode: "Masz kod rabatowy?",
+  enterDiscountCode: "Wprowadź kod...",
+  applyCode: "Zastosuj",
+  discountApplied: "Rabat zastosowany!",
+  fullAccessActive: "Pełny Dostęp Aktywny",
+  invalidCode: "Nieprawidłowy kod rabatowy",
+  discountRemoved: "Kod rabatowy usunięty",
 };
 
 export default pl;
