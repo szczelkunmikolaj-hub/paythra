@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      gmail_connections: {
+        Row: {
+          access_token: string
+          connected_at: string
+          email: string | null
+          id: string
+          last_scan_at: string | null
+          refresh_token: string
+          token_expires_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          connected_at?: string
+          email?: string | null
+          id?: string
+          last_scan_at?: string | null
+          refresh_token: string
+          token_expires_at: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          connected_at?: string
+          email?: string | null
+          id?: string
+          last_scan_at?: string | null
+          refresh_token?: string
+          token_expires_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
