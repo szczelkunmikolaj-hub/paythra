@@ -33,7 +33,7 @@ export const useGmailConnection = () => {
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data as GmailConnection | null;
+      return (data as unknown) as GmailConnection | null;
     },
     enabled: !!user,
   });
