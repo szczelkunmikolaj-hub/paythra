@@ -251,6 +251,33 @@ const en = {
   premiumActivated: "Premium Activated! 🎉",
   premiumActive: "Premium ✓",
   viewFullPricing: "View full pricing details",
+
+  // Auto Detect / Gmail
+  overview: "Overview",
+  autoDetect: "Auto Detect",
+  gmailAutoDetect: "Gmail Auto-Detection",
+  connectGmail: "Connect Gmail",
+  connectGmailDesc: "Connect your Gmail to automatically detect subscriptions from receipts and invoices.",
+  gmailConnected: "Gmail Connected",
+  gmailNotConnected: "Gmail Not Connected",
+  gmailDisconnected: "Gmail disconnected",
+  disconnect: "Disconnect",
+  scanEmails: "Scan Emails",
+  scanning: "Scanning...",
+  scanComplete: "Scan Complete",
+  scanFailed: "Scan Failed",
+  subscriptionsDetected: "subscriptions detected",
+  detectedSubscriptions: "Detected Subscriptions",
+  lastScan: "Last scan",
+  checking: "Checking",
+  priceUnknown: "Price unknown",
+  addedToSubscriptions: "added to subscriptions",
+  failedToAdd: "Failed to add",
+  failedToDisconnect: "Failed to disconnect",
+  noNewSubscriptions: "No new subscriptions detected. All clear!",
+  autoDetectPremium: "Auto-Detection is a Premium Feature",
+  autoDetectPremiumDesc: "Upgrade to Premium or Business to automatically detect subscriptions from your Gmail inbox.",
+  premiumFeature: "Premium Feature",
 };
 
 export default en;
