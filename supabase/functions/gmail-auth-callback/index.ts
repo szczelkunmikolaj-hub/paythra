@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state"); // user_id
+  const stateRaw = url.searchParams.get("state");
   const error = url.searchParams.get("error");
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -21,10 +21,23 @@ Deno.serve(async (req) => {
   const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CLIENT_ID")!;
   const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
 
-  // Get the origin for redirect - use the project's published URL
-  const appOrigin = url.searchParams.get("origin") || "https://subsense-guard.lovable.app";
+  // Decode state to get userId and origin
+  let userId: string | null = null;
+  let appOrigin = "https://subsense-guard.lovable.app";
 
-  if (error || !code || !state) {
+  if (stateRaw) {
+    try {
+      const decoded = JSON.parse(atob(stateRaw));
+      userId = decoded.userId || null;
+      appOrigin = decoded.origin || appOrigin;
+    } catch {
+      // Legacy: state might just be a plain user_id string
+      userId = stateRaw;
+    }
+  }
+
+  if (error || !code || !userId) {
+    console.error("OAuth error or missing params:", { error, hasCode: !!code, hasUserId: !!userId });
     return Response.redirect(`${appOrigin}/dashboard?gmail_error=auth_failed`, 302);
   }
 
@@ -49,6 +62,11 @@ Deno.serve(async (req) => {
       return Response.redirect(`${appOrigin}/dashboard?gmail_error=token_failed`, 302);
     }
 
+    if (!tokenData.access_token) {
+      console.error("No access_token in response:", tokenData);
+      return Response.redirect(`${appOrigin}/dashboard?gmail_error=no_token`, 302);
+    }
+
     // Get user's Gmail address
     const profileRes = await fetch("https://www.googleapis.com/gmail/v1/users/me/profile", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
@@ -57,16 +75,16 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000).toISOString();
 
     // Upsert gmail connection
     const { error: dbError } = await supabase
       .from("gmail_connections")
       .upsert(
         {
-          user_id: state,
+          user_id: userId,
           access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
+          refresh_token: tokenData.refresh_token || "",
           token_expires_at: expiresAt,
           email: profileData.emailAddress || null,
         },
@@ -74,10 +92,11 @@ Deno.serve(async (req) => {
       );
 
     if (dbError) {
-      console.error("DB error:", dbError);
+      console.error("DB upsert error:", dbError);
       return Response.redirect(`${appOrigin}/dashboard?gmail_error=db_failed`, 302);
     }
 
+    console.log("Gmail connected successfully for user:", userId);
     return Response.redirect(`${appOrigin}/dashboard?gmail_connected=true`, 302);
   } catch (err) {
     console.error("Gmail auth callback error:", err);
