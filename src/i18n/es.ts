@@ -1,4 +1,4 @@
-const es = {
+const es: Record<string, string> = {
   features: "Funcionalidades",
   stats: "Estadísticas",
   logIn: "Iniciar sesión",

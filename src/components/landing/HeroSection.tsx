@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 const HeroSection = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
     <section className="relative overflow-hidden bg-gradient-hero pt-32 pb-20">
@@ -38,7 +39,7 @@ const HeroSection = () => {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="px-8 text-base">
+            <Button variant="outline" size="lg" className="px-8 text-base" onClick={() => navigate("/demo")}>
               <Play className="mr-1 h-4 w-4" />
               {t("seeDemo")}
             </Button>
