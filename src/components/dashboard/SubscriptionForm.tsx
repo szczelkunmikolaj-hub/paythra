@@ -163,12 +163,12 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display">{editing ? "Edit Subscription" : "Add Subscription"}</DialogTitle>
+          <DialogTitle className="font-display">{editing ? t("editSubscription") : t("addSubscription")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Service search with autocomplete */}
           <div className="space-y-2 relative" ref={dropdownRef}>
-            <Label htmlFor="service">Service</Label>
+            <Label htmlFor="service">{t("service")}</Label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -183,7 +183,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                   setIsCustomPrice(false);
                 }}
                 onFocus={() => setShowDropdown(true)}
-                placeholder="Search services (e.g. Spotify, Netflix...)"
+                placeholder={t("searchServicesPlaceholder")}
                 className="pl-9"
                 required
                 autoComplete="off"
@@ -221,10 +221,10 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
               <div className="space-y-2">
                 <Label className="flex items-center gap-1.5">
                   <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                  Country
+                   {t("country")}
                 </Label>
                 <Select value={selectedCountry} onValueChange={(v) => { setSelectedCountry(v); setSelectedPlan(""); setPrice(""); }}>
-                  <SelectTrigger><SelectValue placeholder="Select your country" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("selectCountry")} /></SelectTrigger>
                   <SelectContent>
                     {availableCountries.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -237,7 +237,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5">
                     <Tag className="h-3.5 w-3.5 text-muted-foreground" />
-                    Plan
+                    {t("plan")}
                   </Label>
                   <div className="grid gap-2">
                     {availablePlans.map((plan) => (
@@ -264,7 +264,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                         isCustomPrice ? "border-primary text-primary" : "border-border text-muted-foreground hover:border-primary/40"
                       }`}
                     >
-                      Enter custom price
+                      {t("enterCustomPrice")}
                     </button>
                   </div>
                 </div>
@@ -276,16 +276,16 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
           {(isCustomPrice || !hasPlanData || editing) && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="price">Price ({currency})</Label>
+                <Label htmlFor="price">{t("price")} ({currency})</Label>
                 <Input id="price" type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="9.99" required />
               </div>
               <div className="space-y-2">
-                <Label>Billing Cycle</Label>
+                <Label>{t("billingCycle")}</Label>
                 <Select value={billingCycle} onValueChange={(v) => setBillingCycle(v as "monthly" | "yearly")}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
+                    <SelectItem value="monthly">{t("monthly")}</SelectItem>
+                    <SelectItem value="yearly">{t("yearly")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -294,18 +294,18 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{t("categoryLabel")}</Label>
               {showNewCategory ? (
                 <div className="flex gap-2">
                   <Input
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="Category name"
+                    placeholder={t("categoryNamePlaceholder")}
                     className="flex-1"
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddCategory())}
                   />
                   <Button type="button" size="sm" variant="outline" onClick={handleAddCategory}>
-                    Add
+                    {t("addCategory")}
                   </Button>
                 </div>
               ) : (
@@ -324,7 +324,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                     variant="ghost"
                     className="h-10 w-10 shrink-0"
                     onClick={() => setShowNewCategory(true)}
-                    title="Add custom category"
+                    title={t("addCustomCategory")}
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -332,25 +332,25 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="startDate">{t("startDate")}</Label>
               <Input id="startDate" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <Switch id="trial" checked={isTrial} onCheckedChange={setIsTrial} />
-            <Label htmlFor="trial">Free Trial</Label>
+            <Label htmlFor="trial">{t("freeTrial")}</Label>
           </div>
 
           {isTrial && (
             <div className="space-y-2">
-              <Label htmlFor="trialEnd">Trial End Date</Label>
+              <Label htmlFor="trialEnd">{t("trialEndDate")}</Label>
               <Input id="trialEnd" type="date" value={trialEndDate} onChange={(e) => setTrialEndDate(e.target.value)} required />
             </div>
           )}
 
           <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading || (!price && !selectedPlan)}>
-            {loading ? "Saving..." : editing ? "Update" : "Add Subscription"}
+            {loading ? t("saving") : editing ? t("update") : t("addSubscription")}
           </Button>
         </form>
       </DialogContent>
