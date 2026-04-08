@@ -111,7 +111,9 @@ export const useGmailConnection = () => {
       queryClient.invalidateQueries({ queryKey: ["gmail_connection"] });
       window.history.replaceState({}, "", window.location.pathname);
     }
-    if (params.get("gmail_error")) {
+    const gmailError = params.get("gmail_error");
+    if (gmailError) {
+      console.error("Gmail connection error:", gmailError);
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, [queryClient]);
