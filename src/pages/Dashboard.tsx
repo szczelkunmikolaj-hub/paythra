@@ -26,7 +26,7 @@ const Dashboard = () => {
   const { transactions } = useTransactions();
   const { profile } = useProfile();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { plan, limits } = useUserPlan();
   const [formOpen, setFormOpen] = useState(false);
