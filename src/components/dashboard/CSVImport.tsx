@@ -17,7 +17,7 @@ interface ParsedTransaction {
   amount: number;
 }
 
-interface DetectedFromCSV {
+export interface DetectedFromCSV {
   merchant: string;
   amount: number;
   count: number;
@@ -25,6 +25,7 @@ interface DetectedFromCSV {
   serviceName: string | null;
   category: string;
   selected: boolean;
+  confidence: "high" | "medium" | "low";
 }
 
 interface ColumnMapping {
@@ -33,10 +34,23 @@ interface ColumnMapping {
   amount: string;
 }
 
+// Known subscription keywords for smart filtering
+const SUBSCRIPTION_KEYWORDS = [
+  "netflix", "spotify", "apple", "google", "amazon prime", "prime video",
+  "adobe", "microsoft", "hbo", "disney", "youtube", "gym", "subscription",
+  "premium", "recurring", "hulu", "paramount", "crunchyroll", "dazn",
+  "espn", "xbox", "playstation", "psn", "game pass", "linkedin",
+  "dropbox", "notion", "figma", "canva", "slack", "github", "openai",
+  "chatgpt", "zoom", "icloud", "one drive", "onedrive", "office 365",
+  "creative cloud", "f1 tv", "nba", "audible", "kindle", "tidal",
+  "deezer", "apple music", "apple tv", "twitch", "patreon",
+  "membership", "monthly fee", "annual fee", "plan", "pro plan",
+];
+
 const MERCHANT_PATTERNS = [
   { pattern: /spotify/i, name: "Spotify" },
   { pattern: /netflix/i, name: "Netflix" },
-  { pattern: /apple\.com\/bill|itunes/i, name: "Apple" },
+  { pattern: /apple\.com\/bill|itunes|apple\s/i, name: "Apple" },
   { pattern: /google\s*\*?\s*youtube/i, name: "YouTube Premium" },
   { pattern: /chatgpt|openai/i, name: "ChatGPT Plus" },
   { pattern: /notion/i, name: "Notion" },
@@ -59,6 +73,10 @@ const MERCHANT_PATTERNS = [
   { pattern: /f1\s*tv|formula\s*1/i, name: "F1 TV" },
   { pattern: /nba/i, name: "NBA League Pass" },
   { pattern: /espn/i, name: "ESPN+" },
+  { pattern: /hulu/i, name: "Hulu" },
+  { pattern: /gym|fitness/i, name: "Gym" },
+  { pattern: /zoom/i, name: "Zoom" },
+  { pattern: /icloud/i, name: "iCloud" },
 ];
 
 const normalizeMerchant = (raw: string): string => {
@@ -66,6 +84,11 @@ const normalizeMerchant = (raw: string): string => {
     if (pattern.test(raw)) return name;
   }
   return raw.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+};
+
+const isKnownSubscription = (merchant: string): boolean => {
+  const lower = merchant.toLowerCase();
+  return SUBSCRIPTION_KEYWORDS.some((kw) => lower.includes(kw));
 };
 
 const DATE_KEYS = ["date", "fecha", "datum", "transaction date", "booking date", "data", "date de valeur", "valuta", "buchungstag"];
@@ -97,13 +120,14 @@ const CSVImport = () => {
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState<ParsedTransaction[]>([]);
   const [detected, setDetected] = useState<DetectedFromCSV[]>([]);
+  const [otherTransactions, setOtherTransactions] = useState<ParsedTransaction[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [rawRows, setRawRows] = useState<Record<string, string>[]>([]);
   const [rawHeaders, setRawHeaders] = useState<string[]>([]);
   const [showColumnMapper, setShowColumnMapper] = useState(false);
   const [columnMapping, setColumnMapping] = useState<ColumnMapping>({ date: "", merchant: "", amount: "" });
 
-  const detectRecurring = useCallback((txs: ParsedTransaction[]): DetectedFromCSV[] => {
+  const detectSubscriptions = useCallback((txs: ParsedTransaction[]): { subs: DetectedFromCSV[]; other: ParsedTransaction[] } => {
     const grouped: Record<string, ParsedTransaction[]> = {};
     txs.forEach((tx) => {
       const key = normalizeMerchant(tx.merchant).toLowerCase();
@@ -111,14 +135,23 @@ const CSVImport = () => {
       grouped[key].push(tx);
     });
 
-    const results: DetectedFromCSV[] = [];
-    Object.entries(grouped).forEach(([, txGroup]) => {
-      if (txGroup.length < 2) return;
-      const sorted = txGroup.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      const avgAmount = sorted.reduce((s, t) => s + t.amount, 0) / sorted.length;
+    const subs: DetectedFromCSV[] = [];
+    const matchedKeys = new Set<string>();
 
+    Object.entries(grouped).forEach(([key, txGroup]) => {
+      const merchantName = normalizeMerchant(txGroup[0].merchant);
+      const isKnown = isKnownSubscription(txGroup[0].merchant) || isKnownSubscription(merchantName);
+      const service = findService(merchantName);
+
+      // Check for amount similarity (within ±10%)
+      const amounts = txGroup.map((t) => t.amount);
+      const avgAmount = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+      const amountConsistent = amounts.every((a) => Math.abs(a - avgAmount) / avgAmount <= 0.1);
+
+      // Check periodicity
       let cycle: "monthly" | "yearly" | "unknown" = "unknown";
-      if (sorted.length >= 2) {
+      if (txGroup.length >= 2) {
+        const sorted = [...txGroup].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const gaps: number[] = [];
         for (let i = 1; i < sorted.length; i++) {
           gaps.push((new Date(sorted[i].date).getTime() - new Date(sorted[i - 1].date).getTime()) / (1000 * 60 * 60 * 24));
@@ -128,21 +161,55 @@ const CSVImport = () => {
         else if (avgGap >= 340 && avgGap <= 395) cycle = "yearly";
       }
 
-      const merchantName = normalizeMerchant(txGroup[0].merchant);
-      const service = findService(merchantName);
+      // Determine confidence
+      let confidence: "high" | "medium" | "low" = "low";
 
-      results.push({
-        merchant: service?.name ?? merchantName,
-        amount: Math.round(avgAmount * 100) / 100,
-        count: txGroup.length,
-        cycle,
-        serviceName: service?.name ?? null,
-        category: service?.category ?? detectCategory(merchantName),
-        selected: true,
-      });
+      if (isKnown || service) {
+        // Known service → high if recurring, medium if single
+        if (txGroup.length >= 2 && amountConsistent && cycle !== "unknown") {
+          confidence = "high";
+        } else if (txGroup.length >= 2 && amountConsistent) {
+          confidence = "high";
+        } else {
+          confidence = "medium";
+        }
+      } else if (txGroup.length >= 2 && amountConsistent && cycle !== "unknown") {
+        // Unknown service but recurring pattern
+        confidence = "medium";
+      } else if (txGroup.length >= 3 && amountConsistent) {
+        // Many occurrences with same amount
+        confidence = "medium";
+      }
+
+      // Only include as subscription if confidence > low
+      if (confidence !== "low") {
+        matchedKeys.add(key);
+        subs.push({
+          merchant: service?.name ?? merchantName,
+          amount: Math.round(avgAmount * 100) / 100,
+          count: txGroup.length,
+          cycle,
+          serviceName: service?.name ?? null,
+          category: service?.category ?? detectCategory(merchantName),
+          selected: confidence === "high",
+          confidence,
+        });
+      }
     });
 
-    return results.sort((a, b) => b.count - a.count);
+    // Everything else is "other transactions"
+    const other = txs.filter((tx) => {
+      const key = normalizeMerchant(tx.merchant).toLowerCase();
+      return !matchedKeys.has(key);
+    });
+
+    // Sort: high confidence first, then medium
+    subs.sort((a, b) => {
+      const order = { high: 0, medium: 1, low: 2 };
+      return order[a.confidence] - order[b.confidence] || b.count - a.count;
+    });
+
+    return { subs, other };
   }, []);
 
   const parseRows = useCallback((rows: Record<string, string>[], mapping: ColumnMapping): ParsedTransaction[] => {
@@ -153,7 +220,7 @@ const CSVImport = () => {
       const amountVal = row[mapping.amount] || "";
       if (!dateVal || !merchantVal || !amountVal) continue;
 
-      const rawAmount = amountVal.replace(/[€$£,]/g, "").replace(",", ".").trim();
+      const rawAmount = amountVal.replace(/[€$£zł,\s]/g, "").replace(",", ".").trim();
       const amount = Math.abs(parseFloat(rawAmount));
       if (isNaN(amount) || amount === 0) continue;
 
@@ -192,7 +259,11 @@ const CSVImport = () => {
       }
 
       const text = await file.text();
-      const result = Papa.parse(text, { header: true, skipEmptyLines: true, transformHeader: (h: string) => h.trim() });
+      // Try semicolon delimiter first (common in EU), then comma
+      let result = Papa.parse(text, { header: true, skipEmptyLines: true, transformHeader: (h: string) => h.trim(), delimiter: ";" });
+      if (!result.meta.fields || result.meta.fields.length <= 1) {
+        result = Papa.parse(text, { header: true, skipEmptyLines: true, transformHeader: (h: string) => h.trim() });
+      }
 
       if (result.data.length === 0) {
         toast({ title: "Empty file", description: "No data rows found in this file.", variant: "destructive" });
@@ -222,11 +293,12 @@ const CSVImport = () => {
       }
 
       setParsed(transactions);
-      const det = detectRecurring(transactions);
-      setDetected(det);
+      const { subs, other } = detectSubscriptions(transactions);
+      setDetected(subs);
+      setOtherTransactions(other);
       setShowModal(true);
     },
-    [parseRows, detectRecurring]
+    [parseRows, detectSubscriptions]
   );
 
   const applyColumnMapping = () => {
@@ -236,8 +308,9 @@ const CSVImport = () => {
       return;
     }
     setParsed(transactions);
-    const det = detectRecurring(transactions);
-    setDetected(det);
+    const { subs, other } = detectSubscriptions(transactions);
+    setDetected(subs);
+    setOtherTransactions(other);
     setShowColumnMapper(false);
     setShowModal(true);
   };
@@ -309,7 +382,7 @@ const CSVImport = () => {
 
   const resetAll = () => {
     setShowModal(false); setShowColumnMapper(false);
-    setParsed([]); setDetected([]); setRawRows([]); setRawHeaders([]);
+    setParsed([]); setDetected([]); setOtherTransactions([]); setRawRows([]); setRawHeaders([]);
   };
 
   return (
@@ -322,7 +395,6 @@ const CSVImport = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Column Mapper */}
           {showColumnMapper && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -374,7 +446,6 @@ const CSVImport = () => {
             </div>
           )}
 
-          {/* Upload Area */}
           {!showColumnMapper && (
             <>
               <div
@@ -396,7 +467,7 @@ const CSVImport = () => {
               <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">
-                  Supports European bank formats (ES, FR, IT, DE). We auto-detect recurring subscriptions. If columns aren't detected, you can map them manually.
+                  Smart detection: only recurring payments are flagged as subscriptions. One-time purchases are kept as regular transactions.
                 </p>
               </div>
             </>
@@ -408,6 +479,7 @@ const CSVImport = () => {
         open={showModal}
         onOpenChange={(open) => { if (!open) resetAll(); setShowModal(open); }}
         detected={detected}
+        otherTransactions={otherTransactions}
         onToggle={toggleDetected}
         onSelectAll={selectAll}
         onUpdateCycle={updateCycle}

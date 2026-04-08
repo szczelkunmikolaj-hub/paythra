@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit2, Trash2 } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 import type { Subscription } from "@/hooks/useSubscriptions";
 import SubscriptionIcon from "./SubscriptionIcon";
 
@@ -12,6 +14,7 @@ interface SubscriptionCardProps {
 }
 
 const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionCardProps) => {
+  const { i18n } = useTranslation();
   const daysUntilBilling = Math.ceil(
     (new Date(sub.next_billing_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
@@ -37,13 +40,13 @@ const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionC
             <span>
               Next: {daysUntilBilling <= 0
                 ? "Due today"
-                : new Date(sub.next_billing_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                : new Date(sub.next_billing_date).toLocaleDateString(i18n.language, { month: "short", day: "numeric" })}
             </span>
           </div>
         </div>
 
         <div className="text-right shrink-0">
-          <div className="text-lg font-bold text-foreground">€{sub.price.toFixed(2)}</div>
+          <div className="text-lg font-bold text-foreground">{formatCurrency(sub.price, i18n.language)}</div>
           <div className="text-xs text-muted-foreground">/{sub.billing_cycle === "monthly" ? "mo" : "yr"}</div>
         </div>
 

@@ -9,7 +9,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative overflow-hidden bg-gradient-hero pt-32 pb-20">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(252,85%,60%,0.03)_1px,transparent_1px),linear-gradient(to_bottom,hsl(252,85%,60%,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(220,100%,50%,0.03)_1px,transparent_1px),linear-gradient(to_bottom,hsl(220,100%,50%,0.03)_1px,transparent_1px)] bg-[size:64px_64px]" />
       <div className="container relative mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
