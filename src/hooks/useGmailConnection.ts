@@ -28,12 +28,12 @@ export const useGmailConnection = () => {
     queryKey: ["gmail_connection", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("gmail_connections" as any)
+        .from("gmail_connections")
         .select("id, user_id, email, connected_at, last_scan_at")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return (data as unknown) as GmailConnection | null;
+      return data as GmailConnection | null;
     },
     enabled: !!user,
   });
@@ -94,10 +94,12 @@ export const useGmailConnection = () => {
     );
     const clientId = "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
     const scope = encodeURIComponent("https://www.googleapis.com/auth/gmail.readonly");
-    const origin = encodeURIComponent(window.location.origin);
+    // Encode both user_id and origin in state since Google doesn't forward custom params
+    const statePayload = btoa(JSON.stringify({ userId: user.id, origin: window.location.origin }));
+    const encodedState = encodeURIComponent(statePayload);
 
     const authUrl =
-      `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${user.id}&origin=${origin}`;
+      `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent&state=${encodedState}`;
 
     window.location.href = authUrl;
   };
