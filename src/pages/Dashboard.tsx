@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatCurrency } from "@/lib/currency";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
@@ -41,6 +42,7 @@ const Dashboard = () => {
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "there";
+  const lang = i18n.language;
 
   const sendTestNotification = async () => {
     if (!user) return;
@@ -116,7 +118,7 @@ const Dashboard = () => {
                     <div className="rounded-xl bg-primary/10 p-3"><CreditCard className="h-6 w-6 text-primary" /></div>
                     <div>
                       <p className="text-xs text-muted-foreground">{t("monthlySpend")}</p>
-                      <p className="text-2xl font-bold text-foreground">€{monthly.toFixed(2)}</p>
+                      <p className="text-2xl font-bold text-foreground">{formatCurrency(monthly, lang)}</p>
                     </div>
                   </CardContent>
                 </Card>

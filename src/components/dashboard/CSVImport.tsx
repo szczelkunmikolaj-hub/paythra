@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, AlertCircle, Check, X, Columns, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, FileText, AlertCircle, Check, X, Columns } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { findService } from "@/lib/serviceRegistry";
