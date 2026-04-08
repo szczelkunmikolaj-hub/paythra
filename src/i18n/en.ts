@@ -9,6 +9,16 @@ const en = {
   or: "or",
   back: "Back",
   loading: "Loading...",
+  cancel: "Cancel",
+  confirm: "Confirm",
+  save: "Save",
+  delete: "Delete",
+  edit: "Edit",
+  close: "Close",
+  monthly: "Monthly",
+  yearly: "Yearly",
+  perMonth: "/mo",
+  perYear: "/yr",
 
   // Landing - Hero
   heroChip: "Smart subscription management",
@@ -200,6 +210,17 @@ const en = {
   connectAccounts: "Connect Accounts",
   connectDesc: "Link your bank or payment services to auto-detect subscriptions.",
   comingSoon: "Coming soon",
+  connectYourAccounts: "Connect Your Accounts",
+  connectAccountsDesc: "Automatically detect subscriptions from your connected accounts.",
+  connectItem: "Connect {{name}}",
+  detectApple: "Detect App Store & iCloud subscriptions.",
+  detectGoogle: "Detect Play Store & YouTube subscriptions.",
+  detectMicrosoft: "Detect Microsoft 365, Xbox & more.",
+  detectOpenBanking: "Detect subscriptions from your bank.",
+  comingSoonTitle: "Coming Soon",
+  comingSoonDesc: "Future versions of Paythra will automatically detect subscriptions from connected accounts using secure integrations.",
+  gotIt: "Got it",
+  soon: "Soon",
 
   // 404
   pageNotFound: "Oops! Page not found",
@@ -278,6 +299,116 @@ const en = {
   autoDetectPremium: "Auto-Detection is a Premium Feature",
   autoDetectPremiumDesc: "Upgrade to Premium or Business to automatically detect subscriptions from your Gmail inbox.",
   premiumFeature: "Premium Feature",
+
+  // Subscription Form
+  editSubscription: "Edit Subscription",
+  service: "Service",
+  searchServicesPlaceholder: "Search services (e.g. Spotify, Netflix...)",
+  country: "Country",
+  selectCountry: "Select your country",
+  plan: "Plan",
+  enterCustomPrice: "Enter custom price",
+  price: "Price",
+  billingCycle: "Billing Cycle",
+  categoryLabel: "Category",
+  categoryNamePlaceholder: "Category name",
+  addCategory: "Add",
+  addCustomCategory: "Add custom category",
+  startDate: "Start Date",
+  freeTrial: "Free Trial",
+  trialEndDate: "Trial End Date",
+  update: "Update",
+
+  // Subscription Card
+  trial: "Trial",
+  unused: "Unused",
+  next: "Next",
+  dueToday: "Due today",
+
+  // Health Score
+  subscriptionHealth: "Subscription Health",
+  healthTooltip: "Based on income ratio, subscription count, and unused service detection.",
+  healthy: "Healthy",
+  needsAttention: "Needs Attention",
+  atRisk: "At Risk",
+  healthSpendWarning: "⚠ You spend {{pct}}% of your income on subscriptions. Recommended: under 10%.",
+  healthSpendOk: "✓ Subscription spending is {{pct}}% of income (under 10%).",
+  healthSubsWarning: "⚠ You have {{count}} active subscriptions (recommended: ≤10).",
+  healthSubsOk: "✓ {{count}} active subscriptions (within recommended limit).",
+  healthUnusedWarning: "⚠ {{count}} unused subscription(s) detected.",
+
+  // Overload Index
+  overloadIndex: "Overload Index",
+  recommended: "recommended",
+  overloadWarning: "You have more subscriptions than recommended. Consider consolidating.",
+
+  // Savings Panel
+  savingsOpportunities: "Savings Opportunities",
+  noSavingsDetected: "No savings opportunities detected. Your subscriptions look optimized!",
+  saveUpTo: "Save up to {{amount}}/year",
+
+  // Trial Countdown
+  expired: "Expired",
+  daysLeft: "{{count}}d left",
+
+  // Spending Chart
+  monthlySpending: "Monthly Spending",
+  addSubsToSeeData: "Add subscriptions to see spending data",
+
+  // Category Chart
+  spendingByService: "Spending by Service",
+  noSubDataYet: "No subscription data yet",
+
+  // Forecast Chart
+  spendingForecast: "12-Month Spending Forecast",
+  projectedYearly: "Projected yearly",
+
+  // CSV Import
+  importBankTransactions: "Import Bank Transactions",
+  mapYourColumns: "Map your columns",
+  applyContinue: "Apply & Continue",
+  dropBankStatement: "Drop your bank statement here",
+  supportedFormats: "CSV, XLSX, OFX, QIF supported",
+  chooseFile: "Choose File",
+  smartDetectionHint: "Smart detection: only recurring payments are flagged as subscriptions. One-time purchases are kept as regular transactions.",
+  unsupportedFormat: "Unsupported format",
+  supportedFormatsList: "Supported: CSV, TXT, XLSX, OFX, QIF",
+  fileTooLarge: "File too large",
+  maxFileSize: "Maximum file size is 10MB.",
+  emptyFile: "Empty file",
+  noDataRows: "No data rows found in this file.",
+  autoDetectionZeroRows: "Auto-detection found 0 rows",
+  mapColumnsManually: "Please map columns manually.",
+  noValidRows: "No valid rows",
+  checkColumnMapping: "Check your column mapping and try again.",
+  dateColumn: "Date Column",
+  merchantColumn: "Merchant Column",
+  amountColumn: "Amount Column",
+  importedTransactions: "Imported {{count}} transactions",
+  addedSubscriptions: "Added {{count}} subscriptions.",
+  importFailed: "Import failed",
+
+  // Import Confirm Modal
+  importResults: "Import Results",
+  foundTransactions: "Found {{count}} transactions.",
+  lookLikeSubscriptions: "{{count}} look like subscriptions.",
+  noSubscriptionsDetected: "No subscriptions detected.",
+  regularTransactions: "{{count}} are regular transactions.",
+  detectedSubscriptionsLabel: "Detected Subscriptions",
+  uncertainConfirm: "Uncertain — Confirm with toggle",
+  noRecurringDetected: "No recurring subscriptions detected in this file.",
+  allTransactionsRegular: "All {{count}} transactions will be imported as regular transactions.",
+  otherTransactionsLabel: "Other transactions",
+  notSubscriptions: "not subscriptions",
+  selectedOfTotal: "{{selected}} of {{total}} selected",
+  selectAll: "Select all",
+  importing: "Importing...",
+  importTxnsAndSubs: "Import {{txns}} txns + {{subs}} subs",
+  importTransactions: "Import {{count}} transactions",
+  confirmed: "confirmed",
+  uncertain: "uncertain",
+  charges: "charges",
+  cyclePlaceholder: "Cycle?",
 };
 
 export default en;
