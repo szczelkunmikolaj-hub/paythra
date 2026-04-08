@@ -1,5 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, TrendingUp, Zap, AlertTriangle } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 import type { Subscription } from "@/hooks/useSubscriptions";
 
 interface StatsCardsProps {
@@ -7,14 +9,16 @@ interface StatsCardsProps {
 }
 
 const StatsCards = ({ subscriptions }: StatsCardsProps) => {
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
   const yearly = monthly * 12;
   const unused = active.filter((s) => s.is_unused).length;
 
   const stats = [
-    { title: "Monthly Cost", value: `€${monthly.toFixed(2)}`, icon: CreditCard, color: "text-primary" },
-    { title: "Yearly Cost", value: `€${yearly.toFixed(2)}`, icon: TrendingUp, color: "text-accent-foreground" },
+    { title: "Monthly Cost", value: formatCurrency(monthly, lang), icon: CreditCard, color: "text-primary" },
+    { title: "Yearly Cost", value: formatCurrency(yearly, lang), icon: TrendingUp, color: "text-accent-foreground" },
     { title: "Active Subscriptions", value: active.length.toString(), icon: Zap, color: "text-primary" },
     { title: "Unused Alerts", value: unused.toString(), icon: AlertTriangle, color: "text-destructive" },
   ];
