@@ -409,6 +409,27 @@ const en = {
   uncertain: "uncertain",
   charges: "charges",
   cyclePlaceholder: "Cycle?",
+
+  // Demo
+  demoIntroTitle: "Manage all your subscriptions in one place.",
+  demoIntroSubtitle: "Track, detect, and optimize your recurring spending effortlessly.",
+  demoDashboardTitle: "Your complete subscription overview.",
+  demoDashboardSubtitle: "Get a clear picture of your monthly subscriptions instantly.",
+  demoTrackingTitle: "Track every subscription with full control.",
+  demoTrackingSubtitle: "Edit pricing, billing dates, and categories anytime.",
+  demoImportTitle: "Import bank transactions to detect payments.",
+  demoImportSubtitle: "Our system identifies potential subscriptions using smart filtering and repetition logic.",
+  demoAutoDetectTitle: "Automatic subscription detection (coming soon)",
+  demoAutoDetectSubtitle: "Securely connect your email to automatically detect subscriptions from receipts and invoices.",
+  demoCurrencyTitle: "See subscriptions in your local currency.",
+  demoCurrencySubtitle: "Prices are automatically converted based on your country.",
+  demoLanguageTitle: "Built for global users.",
+  demoLanguageSubtitle: "Supports multiple languages and currencies seamlessly.",
+  demoInsightsTitle: "Understand where your money goes.",
+  demoInsightsSubtitle: "Track, analyze, and optimize your subscriptions.",
+  demoCTATitle: "Start saving money today.",
+  demoCTASubtitle: "Join thousands of users taking control of their subscriptions.",
+  demoExitDemo: "Exit Demo",
 };
 
 export default en;

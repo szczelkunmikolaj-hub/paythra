@@ -375,6 +375,26 @@ const de = {
   uncertain: "unsicher",
   charges: "Gebühren",
   cyclePlaceholder: "Zyklus?",
+
+  demoIntroTitle: "Verwalte alle Abonnements an einem Ort.",
+  demoIntroSubtitle: "Verfolge, erkenne und optimiere deine wiederkehrenden Ausgaben.",
+  demoDashboardTitle: "Dein kompletter Abonnement-Überblick.",
+  demoDashboardSubtitle: "Erhalte sofort ein klares Bild deiner monatlichen Abonnements.",
+  demoTrackingTitle: "Verfolge jedes Abonnement mit voller Kontrolle.",
+  demoTrackingSubtitle: "Bearbeite Preise, Abrechnungsdaten und Kategorien jederzeit.",
+  demoImportTitle: "Importiere Banktransaktionen zur Erkennung.",
+  demoImportSubtitle: "Unser System erkennt Abonnements durch intelligentes Filtern.",
+  demoAutoDetectTitle: "Automatische Abonnement-Erkennung (bald verfügbar)",
+  demoAutoDetectSubtitle: "Verbinde deine E-Mail, um Abonnements automatisch zu erkennen.",
+  demoCurrencyTitle: "Abonnements in deiner Landeswährung anzeigen.",
+  demoCurrencySubtitle: "Preise werden automatisch basierend auf deinem Land umgerechnet.",
+  demoLanguageTitle: "Für globale Nutzer entwickelt.",
+  demoLanguageSubtitle: "Unterstützt mehrere Sprachen und Währungen.",
+  demoInsightsTitle: "Verstehe, wohin dein Geld fließt.",
+  demoInsightsSubtitle: "Analysiere und optimiere deine Abonnements.",
+  demoCTATitle: "Fang heute an zu sparen.",
+  demoCTASubtitle: "Schließe dich tausenden Nutzern an, die ihre Abonnements kontrollieren.",
+  demoExitDemo: "Demo beenden",
 };
 
 export default de;

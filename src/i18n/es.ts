@@ -1,4 +1,4 @@
-const es = {
+const es: Record<string, string> = {
   features: "Funcionalidades",
   stats: "Estadísticas",
   logIn: "Iniciar sesión",
@@ -375,6 +375,26 @@ const es = {
   uncertain: "incierto",
   charges: "cargos",
   cyclePlaceholder: "¿Ciclo?",
+
+  demoIntroTitle: "Gestiona todas tus suscripciones en un solo lugar.",
+  demoIntroSubtitle: "Rastrea, detecta y optimiza tus gastos recurrentes sin esfuerzo.",
+  demoDashboardTitle: "Tu resumen completo de suscripciones.",
+  demoDashboardSubtitle: "Obtén una imagen clara de tus suscripciones mensuales al instante.",
+  demoTrackingTitle: "Controla cada suscripción con total libertad.",
+  demoTrackingSubtitle: "Edita precios, fechas de facturación y categorías en cualquier momento.",
+  demoImportTitle: "Importa transacciones bancarias para detectar pagos.",
+  demoImportSubtitle: "Nuestro sistema identifica suscripciones potenciales con filtrado inteligente.",
+  demoAutoDetectTitle: "Detección automática de suscripciones (próximamente)",
+  demoAutoDetectSubtitle: "Conecta tu email para detectar suscripciones automáticamente.",
+  demoCurrencyTitle: "Ve tus suscripciones en tu moneda local.",
+  demoCurrencySubtitle: "Los precios se convierten automáticamente según tu país.",
+  demoLanguageTitle: "Diseñado para usuarios globales.",
+  demoLanguageSubtitle: "Compatible con múltiples idiomas y monedas.",
+  demoInsightsTitle: "Entiende a dónde va tu dinero.",
+  demoInsightsSubtitle: "Analiza y optimiza tus suscripciones.",
+  demoCTATitle: "Empieza a ahorrar dinero hoy.",
+  demoCTASubtitle: "Únete a miles de usuarios que controlan sus suscripciones.",
+  demoExitDemo: "Salir de la demo",
 };
 
 export default es;

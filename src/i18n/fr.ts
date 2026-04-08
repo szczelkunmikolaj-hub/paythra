@@ -375,6 +375,26 @@ const fr = {
   uncertain: "incertain",
   charges: "frais",
   cyclePlaceholder: "Cycle ?",
+
+  demoIntroTitle: "Gérez tous vos abonnements en un seul endroit.",
+  demoIntroSubtitle: "Suivez, détectez et optimisez vos dépenses récurrentes.",
+  demoDashboardTitle: "Votre aperçu complet des abonnements.",
+  demoDashboardSubtitle: "Obtenez une image claire de vos abonnements mensuels.",
+  demoTrackingTitle: "Suivez chaque abonnement avec un contrôle total.",
+  demoTrackingSubtitle: "Modifiez les prix, dates de facturation et catégories à tout moment.",
+  demoImportTitle: "Importez vos transactions bancaires.",
+  demoImportSubtitle: "Notre système identifie les abonnements grâce à un filtrage intelligent.",
+  demoAutoDetectTitle: "Détection automatique (bientôt disponible)",
+  demoAutoDetectSubtitle: "Connectez votre email pour détecter automatiquement vos abonnements.",
+  demoCurrencyTitle: "Abonnements dans votre devise locale.",
+  demoCurrencySubtitle: "Les prix sont automatiquement convertis selon votre pays.",
+  demoLanguageTitle: "Conçu pour les utilisateurs du monde entier.",
+  demoLanguageSubtitle: "Prise en charge de plusieurs langues et devises.",
+  demoInsightsTitle: "Comprenez où va votre argent.",
+  demoInsightsSubtitle: "Analysez et optimisez vos abonnements.",
+  demoCTATitle: "Commencez à économiser dès aujourd'hui.",
+  demoCTASubtitle: "Rejoignez des milliers d'utilisateurs qui contrôlent leurs abonnements.",
+  demoExitDemo: "Quitter la démo",
 };
 
 export default fr;

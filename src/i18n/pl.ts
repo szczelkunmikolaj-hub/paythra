@@ -375,6 +375,26 @@ const pl = {
   uncertain: "niepewne",
   charges: "opłat",
   cyclePlaceholder: "Cykl?",
+
+  demoIntroTitle: "Zarządzaj wszystkimi subskrypcjami w jednym miejscu.",
+  demoIntroSubtitle: "Śledź, wykrywaj i optymalizuj swoje wydatki cykliczne.",
+  demoDashboardTitle: "Kompletny przegląd Twoich subskrypcji.",
+  demoDashboardSubtitle: "Uzyskaj jasny obraz swoich miesięcznych subskrypcji.",
+  demoTrackingTitle: "Śledź każdą subskrypcję z pełną kontrolą.",
+  demoTrackingSubtitle: "Edytuj ceny, daty rozliczeń i kategorie w dowolnym momencie.",
+  demoImportTitle: "Importuj transakcje bankowe, by wykryć płatności.",
+  demoImportSubtitle: "Nasz system identyfikuje subskrypcje za pomocą inteligentnego filtrowania.",
+  demoAutoDetectTitle: "Automatyczne wykrywanie subskrypcji (wkrótce)",
+  demoAutoDetectSubtitle: "Połącz email, aby automatycznie wykrywać subskrypcje.",
+  demoCurrencyTitle: "Zobacz subskrypcje w swojej walucie.",
+  demoCurrencySubtitle: "Ceny są automatycznie przeliczane na podstawie kraju.",
+  demoLanguageTitle: "Stworzony dla użytkowników z całego świata.",
+  demoLanguageSubtitle: "Obsługuje wiele języków i walut.",
+  demoInsightsTitle: "Zrozum, na co wydajesz pieniądze.",
+  demoInsightsSubtitle: "Analizuj i optymalizuj swoje subskrypcje.",
+  demoCTATitle: "Zacznij oszczędzać już dziś.",
+  demoCTASubtitle: "Dołącz do tysięcy użytkowników kontrolujących swoje subskrypcje.",
+  demoExitDemo: "Wyjdź z demo",
 };
 
 export default pl;
