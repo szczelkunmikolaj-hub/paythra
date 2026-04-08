@@ -64,30 +64,6 @@ const SubRow = ({
   </motion.div>
 );
 
-/* ───── animated counter ───── */
-const AnimatedNumber = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) => {
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    let frame: number;
-    const start = performance.now();
-    const duration = 1200;
-    const animate = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(eased * value));
-      if (progress < 1) frame = requestAnimationFrame(animate);
-    };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [value]);
-  return (
-    <span>
-      {prefix}
-      {display.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      {suffix}
-    </span>
-  );
-};
 
 /* ───── main component ───── */
 
