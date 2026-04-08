@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,7 @@ interface SubscriptionFormProps {
 }
 
 const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: SubscriptionFormProps) => {
+  const { t } = useTranslation();
   const { categories, addCategory } = useUserCategories();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
