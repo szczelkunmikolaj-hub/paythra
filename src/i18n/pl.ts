@@ -172,7 +172,7 @@ const pl = {
   joined: "Dołączono",
   intelligenceSettings: "Ustawienia Inteligentne",
   intelligenceDesc: "Skonfiguruj swój profil, aby odblokować spersonalizowane analizy i rekomendacje oszczędności.",
-  monthlyIncome: "Dochód Miesięczny (zł) — opcjonalnie",
+  monthlyIncome: "Dochód Miesięczny — opcjonalnie",
   incomeHelp: "Używane do obliczenia wyniku zdrowia subskrypcji. Nigdy nie udostępniane.",
   imStudent: "Jestem studentem",
   studentHelp: "Włącz, aby zobaczyć rekomendacje zniżek studenckich.",

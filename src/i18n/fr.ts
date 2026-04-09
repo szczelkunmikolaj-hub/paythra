@@ -172,7 +172,7 @@ const fr = {
   joined: "Inscrit",
   intelligenceSettings: "Paramètres Intelligents",
   intelligenceDesc: "Configurez votre profil pour des analyses personnalisées et des recommandations d'économies.",
-  monthlyIncome: "Revenu Mensuel (€) — optionnel",
+  monthlyIncome: "Revenu Mensuel — optionnel",
   incomeHelp: "Utilisé pour calculer votre score de santé d'abonnements. Jamais partagé.",
   imStudent: "Je suis étudiant(e)",
   studentHelp: "Activez pour voir les réductions étudiantes.",

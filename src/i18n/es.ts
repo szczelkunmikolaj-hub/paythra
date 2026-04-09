@@ -172,7 +172,7 @@ const es: Record<string, string> = {
   joined: "Registrado",
   intelligenceSettings: "Configuración Inteligente",
   intelligenceDesc: "Configura tu perfil para desbloquear análisis personalizados y recomendaciones de ahorro.",
-  monthlyIncome: "Ingreso Mensual (€) — opcional",
+  monthlyIncome: "Ingreso Mensual — opcional",
   incomeHelp: "Usado para calcular tu puntuación de salud de suscripciones. Nunca compartido.",
   imStudent: "Soy estudiante",
   studentHelp: "Activa para ver recomendaciones de descuentos para estudiantes.",
