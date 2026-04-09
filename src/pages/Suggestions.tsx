@@ -7,7 +7,7 @@ import { useServicePricing } from "@/hooks/useServicePricing";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscriptionIntelligence } from "@/hooks/useSubscriptionIntelligence";
 import { formatCurrency } from "@/lib/currency";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,9 +17,11 @@ import {
   CheckCircle2, AlertTriangle, Eye, GraduationCap, Users, Info, Sparkles,
 } from "lucide-react";
 
+import type { Easing } from "framer-motion";
+
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4, ease: "easeOut" } }),
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4, ease: "easeOut" as Easing } }),
 };
 
 const Suggestions = () => {
@@ -29,7 +31,7 @@ const Suggestions = () => {
   const { services } = useServicePricing();
   const { profile } = useProfile();
 
-  const { insights, totalSavings, monthlySpend } = useSubscriptionIntelligence({
+  const { insights, totalSavings } = useSubscriptionIntelligence({
     subscriptions,
     services,
     isStudent: profile?.is_student ?? false,

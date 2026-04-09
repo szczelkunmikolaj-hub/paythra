@@ -438,6 +438,33 @@ const en = {
   demoCTATitle: "Start saving money today.",
   demoCTASubtitle: "Join thousands of users taking control of their subscriptions.",
   demoExitDemo: "Exit Demo",
+
+  // Suggestions
+  suggestions: "Suggestions",
+  suggestionsTitle: "Smart Suggestions",
+  suggestionsSubtitle: "Actionable insights to optimize your subscriptions and save money.",
+  suggestionsTotalSavings: "Potential Savings",
+  suggestionsActionable: "Actionable Items",
+  suggestionsSavingsSection: "Possible Savings",
+  suggestionsAISection: "AI Suggestions",
+  suggestionsTimeSection: "Time Machine Insights",
+  suggestionsOptimized: "Already optimized",
+  suggestionsNoAI: "No AI suggestions right now — your subscriptions look well optimized!",
+  suggestionsNoTime: "No time machine insights available yet.",
+  suggestionsAIStreamingTitle: "Streaming Bundle Check",
+  suggestionsAIStreamingMsg: "You have {{count}} streaming subscriptions totaling {{total}}/mo. Are they all worth it?",
+  suggestionsAIPauseTitle: "Consider Pausing",
+  suggestionsAIPauseMsg: "You could pause {{name}} for one month and save {{amount}}.",
+  suggestionsAIUnusedTitle: "Are You Using This?",
+  suggestionsAIUnusedMsg: "{{name}} appears unused. Could this money be used elsewhere?",
+  suggestionsAIConsolidateTitle: "Too Many in One Category",
+  suggestionsAIConsolidateMsg: "You have {{count}} {{category}} subscriptions. Consider consolidating.",
+  suggestionsTimePastTitle: "Missed Savings",
+  suggestionsTimePastMsg: "If you had canceled {{name}} 6 months ago, you would have saved {{amount}}.",
+  suggestionsTimeFutureTitle: "12-Month Projection",
+  suggestionsTimeFutureMsg: "By acting on all suggestions, you could save {{amount}} over the next year.",
+  suggestionsTimeOverlapTitle: "Streaming Overlap",
+  suggestionsTimeOverlapMsg: "Dropping redundant streaming subs could save {{amount}}/year.",
 };
 
 export default en;
