@@ -11,6 +11,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
 import { useUnusedDetection } from "@/hooks/useUnusedDetection";
 import { usePriceChangeDetection } from "@/hooks/usePriceChangeDetection";
+import { useUpcomingChargeNotifications } from "@/hooks/useUpcomingChargeNotifications";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
@@ -38,6 +39,7 @@ const Dashboard = () => {
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
   usePriceChangeDetection(subscriptions);
+  useUpcomingChargeNotifications(subscriptions);
 
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
