@@ -1,10 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
+import { formatCurrency, formatCurrencyRaw, convertFromEUR } from "@/lib/currency";
 import type { Subscription } from "@/hooks/useSubscriptions";
 
 interface ForecastChartProps {
@@ -12,50 +10,46 @@ interface ForecastChartProps {
 }
 
 const ForecastChart = ({ subscriptions }: ForecastChartProps) => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const active = subscriptions.filter((s) => s.status === "active");
   const monthlyBase = active.reduce(
     (sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12),
     0
   );
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-  ];
-
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const now = new Date();
   const data = [];
   let cumulative = 0;
 
   for (let i = 0; i < 12; i++) {
     const monthIdx = (now.getMonth() + i) % 12;
-    // Check for yearly subs in this month
     const yearlyThisMonth = active
-      .filter((s) => {
-        if (s.billing_cycle !== "yearly") return false;
-        const next = new Date(s.next_billing_date);
-        return next.getMonth() === monthIdx;
-      })
+      .filter((s) => s.billing_cycle === "yearly" && new Date(s.next_billing_date).getMonth() === monthIdx)
       .reduce((sum, s) => sum + s.price, 0);
 
-    cumulative += monthlyBase + yearlyThisMonth;
+    const totalEUR = monthlyBase + yearlyThisMonth;
+    cumulative += totalEUR;
 
     data.push({
       month: months[monthIdx],
-      spending: Math.round(monthlyBase + yearlyThisMonth),
-      cumulative: Math.round(cumulative),
+      spending: Math.round(convertFromEUR(totalEUR, lang)),
+      cumulative: Math.round(convertFromEUR(cumulative, lang)),
     });
   }
 
   const chartConfig = {
-    spending: { label: "Monthly", color: "hsl(var(--primary))" },
+    spending: { label: t("monthly"), color: "hsl(var(--primary))" },
     cumulative: { label: "Cumulative", color: "hsl(252, 85%, 75%)" },
   };
+
+  const symbol = formatCurrency(0, lang).replace(/[\d.,\s]/g, "").trim();
 
   return (
     <Card className="shadow-card">
       <CardHeader>
-        <CardTitle className="font-display text-lg">12-Month Spending Forecast</CardTitle>
+        <CardTitle className="font-display text-lg">{t("spendingForecast")}</CardTitle>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
@@ -67,20 +61,13 @@ const ForecastChart = ({ subscriptions }: ForecastChartProps) => {
               </linearGradient>
             </defs>
             <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `€${v}`} />
+            <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(v) => `${symbol}${v}`} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Area
-              type="monotone"
-              dataKey="spending"
-              stroke="hsl(var(--primary))"
-              fillOpacity={1}
-              fill="url(#colorSpending)"
-              strokeWidth={2}
-            />
+            <Area type="monotone" dataKey="spending" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorSpending)" strokeWidth={2} />
           </AreaChart>
         </ChartContainer>
         <p className="mt-3 text-center text-sm text-muted-foreground">
-          Projected yearly: <strong className="text-foreground">€{data[data.length - 1]?.cumulative ?? 0}</strong>
+          {t("projectedYearly")}: <strong className="text-foreground">{formatCurrencyRaw(data[data.length - 1]?.cumulative ?? 0, lang)}</strong>
         </p>
       </CardContent>
     </Card>

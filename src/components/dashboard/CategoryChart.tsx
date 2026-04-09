@@ -1,26 +1,24 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { formatCurrency, convertFromEUR } from "@/lib/currency";
 import type { Subscription } from "@/hooks/useSubscriptions";
 import { getServiceColor } from "@/lib/serviceRegistry";
 
 const FALLBACK_COLORS = [
-  "hsl(252, 85%, 60%)",
-  "hsl(270, 95%, 65%)",
-  "hsl(200, 80%, 55%)",
-  "hsl(150, 60%, 50%)",
-  "hsl(30, 80%, 55%)",
-  "hsl(340, 75%, 55%)",
-  "hsl(180, 60%, 45%)",
-  "hsl(60, 70%, 50%)",
+  "hsl(252, 85%, 60%)", "hsl(270, 95%, 65%)", "hsl(200, 80%, 55%)",
+  "hsl(150, 60%, 50%)", "hsl(30, 80%, 55%)", "hsl(340, 75%, 55%)",
+  "hsl(180, 60%, 45%)", "hsl(60, 70%, 50%)",
 ];
 
 const CategoryChart = ({ subscriptions }: { subscriptions: Subscription[] }) => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const active = subscriptions.filter((s) => s.status === "active");
 
-  // Group by service name for service-level pie chart
   const serviceData = active.map((s) => ({
     name: s.name,
-    value: Math.round((s.billing_cycle === "monthly" ? s.price : s.price / 12) * 100) / 100,
+    value: Math.round(convertFromEUR(s.billing_cycle === "monthly" ? s.price : s.price / 12, lang) * 100) / 100,
     color: getServiceColor(s.name),
   }));
 
@@ -29,32 +27,21 @@ const CategoryChart = ({ subscriptions }: { subscriptions: Subscription[] }) => 
   return (
     <Card className="shadow-card">
       <CardHeader>
-        <CardTitle className="font-display text-lg">Spending by Service</CardTitle>
+        <CardTitle className="font-display text-lg">{t("spendingByService")}</CardTitle>
       </CardHeader>
       <CardContent>
         {serviceData.length === 0 ? (
-          <div className="flex h-[200px] items-center justify-center text-muted-foreground">
-            No subscription data yet
-          </div>
+          <div className="flex h-[200px] items-center justify-center text-muted-foreground">{t("noSubDataYet")}</div>
         ) : (
           <div className="flex items-center gap-4">
             <ResponsiveContainer width="50%" height={200}>
               <PieChart>
-                <Pie
-                  data={serviceData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={75}
-                  dataKey="value"
-                  strokeWidth={2}
-                  stroke="hsl(var(--background))"
-                >
+                <Pie data={serviceData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value" strokeWidth={2} stroke="hsl(var(--background))">
                   {serviceData.map((entry, i) => (
                     <Cell key={i} fill={entry.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => `€${value.toFixed(2)}/mo`} />
+                <Tooltip formatter={(value: number) => formatCurrency(value, lang)} />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex-1 space-y-1.5 overflow-hidden">
@@ -62,18 +49,13 @@ const CategoryChart = ({ subscriptions }: { subscriptions: Subscription[] }) => 
                 const pct = totalMonthly > 0 ? ((d.value / totalMonthly) * 100).toFixed(0) : "0";
                 return (
                   <div key={d.name} className="flex items-center gap-2">
-                    <div
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: d.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length] }}
-                    />
+                    <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color || FALLBACK_COLORS[i % FALLBACK_COLORS.length] }} />
                     <span className="text-xs text-foreground truncate flex-1">{d.name}</span>
                     <span className="text-xs text-muted-foreground shrink-0">{pct}%</span>
                   </div>
                 );
               })}
-              {serviceData.length > 6 && (
-                <p className="text-xs text-muted-foreground">+{serviceData.length - 6} more</p>
-              )}
+              {serviceData.length > 6 && <p className="text-xs text-muted-foreground">+{serviceData.length - 6} more</p>}
             </div>
           </div>
         )}

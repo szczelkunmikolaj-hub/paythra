@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 import type { Subscription } from "@/hooks/useSubscriptions";
@@ -7,9 +8,8 @@ interface TrialCountdownProps {
 }
 
 const TrialCountdown = ({ subscriptions }: TrialCountdownProps) => {
-  const trials = subscriptions.filter(
-    (s) => s.is_trial && s.trial_end_date && s.status === "active"
-  );
+  const { t } = useTranslation();
+  const trials = subscriptions.filter((s) => s.is_trial && s.trial_end_date && s.status === "active");
 
   if (trials.length === 0) return null;
 
@@ -18,9 +18,7 @@ const TrialCountdown = ({ subscriptions }: TrialCountdownProps) => {
       {trials.map((trial) => {
         const end = new Date(trial.trial_end_date!);
         const now = new Date();
-        const totalDays = Math.ceil(
-          (end.getTime() - new Date(trial.start_date).getTime()) / (1000 * 60 * 60 * 24)
-        );
+        const totalDays = Math.ceil((end.getTime() - new Date(trial.start_date).getTime()) / (1000 * 60 * 60 * 24));
         const daysLeft = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
         const progress = totalDays > 0 ? Math.max(0, Math.min(100, ((totalDays - daysLeft) / totalDays) * 100)) : 100;
         const isUrgent = daysLeft <= 3;
@@ -35,14 +33,11 @@ const TrialCountdown = ({ subscriptions }: TrialCountdownProps) => {
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-foreground truncate">{trial.name}</p>
                   <span className={`text-xs font-medium ${isUrgent ? "text-destructive" : "text-muted-foreground"}`}>
-                    {daysLeft === 0 ? "Expired" : `${daysLeft}d left`}
+                    {daysLeft === 0 ? t("expired") : t("daysLeft", { count: daysLeft })}
                   </span>
                 </div>
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full rounded-full transition-all ${isUrgent ? "bg-destructive" : "bg-primary"}`}
-                    style={{ width: `${progress}%` }}
-                  />
+                  <div className={`h-full rounded-full transition-all ${isUrgent ? "bg-destructive" : "bg-primary"}`} style={{ width: `${progress}%` }} />
                 </div>
               </div>
             </CardContent>

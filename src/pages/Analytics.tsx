@@ -16,24 +16,19 @@ import { useUserPlan } from "@/hooks/useUserPlan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Target, Lightbulb, CreditCard, AlertTriangle } from "lucide-react";
 import { getCategoryIcon } from "@/lib/categoryIcons";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
-} from "recharts";
+import { formatCurrency, convertFromEUR } from "@/lib/currency";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const Analytics = () => {
   const { subscriptions, isLoading } = useSubscriptions();
   const { services } = useServicePricing();
   const { profile } = useProfile();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { limits } = useUserPlan();
+  const lang = i18n.language;
 
   const { insights, totalSavings, healthScore, activeCount, monthlySpend, yearlyProjected } =
-    useSubscriptionIntelligence({
-      subscriptions,
-      services,
-      isStudent: profile?.is_student ?? false,
-      monthlyIncome: profile?.monthly_income ?? null,
-    });
+    useSubscriptionIntelligence({ subscriptions, services, isStudent: profile?.is_student ?? false, monthlyIncome: profile?.monthly_income ?? null });
 
   const unusedCount = subscriptions.filter((s) => s.is_unused).length;
   const active = subscriptions.filter((s) => s.status === "active");
@@ -48,10 +43,12 @@ const Analytics = () => {
   const categoryBarData = Object.entries(categorySpending)
     .map(([category, amount]) => ({
       category: category.charAt(0).toUpperCase() + category.slice(1),
-      amount: Math.round(amount * 100) / 100,
+      amount: Math.round(convertFromEUR(amount, lang) * 100) / 100,
       fill: getCategoryIcon(category).hexColor,
     }))
     .sort((a, b) => b.amount - a.amount);
+
+  const symbol = formatCurrency(0, lang).replace(/[\d.,\s]/g, "").trim();
 
   return (
     <DashboardLayout>
@@ -70,7 +67,7 @@ const Analytics = () => {
                   <div className="rounded-xl bg-primary/10 p-2"><CreditCard className="h-5 w-5 text-primary" /></div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("monthlySpend")}</p>
-                    <p className="text-2xl font-bold text-foreground">€{monthlySpend.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-foreground">{formatCurrency(monthlySpend, lang)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -79,7 +76,7 @@ const Analytics = () => {
                   <div className="rounded-xl bg-primary/10 p-2"><TrendingUp className="h-5 w-5 text-primary" /></div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("yearlyTotal")}</p>
-                    <p className="text-2xl font-bold text-foreground">€{yearlyProjected.toFixed(0)}</p>
+                    <p className="text-2xl font-bold text-foreground">{formatCurrency(yearlyProjected, lang)}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -111,7 +108,7 @@ const Analytics = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("potentialSavings")}</p>
-                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">€{totalSavings.toFixed(0)}/yr</p>
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalSavings, lang)}/{t("perYear").replace("/", "")}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -132,9 +129,9 @@ const Analytics = () => {
                 <CardContent>
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={categoryBarData} layout="vertical" margin={{ left: 20 }}>
-                      <XAxis type="number" tickFormatter={(v) => `€${v}`} fontSize={12} />
+                      <XAxis type="number" tickFormatter={(v) => `${symbol}${v}`} fontSize={12} />
                       <YAxis type="category" dataKey="category" fontSize={12} width={100} />
-                      <Tooltip formatter={(v: number) => `€${v.toFixed(2)}`} />
+                      <Tooltip formatter={(v: number) => formatCurrency(v, lang)} />
                       <Bar dataKey="amount" radius={[0, 8, 8, 0]}>
                         {categoryBarData.map((entry, i) => (
                           <Cell key={i} fill={entry.fill} />
