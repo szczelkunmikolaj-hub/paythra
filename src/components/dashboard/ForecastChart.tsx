@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, XAxis, YAxis } from "recharts";
-import { formatCurrency, convertFromEUR } from "@/lib/currency";
+import { formatCurrency, formatCurrencyRaw, convertFromEUR } from "@/lib/currency";
 import type { Subscription } from "@/hooks/useSubscriptions";
 
 interface ForecastChartProps {
@@ -67,7 +67,7 @@ const ForecastChart = ({ subscriptions }: ForecastChartProps) => {
           </AreaChart>
         </ChartContainer>
         <p className="mt-3 text-center text-sm text-muted-foreground">
-          {t("projectedYearly")}: <strong className="text-foreground">{formatCurrency(data[data.length - 1]?.cumulative ?? 0, lang)}</strong>
+          {t("projectedYearly")}: <strong className="text-foreground">{formatCurrencyRaw(data[data.length - 1]?.cumulative ?? 0, lang)}</strong>
         </p>
       </CardContent>
     </Card>
