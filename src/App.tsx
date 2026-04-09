@@ -19,6 +19,7 @@ import Calendar from "./pages/Calendar";
 import Secret from "./pages/Secret";
 import Pricing from "./pages/Pricing";
 import Demo from "./pages/Demo";
+import Suggestions from "./pages/Suggestions";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/subscriptions" element={<ProtectedRoute><Subscriptions /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+            <Route path="/suggestions" element={<ProtectedRoute><Suggestions /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
