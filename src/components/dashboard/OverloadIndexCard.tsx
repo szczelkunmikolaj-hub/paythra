@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gauge } from "lucide-react";
 
@@ -6,6 +7,7 @@ interface OverloadIndexCardProps {
 }
 
 const OverloadIndexCard = ({ activeCount }: OverloadIndexCardProps) => {
+  const { t } = useTranslation();
   const recommended = 8;
   const index = activeCount / recommended;
   const isOverloaded = index > 1;
@@ -15,7 +17,7 @@ const OverloadIndexCard = ({ activeCount }: OverloadIndexCardProps) => {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
           <Gauge className="h-4 w-4" />
-          Overload Index
+          {t("overloadIndex")}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -25,12 +27,10 @@ const OverloadIndexCard = ({ activeCount }: OverloadIndexCardProps) => {
           </span>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          {activeCount} / {recommended} recommended
+          {activeCount} / {recommended} {t("recommended")}
         </p>
         {isOverloaded && (
-          <p className="mt-2 text-xs text-destructive">
-            You have more subscriptions than recommended. Consider consolidating.
-          </p>
+          <p className="mt-2 text-xs text-destructive">{t("overloadWarning")}</p>
         )}
       </CardContent>
     </Card>
