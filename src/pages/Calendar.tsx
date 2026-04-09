@@ -6,6 +6,7 @@ import SubscriptionIcon from "@/components/dashboard/SubscriptionIcon";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 import {
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
   addDays, addMonths, subMonths, isSameMonth, isToday, differenceInDays,
@@ -27,7 +28,8 @@ interface DayEntry { subscription: Subscription; date: Date; }
 
 const Calendar = () => {
   const { subscriptions, isLoading } = useSubscriptions();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -82,7 +84,7 @@ const Calendar = () => {
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-display text-sm font-semibold text-foreground">{t("upcomingPayments")}</h2>
               <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                💸 €{weekTotal.toFixed(2)} {t("thisWeek")}
+                💸 {formatCurrency(weekTotal, lang)} {t("thisWeek")}
               </span>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -94,7 +96,7 @@ const Calendar = () => {
                     <SubscriptionIcon name={entry.subscription.name} category={entry.subscription.category} size="sm" />
                     <div>
                       <p className="text-sm font-medium text-foreground">{entry.subscription.name}</p>
-                      <p className="text-xs text-muted-foreground">€{entry.subscription.price.toFixed(2)} · {label}</p>
+                      <p className="text-xs text-muted-foreground">{formatCurrency(entry.subscription.price, lang)} · {label}</p>
                     </div>
                   </div>
                 );
@@ -156,7 +158,7 @@ const Calendar = () => {
                             </span>
                           )}
                         </div>
-                        <span className="mt-auto text-[10px] font-bold text-primary">€{total.toFixed(2)}</span>
+                        <span className="mt-auto text-[10px] font-bold text-primary">{formatCurrency(total, lang)}</span>
                       </>
                     )}
                   </button>
@@ -188,13 +190,13 @@ const Calendar = () => {
                     <SubscriptionIcon name={entry.subscription.name} category={entry.subscription.category} size="md" />
                     <span className="font-medium text-foreground">{entry.subscription.name}</span>
                   </div>
-                  <span className="font-semibold text-foreground">€{entry.subscription.price.toFixed(2)}</span>
+                  <span className="font-semibold text-foreground">{formatCurrency(entry.subscription.price, lang)}</span>
                 </div>
               ))}
               {selectedEntries.length > 0 && (
                 <div className="flex items-center justify-between border-t border-border pt-3">
                   <span className="text-sm font-medium text-muted-foreground">{t("total")}</span>
-                  <span className="text-lg font-bold text-primary">€{selectedTotal.toFixed(2)}</span>
+                  <span className="text-lg font-bold text-primary">{formatCurrency(selectedTotal, lang)}</span>
                 </div>
               )}
             </div>
