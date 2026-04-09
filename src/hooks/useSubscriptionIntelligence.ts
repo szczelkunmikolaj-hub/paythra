@@ -26,10 +26,11 @@ export const useSubscriptionIntelligence = ({
   monthlyIncome,
 }: IntelligenceParams) => {
   return useMemo(() => {
-    const insights: Insight[] = [];
     const active = subscriptions.filter((s) => s.status === "active");
 
-    // Match subscriptions to service pricing
+    // --- Step 1: Generate all candidate insights per subscription ---
+    const candidateInsights: Insight[] = [];
+
     active.forEach((sub) => {
       const match = services.find(
         (sp) =>
@@ -44,7 +45,7 @@ export const useSubscriptionIntelligence = ({
       // Overpaying check
       if (monthlySubPrice > match.standard_price * 1.05) {
         const savings = (monthlySubPrice - match.standard_price) * 12;
-        insights.push({
+        candidateInsights.push({
           id: `overpay-${sub.id}`,
           type: "overpaying",
           title: "Possible Overpayment",
@@ -58,7 +59,7 @@ export const useSubscriptionIntelligence = ({
       // Student discount check
       if (isStudent && match.student_price && monthlySubPrice > match.student_price) {
         const savings = (monthlySubPrice - match.student_price) * 12;
-        insights.push({
+        candidateInsights.push({
           id: `student-${sub.id}`,
           type: "student",
           title: "Student Discount Available",
@@ -73,7 +74,7 @@ export const useSubscriptionIntelligence = ({
       if (match.family_price && monthlySubPrice > match.family_price / 5) {
         const savingsPerPerson = (monthlySubPrice - match.family_price / 5) * 12;
         if (savingsPerPerson > 5) {
-          insights.push({
+          candidateInsights.push({
             id: `family-${sub.id}`,
             type: "family",
             title: "Family Plan Savings",
@@ -88,8 +89,8 @@ export const useSubscriptionIntelligence = ({
       // Cheapest plan suggestion
       if (match.cheapest_plan_price !== null && match.cheapest_plan_price < monthlySubPrice && match.cheapest_plan_name) {
         const savings = (monthlySubPrice - match.cheapest_plan_price) * 12;
-        if (savings > 10 && !insights.some((i) => i.subscriptionId === sub.id && i.type === "overpaying")) {
-          insights.push({
+        if (savings > 10 && !candidateInsights.some((i) => i.subscriptionId === sub.id && i.type === "overpaying")) {
+          candidateInsights.push({
             id: `cheap-${sub.id}`,
             type: "general",
             title: "Cheaper Plan Available",
@@ -107,7 +108,7 @@ export const useSubscriptionIntelligence = ({
       .filter((s) => s.is_unused)
       .forEach((sub) => {
         const yearlyCost = sub.billing_cycle === "monthly" ? sub.price * 12 : sub.price;
-        insights.push({
+        candidateInsights.push({
           id: `unused-${sub.id}`,
           type: "unused",
           title: "Unused Subscription",
@@ -118,7 +119,33 @@ export const useSubscriptionIntelligence = ({
         });
       });
 
-    // Duplicate category check
+    // --- Step 2: Deduplicate per service — keep only the highest saving insight per service name ---
+    const serviceNameMap = new Map<string, Insight[]>();
+    for (const insight of candidateInsights) {
+      if (!insight.subscriptionId) continue;
+      const sub = active.find((s) => s.id === insight.subscriptionId);
+      if (!sub) continue;
+      const key = sub.name.toLowerCase();
+      const list = serviceNameMap.get(key) ?? [];
+      list.push(insight);
+      serviceNameMap.set(key, list);
+    }
+
+    const insights: Insight[] = [];
+    for (const [, serviceInsights] of serviceNameMap) {
+      // Pick the single best (highest savings) insight for this service
+      const best = serviceInsights.reduce((a, b) => (a.savingsPerYear >= b.savingsPerYear ? a : b));
+      insights.push(best);
+    }
+
+    // Add insights without a subscriptionId (e.g. category overlap)
+    for (const insight of candidateInsights) {
+      if (!insight.subscriptionId) {
+        insights.push(insight);
+      }
+    }
+
+    // Duplicate category check (no savings value, just advisory)
     const categoryMap = new Map<string, Subscription[]>();
     active.forEach((s) => {
       const list = categoryMap.get(s.category) || [];
@@ -138,14 +165,17 @@ export const useSubscriptionIntelligence = ({
       }
     });
 
-    // Total potential savings
-    const totalSavings = insights.reduce((sum, i) => sum + i.savingsPerYear, 0);
-
-    // Health score
+    // --- Step 3: Cap total savings so it never exceeds actual yearly spending ---
     const monthlySpend = active.reduce(
       (sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12),
       0
     );
+    const yearlySpend = monthlySpend * 12 + active.filter((s) => s.billing_cycle === "yearly").reduce((sum, s) => sum + s.price, 0);
+
+    const rawTotalSavings = insights.reduce((sum, i) => sum + i.savingsPerYear, 0);
+    const totalSavings = Math.min(rawTotalSavings, yearlySpend);
+
+    // Health score
     let healthScore = 100;
     if (monthlyIncome && monthlySpend > monthlyIncome * 0.1) healthScore -= 20;
     if (active.length > 10) healthScore -= 15;
@@ -164,7 +194,7 @@ export const useSubscriptionIntelligence = ({
       overloadIndex,
       activeCount: active.length,
       monthlySpend,
-      yearlyProjected: monthlySpend * 12 + active.filter((s) => s.billing_cycle === "yearly").reduce((sum, s) => sum + s.price, 0),
+      yearlyProjected: yearlySpend,
     };
   }, [subscriptions, services, isStudent, monthlyIncome]);
 };
