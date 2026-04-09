@@ -191,7 +191,7 @@ const en = {
   joined: "Joined",
   intelligenceSettings: "Intelligence Settings",
   intelligenceDesc: "Configure your profile to unlock personalized insights and savings recommendations.",
-  monthlyIncome: "Monthly Income (€) — optional",
+  monthlyIncome: "Monthly Income — optional",
   incomeHelp: "Used to calculate your subscription health score. Never shared.",
   imStudent: "I'm a student",
   studentHelp: "Enable to see student discount recommendations.",
@@ -200,11 +200,19 @@ const en = {
   addTransactionManually: "Add Transaction Manually",
   transactionDesc: "Add transactions to enable automatic subscription detection.",
   merchant: "Merchant",
-  amount: "Amount (€)",
+  amount: "Amount",
   date: "Date",
   adding: "Adding...",
   addTransaction: "Add Transaction",
   error: "Error",
+
+  // Currency Settings
+  currencySettings: "Currency Settings",
+  currencySettingsDesc: "Choose your preferred currency. Values are automatically converted.",
+  currency: "Currency",
+  automaticCurrency: "Automatic (based on language)",
+  currencyHelp: "Override the automatic currency selection linked to your language.",
+  currencyUpdated: "Currency updated",
 
   // Connect Accounts
   connectAccounts: "Connect Accounts",
