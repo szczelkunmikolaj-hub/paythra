@@ -8,6 +8,7 @@ const members = [
   { name: "Cockzia", color: "text-green-400" },
   { name: "Trastero", color: "text-orange-400" },
   { name: "Molestador", color: "text-pink-400" },
+  { name: "Cummings", color: "text-white-400" },
 ];
 
 const Secret = () => {
@@ -19,16 +20,11 @@ const Secret = () => {
         transition={{ duration: 0.6, type: "spring" }}
         className="max-w-md w-full text-center space-y-8"
       >
-        <motion.div
-          animate={{ rotate: [0, 5, -5, 0] }}
-          transition={{ repeat: Infinity, duration: 3 }}
-        >
+        <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ repeat: Infinity, duration: 3 }}>
           <Sparkles className="mx-auto h-16 w-16 text-yellow-400" />
         </motion.div>
 
-        <h1 className="font-display text-4xl font-bold text-white">
-          🤫 Secret
-        </h1>
+        <h1 className="font-display text-4xl font-bold text-white">🤫 Secret</h1>
 
         <div className="space-y-2">
           <p className="text-lg text-gray-300 font-medium italic">The Moe Lesters</p>
