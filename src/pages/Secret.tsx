@@ -24,7 +24,7 @@ const Secret = () => {
           <Sparkles className="mx-auto h-16 w-16 text-yellow-400" />
         </motion.div>
 
-        <h1 className="font-display text-4xl font-bold text-white">🤫 Secret</h1>
+        <h1 className="font-display text-4xl font-bold text-white">🤫🫃🏿🍆🍑💦👧🏾 Secret</h1>
 
         <div className="space-y-2">
           <p className="text-lg text-gray-300 font-medium italic">The Moe Lesters</p>
