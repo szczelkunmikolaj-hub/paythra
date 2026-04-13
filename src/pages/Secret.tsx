@@ -8,7 +8,7 @@ const members = [
   { name: "Cockzia", color: "text-green-400" },
   { name: "Trastero", color: "text-orange-400" },
   { name: "Molestador", color: "text-pink-400" },
-  { name: "Cummings", color: "text-white-400" },
+  { name: "Cummings", color: "text-White-400" },
 ];
 
 const Secret = () => {
