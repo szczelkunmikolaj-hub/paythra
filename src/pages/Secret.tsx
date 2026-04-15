@@ -7,7 +7,7 @@ const members = [
   { name: "Nigo", color: "text-blue-400" },
   { name: "Cockzia", color: "text-green-400" },
   { name: "Trastero", color: "text-orange-400" },
-  { name: "Molestador", color: "text-pink-400" },
+  { name: "Ferran torres", color: "text-pink-400" },
   { name: "Cummings", color: "text-White-400" },
 ];
 
