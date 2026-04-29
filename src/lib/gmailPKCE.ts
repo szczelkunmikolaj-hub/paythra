@@ -55,15 +55,28 @@ export async function startGmailAuth(): Promise<void> {
 
 export async function exchangeCodeForToken(code: string): Promise<string> {
   const verifier = sessionStorage.getItem(SS_VERIFIER);
+  console.log("[Gmail PKCE] Verifier from sessionStorage:", verifier ? `present (${verifier.length} chars)` : "MISSING");
   if (!verifier) throw new Error("Missing PKCE verifier — please retry the connection.");
 
-  const body = new URLSearchParams({
+  // PKCE-only token exchange — NO client_secret field.
+  const params: Record<string, string> = {
     client_id: GOOGLE_CLIENT_ID,
     code,
     code_verifier: verifier,
     grant_type: "authorization_code",
     redirect_uri: getRedirectUri(),
+  };
+
+  console.log("[Gmail PKCE] Token exchange params:", {
+    client_id: params.client_id,
+    code: `${code.slice(0, 10)}…`,
+    code_verifier: `${verifier.slice(0, 10)}… (${verifier.length} chars)`,
+    grant_type: params.grant_type,
+    redirect_uri: params.redirect_uri,
+    has_client_secret: false,
   });
+
+  const body = new URLSearchParams(params);
 
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -73,6 +86,7 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
 
   if (!res.ok) {
     const errText = await res.text();
+    console.error("[Gmail PKCE] Token exchange failed:", res.status, errText);
     throw new Error(`Token exchange failed: ${errText}`);
   }
 
