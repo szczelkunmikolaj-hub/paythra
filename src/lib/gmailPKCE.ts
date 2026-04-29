@@ -1,19 +1,14 @@
-// Client-side Google OAuth 2.0 with PKCE (no client secret required).
-// VITE_GOOGLE_CLIENT_ID is a public OAuth client ID — safe to ship in the bundle.
+// Client-side Google OAuth 2.0 with PKCE (no client secret).
+// Public client ID — safe to ship in the bundle.
 
 export const GOOGLE_CLIENT_ID =
   "240223060504-87m6gplhtq4dbipvugpvkq0o23t1k6ce.apps.googleusercontent.com";
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 
-const LS_VERIFIER = "paythra_gmail_pkce_verifier";
-const LS_TOKEN = "paythra_gmail_token";
-const LS_EMAIL = "paythra_gmail_email";
-
-export interface GmailToken {
-  access_token: string;
-  expires_at: number; // epoch ms
-  refresh_token?: string;
-}
+const SS_VERIFIER = "gmail_pkce_verifier";
+const LS_TOKEN_KEY = "gmail_access_token";
+const LS_TOKEN_META = "gmail_token_meta"; // { expires_at }
+const LS_EMAIL = "gmail_connected_email";
 
 // --- PKCE helpers ---
 function base64UrlEncode(bytes: Uint8Array): string {
@@ -41,7 +36,7 @@ export function getRedirectUri(): string {
 export async function startGmailAuth(): Promise<void> {
   const verifier = randomString(64);
   const challenge = base64UrlEncode(await sha256(verifier));
-  localStorage.setItem(LS_VERIFIER, verifier);
+  sessionStorage.setItem(SS_VERIFIER, verifier);
 
   const params = new URLSearchParams({
     client_id: GOOGLE_CLIENT_ID,
@@ -58,8 +53,8 @@ export async function startGmailAuth(): Promise<void> {
   window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
-export async function exchangeCodeForToken(code: string): Promise<GmailToken> {
-  const verifier = localStorage.getItem(LS_VERIFIER);
+export async function exchangeCodeForToken(code: string): Promise<string> {
+  const verifier = sessionStorage.getItem(SS_VERIFIER);
   if (!verifier) throw new Error("Missing PKCE verifier — please retry the connection.");
 
   const body = new URLSearchParams({
@@ -82,42 +77,45 @@ export async function exchangeCodeForToken(code: string): Promise<GmailToken> {
   }
 
   const data = await res.json();
-  const token: GmailToken = {
-    access_token: data.access_token,
-    expires_at: Date.now() + (data.expires_in ?? 3600) * 1000,
-    refresh_token: data.refresh_token,
-  };
-  saveToken(token);
-  localStorage.removeItem(LS_VERIFIER);
+  const accessToken: string = data.access_token;
+  const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
 
-  // fetch email address for display
+  localStorage.setItem(LS_TOKEN_KEY, accessToken);
+  localStorage.setItem(LS_TOKEN_META, JSON.stringify({ expires_at: expiresAt }));
+  sessionStorage.removeItem(SS_VERIFIER);
+
+  // fetch email for display (non-fatal)
   try {
     const profile = await fetch(
       "https://gmail.googleapis.com/gmail/v1/users/me/profile",
-      { headers: { Authorization: `Bearer ${token.access_token}` } }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     ).then((r) => r.json());
     if (profile.emailAddress) localStorage.setItem(LS_EMAIL, profile.emailAddress);
   } catch {
     /* non-fatal */
   }
 
+  return accessToken;
+}
+
+/** Returns the access token if present and not expired, else null. */
+export function getAccessToken(): string | null {
+  const token = localStorage.getItem(LS_TOKEN_KEY);
+  if (!token) return null;
+  const metaRaw = localStorage.getItem(LS_TOKEN_META);
+  if (metaRaw) {
+    try {
+      const meta = JSON.parse(metaRaw);
+      if (meta.expires_at && meta.expires_at <= Date.now()) return null;
+    } catch {
+      /* ignore */
+    }
+  }
   return token;
 }
 
-export function saveToken(token: GmailToken) {
-  localStorage.setItem(LS_TOKEN, JSON.stringify(token));
-}
-
-export function loadToken(): GmailToken | null {
-  const raw = localStorage.getItem(LS_TOKEN);
-  if (!raw) return null;
-  try {
-    const t = JSON.parse(raw) as GmailToken;
-    if (t.expires_at <= Date.now()) return null;
-    return t;
-  } catch {
-    return null;
-  }
+export function isGmailConnected(): boolean {
+  return getAccessToken() !== null;
 }
 
 export function getConnectedEmail(): string | null {
@@ -125,7 +123,8 @@ export function getConnectedEmail(): string | null {
 }
 
 export function disconnectGmail() {
-  localStorage.removeItem(LS_TOKEN);
+  localStorage.removeItem(LS_TOKEN_KEY);
+  localStorage.removeItem(LS_TOKEN_META);
   localStorage.removeItem(LS_EMAIL);
-  localStorage.removeItem(LS_VERIFIER);
+  sessionStorage.removeItem(SS_VERIFIER);
 }

@@ -1,5 +1,5 @@
 // Gmail scanner: fetch last-90-day messages, filter by sender, extract amounts,
-// group recurring senders. Pure client-side.
+// group recurring senders, and assign confidence scores. Pure client-side.
 
 export const TARGET_DOMAINS = [
   "netflix.com",
@@ -13,6 +13,14 @@ export const TARGET_DOMAINS = [
   "notion.so",
   "linkedin.com",
   "chatgpt.com",
+  "paypal.com",
+  "microsoft.com",
+  "slack.com",
+  "zoom.us",
+  "figma.com",
+  "github.com",
+  "twitter.com",
+  "icloud.com",
 ];
 
 export interface ParsedEmail {
@@ -32,12 +40,14 @@ export interface DetectedSubscription {
   currency: string;
   frequency: "monthly" | "yearly" | "unknown";
   occurrences: number;
+  confidence: number; // 0-100
   lastSeen: Date;
 }
 
 const LS_DETECTED = "paythra_detected_subscriptions";
 const LS_DISMISSED = "paythra_dismissed_merchants";
-const LS_CONFIRMED = "paythra_confirmed_subs";
+const LS_CONFIRMED_DOMAINS = "paythra_confirmed_subs";
+const LS_PAYTHRA_SUBS = "paythra_subscriptions"; // user-spec'd key
 
 // --- Gmail API ---
 async function gmailFetch(token: string, path: string): Promise<any> {
@@ -59,7 +69,7 @@ export async function fetchEmailsLast90Days(
   const fromQuery = TARGET_DOMAINS.map((d) => `from:${d}`).join(" OR ");
   const q = encodeURIComponent(`(${fromQuery}) after:${after}`);
 
-  onProgress?.("Searching emails…");
+  onProgress?.("Scanning your emails for subscriptions...");
 
   const messageIds: string[] = [];
   let pageToken: string | undefined;
@@ -70,19 +80,21 @@ export async function fetchEmailsLast90Days(
     if (data.messages) messageIds.push(...data.messages.map((m: any) => m.id));
     pageToken = data.nextPageToken;
     pages++;
-    if (pages > 5) break; // safety: max ~500 messages
+    if (pages > 5) break; // safety cap ~500 messages
   } while (pageToken);
 
   onProgress?.(`Found ${messageIds.length} emails. Reading details…`);
 
   const parsed: ParsedEmail[] = [];
-  // Process in batches of 10 in parallel
   const batchSize = 10;
   for (let i = 0; i < messageIds.length; i += batchSize) {
     const batch = messageIds.slice(i, i + batchSize);
     const results = await Promise.all(
       batch.map((id) =>
-        gmailFetch(accessToken, `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`)
+        gmailFetch(
+          accessToken,
+          `/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`
+        )
           .then((msg) => parseMessage(id, msg))
           .catch(() => null)
       )
@@ -91,7 +103,7 @@ export async function fetchEmailsLast90Days(
     onProgress?.(`Processed ${Math.min(i + batchSize, messageIds.length)}/${messageIds.length}…`);
   }
 
-  // Need bodies for amount extraction — fetch full for messages without amount
+  // For messages without an amount, fetch full body
   for (let i = 0; i < parsed.length; i++) {
     if (parsed[i].amount === null) {
       try {
@@ -111,15 +123,15 @@ export async function fetchEmailsLast90Days(
 
 function parseMessage(id: string, msg: any): ParsedEmail | null {
   const headers: { name: string; value: string }[] = msg.payload?.headers ?? [];
-  const get = (n: string) => headers.find((h) => h.name.toLowerCase() === n.toLowerCase())?.value ?? "";
+  const get = (n: string) =>
+    headers.find((h) => h.name.toLowerCase() === n.toLowerCase())?.value ?? "";
   const from = get("From");
   const subject = get("Subject");
   const dateStr = get("Date");
 
   const { name, domain } = parseSender(from);
   if (!domain) return null;
-  // Confirm domain matches one of our targets
-  const matched = TARGET_DOMAINS.find((d) => domain.endsWith(d));
+  const matched = TARGET_DOMAINS.find((d) => domain === d || domain.endsWith("." + d));
   if (!matched) return null;
 
   const date = dateStr ? new Date(dateStr) : new Date();
@@ -137,7 +149,6 @@ function parseMessage(id: string, msg: any): ParsedEmail | null {
 }
 
 function parseSender(from: string): { name: string; domain: string } {
-  // "Netflix <info@netflix.com>" or "info@spotify.com"
   const match = from.match(/(?:"?([^"<]*)"?\s*)?<?([^<>\s]+@[^<>\s]+)>?/);
   if (!match) return { name: "", domain: "" };
   const name = (match[1] || "").trim().replace(/^"|"$/g, "");
@@ -161,7 +172,6 @@ function extractBodyText(msg: any): string {
     if (p.parts) p.parts.forEach(walk);
   };
   walk(msg.payload);
-  // strip html tags crudely
   return parts.join(" ").replace(/<[^>]+>/g, " ");
 }
 
@@ -173,7 +183,6 @@ const CURRENCY_MAP: Record<string, string> = {
 
 export function extractAmount(text: string): { amount: number | null; currency: string | null } {
   if (!text) return { amount: null, currency: null };
-  // Match £12.99, € 9.99, $5, 12.99 GBP
   const symbolRe = /([£€$])\s?(\d+(?:[.,]\d{1,2})?)/;
   const codeRe = /(\d+(?:[.,]\d{1,2})?)\s?(GBP|EUR|USD)/i;
   let m = text.match(symbolRe);
@@ -198,35 +207,61 @@ export function groupRecurring(emails: ParsedEmail[]): DetectedSubscription[] {
 
   const detected: DetectedSubscription[] = [];
   for (const [domain, items] of byDomain) {
-    if (items.length < 2) continue; // must appear >1 time
     items.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    // Find dominant amount (similar prices)
     const amounts = items.map((i) => i.amount).filter((a): a is number => a !== null);
+
+    // Single email seen → low-confidence entry if we have an amount
+    if (items.length < 2) {
+      if (amounts.length === 1) {
+        detected.push({
+          merchant: prettyMerchantName(domain, items[0].senderName),
+          domain,
+          amount: amounts[0],
+          currency: items[0].currency || "EUR",
+          frequency: "unknown",
+          occurrences: 1,
+          confidence: 45,
+          lastSeen: items[0].date,
+        });
+      }
+      continue;
+    }
+
     if (amounts.length < 2) continue;
 
-    const dominant = mostCommonAmount(amounts);
-    if (dominant === null) continue;
+    const cluster = mostCommonCluster(amounts);
+    if (!cluster) continue;
+    const dominant = cluster.centroid;
 
     const currency =
       items.find((i) => i.amount === dominant)?.currency ??
       items.find((i) => i.currency)?.currency ??
       "EUR";
 
-    // Frequency: average gap between sightings of dominant amount
     const matchingDates = items
       .filter((i) => i.amount !== null && Math.abs(i.amount - dominant) <= dominant * 0.05)
       .map((i) => i.date.getTime())
       .sort((a, b) => a - b);
 
     let frequency: DetectedSubscription["frequency"] = "unknown";
+    let avgDays = 0;
     if (matchingDates.length >= 2) {
       const gaps: number[] = [];
-      for (let i = 1; i < matchingDates.length; i++) gaps.push(matchingDates[i] - matchingDates[i - 1]);
-      const avgDays = gaps.reduce((a, b) => a + b, 0) / gaps.length / (24 * 60 * 60 * 1000);
+      for (let i = 1; i < matchingDates.length; i++)
+        gaps.push(matchingDates[i] - matchingDates[i - 1]);
+      avgDays = gaps.reduce((a, b) => a + b, 0) / gaps.length / (24 * 60 * 60 * 1000);
       if (avgDays >= 20 && avgDays <= 40) frequency = "monthly";
       else if (avgDays >= 300 && avgDays <= 400) frequency = "yearly";
     }
+
+    // Confidence:
+    //  - same amount repeats monthly → 98%
+    //  - similar amounts (cluster found, but not clean monthly) → 72%
+    let confidence = 72;
+    const amountsAreIdentical =
+      cluster.values.every((v) => Math.abs(v - dominant) <= 0.01) && cluster.values.length >= 2;
+    if (frequency === "monthly" && amountsAreIdentical) confidence = 98;
+    else if (frequency === "yearly" && amountsAreIdentical) confidence = 92;
 
     detected.push({
       merchant: prettyMerchantName(domain, items[0].senderName),
@@ -235,15 +270,17 @@ export function groupRecurring(emails: ParsedEmail[]): DetectedSubscription[] {
       currency,
       frequency,
       occurrences: matchingDates.length,
+      confidence,
       lastSeen: new Date(matchingDates[matchingDates.length - 1] || items[items.length - 1].date),
     });
   }
 
-  return detected.sort((a, b) => b.occurrences - a.occurrences);
+  return detected.sort((a, b) => b.confidence - a.confidence);
 }
 
-function mostCommonAmount(amounts: number[]): number | null {
-  // Cluster by 5% tolerance, return centroid of largest cluster (≥2 members)
+function mostCommonCluster(
+  amounts: number[]
+): { centroid: number; values: number[] } | null {
   const clusters: number[][] = [];
   for (const a of amounts) {
     const c = clusters.find((cl) => Math.abs(cl[0] - a) <= cl[0] * 0.05);
@@ -253,7 +290,8 @@ function mostCommonAmount(amounts: number[]): number | null {
   clusters.sort((a, b) => b.length - a.length);
   const top = clusters[0];
   if (!top || top.length < 2) return null;
-  return Number((top.reduce((s, x) => s + x, 0) / top.length).toFixed(2));
+  const centroid = Number((top.reduce((s, x) => s + x, 0) / top.length).toFixed(2));
+  return { centroid, values: top };
 }
 
 function prettyMerchantName(domain: string, fallback: string): string {
@@ -269,6 +307,14 @@ function prettyMerchantName(domain: string, fallback: string): string {
     "notion.so": "Notion",
     "linkedin.com": "LinkedIn",
     "chatgpt.com": "ChatGPT",
+    "paypal.com": "PayPal",
+    "microsoft.com": "Microsoft",
+    "slack.com": "Slack",
+    "zoom.us": "Zoom",
+    "figma.com": "Figma",
+    "github.com": "GitHub",
+    "twitter.com": "Twitter / X",
+    "icloud.com": "iCloud",
   };
   return map[domain] || fallback || domain;
 }
@@ -299,11 +345,26 @@ export function getDismissed(): string[] {
 }
 
 export function recordConfirmed(domain: string) {
-  const list = JSON.parse(localStorage.getItem(LS_CONFIRMED) || "[]");
+  const list = JSON.parse(localStorage.getItem(LS_CONFIRMED_DOMAINS) || "[]");
   if (!list.includes(domain)) list.push(domain);
-  localStorage.setItem(LS_CONFIRMED, JSON.stringify(list));
+  localStorage.setItem(LS_CONFIRMED_DOMAINS, JSON.stringify(list));
 }
 
 export function getConfirmed(): string[] {
-  return JSON.parse(localStorage.getItem(LS_CONFIRMED) || "[]");
+  return JSON.parse(localStorage.getItem(LS_CONFIRMED_DOMAINS) || "[]");
+}
+
+/** Append a confirmed subscription to paythra_subscriptions in localStorage. */
+export function appendPaythraSubscription(sub: DetectedSubscription) {
+  const list = JSON.parse(localStorage.getItem(LS_PAYTHRA_SUBS) || "[]");
+  list.push({
+    merchant: sub.merchant,
+    domain: sub.domain,
+    amount: sub.amount,
+    currency: sub.currency,
+    frequency: sub.frequency,
+    confidence: sub.confidence,
+    addedAt: new Date().toISOString(),
+  });
+  localStorage.setItem(LS_PAYTHRA_SUBS, JSON.stringify(list));
 }
