@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
-import AutoDetect from "@/components/dashboard/AutoDetect";
+import GmailDetect from "@/components/dashboard/GmailDetect";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
@@ -155,7 +155,7 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="autodetect">
-              <AutoDetect />
+              <GmailDetect />
             </TabsContent>
           </Tabs>
         )}
