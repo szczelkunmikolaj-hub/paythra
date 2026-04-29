@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import CSVImport from "@/components/dashboard/CSVImport";
@@ -128,6 +129,19 @@ const Settings = () => {
         </Card>
 
         <CSVImport />
+
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="font-display text-lg">Legal</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+              <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>
+              <span className="text-muted-foreground" aria-hidden="true">·</span>
+              <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
