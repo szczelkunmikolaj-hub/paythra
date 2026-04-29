@@ -20,6 +20,8 @@ import Secret from "./pages/Secret";
 import Pricing from "./pages/Pricing";
 import Demo from "./pages/Demo";
 import Suggestions from "./pages/Suggestions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +48,8 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/secret" element={<Secret />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
