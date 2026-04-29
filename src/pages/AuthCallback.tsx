@@ -27,8 +27,8 @@ const AuthCallback = () => {
     exchangeCodeForToken(code)
       .then(() => {
         setStatus("success");
-        setMessage("Gmail connected. Redirecting…");
-        setTimeout(() => navigate("/dashboard?tab=autodetect&scan=1"), 1200);
+        setMessage("Gmail connected. Starting scan…");
+        setTimeout(() => navigate("/dashboard?tab=autodetect&scan=1", { replace: true }), 800);
       })
       .catch((e) => {
         setStatus("error");

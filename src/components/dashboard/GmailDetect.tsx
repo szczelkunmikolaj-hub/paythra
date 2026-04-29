@@ -8,7 +8,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import {
   startGmailAuth,
-  loadToken,
+  getAccessToken,
+  isGmailConnected,
   disconnectGmail,
   getConnectedEmail,
 } from "@/lib/gmailPKCE";
@@ -21,6 +22,7 @@ import {
   getDismissed,
   recordConfirmed,
   getConfirmed,
+  appendPaythraSubscription,
   type DetectedSubscription,
 } from "@/lib/gmailScanner";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
@@ -29,7 +31,7 @@ const GmailDetect = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addSubscription } = useSubscriptions();
 
-  const [token, setToken] = useState(loadToken());
+  const [connected, setConnected] = useState(isGmailConnected());
   const [email, setEmail] = useState(getConnectedEmail());
   const [detected, setDetected] = useState<DetectedSubscription[]>(loadDetected());
   const [scanning, setScanning] = useState(false);
@@ -37,33 +39,41 @@ const GmailDetect = () => {
   const [dismissed, setDismissed] = useState<string[]>(getDismissed());
   const [confirmed, setConfirmed] = useState<string[]>(getConfirmed());
 
-  const isConnected = !!token;
-
   const handleScan = async () => {
-    const t = loadToken();
+    const t = getAccessToken();
     if (!t) {
-      toast({ title: "Not connected", description: "Connect Gmail first.", variant: "destructive" });
+      toast({
+        title: "Session expired",
+        description: "Please reconnect Gmail.",
+        variant: "destructive",
+      });
+      setConnected(false);
       return;
     }
     setScanning(true);
-    setProgress("Starting scan…");
+    setProgress("Scanning your emails for subscriptions...");
     try {
-      const emails = await fetchEmailsLast90Days(t.access_token, setProgress);
+      const emails = await fetchEmailsLast90Days(t, setProgress);
       const groups = groupRecurring(emails);
       saveDetected(groups);
       setDetected(groups);
       toast({
         title: "Scan complete",
-        description: `${groups.length} recurring subscription${groups.length === 1 ? "" : "s"} detected.`,
+        description: `${groups.length} subscription${groups.length === 1 ? "" : "s"} detected.`,
       });
     } catch (e: any) {
-      // 401 → token expired
-      if (String(e.message).includes("401")) {
+      const msg = String(e?.message || "");
+      if (msg.includes("401") || msg.toLowerCase().includes("invalid")) {
         disconnectGmail();
-        setToken(null);
-        toast({ title: "Session expired", description: "Please reconnect Gmail.", variant: "destructive" });
+        setConnected(false);
+        setEmail(null);
+        toast({
+          title: "Session expired",
+          description: "Please reconnect Gmail.",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: "Scan failed", description: e.message, variant: "destructive" });
+        toast({ title: "Scan failed", description: msg, variant: "destructive" });
       }
     } finally {
       setScanning(false);
@@ -71,22 +81,31 @@ const GmailDetect = () => {
     }
   };
 
-  // Auto-scan after redirect from /auth/callback
+  // Auto-scan after redirect from /auth/callback (?scan=1)
   useEffect(() => {
-    if (searchParams.get("scan") === "1" && isConnected && !scanning) {
-      const cleanup = setTimeout(() => {
+    if (searchParams.get("scan") === "1" && connected && !scanning) {
+      const timer = setTimeout(() => {
         handleScan();
         searchParams.delete("scan");
         setSearchParams(searchParams, { replace: true });
       }, 200);
-      return () => clearTimeout(cleanup);
+      return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected]);
+  }, [connected]);
+
+  const handleConnectClick = () => {
+    if (isGmailConnected()) {
+      // Already connected → skip OAuth, scan immediately
+      handleScan();
+    } else {
+      startGmailAuth();
+    }
+  };
 
   const handleDisconnect = () => {
     disconnectGmail();
-    setToken(null);
+    setConnected(false);
     setEmail(null);
     setDetected([]);
     saveDetected([]);
@@ -105,6 +124,7 @@ const GmailDetect = () => {
         next_billing_date: next.toISOString().split("T")[0],
         status: "active",
       });
+      appendPaythraSubscription(sub);
       recordConfirmed(sub.domain);
       setConfirmed((c) => [...c, sub.domain]);
       toast({ title: `${sub.merchant} added to your subscriptions` });
@@ -122,6 +142,12 @@ const GmailDetect = () => {
     (d) => !dismissed.includes(d.domain) && !confirmed.includes(d.domain)
   );
 
+  const confidenceVariant = (c: number): "default" | "secondary" | "outline" => {
+    if (c >= 90) return "default";
+    if (c >= 70) return "secondary";
+    return "outline";
+  };
+
   return (
     <div className="space-y-6">
       <Card className="shadow-card">
@@ -132,7 +158,7 @@ const GmailDetect = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isConnected ? (
+          {connected ? (
             <>
               <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/30">
                 <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -144,15 +170,28 @@ const GmailDetect = () => {
                 </div>
               </div>
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={handleScan} disabled={scanning} className="gap-2 bg-gradient-primary hover:opacity-90">
+                <Button
+                  onClick={handleScan}
+                  disabled={scanning}
+                  className="gap-2 bg-gradient-primary hover:opacity-90"
+                >
                   {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   {scanning ? "Scanning…" : "Scan last 90 days"}
                 </Button>
-                <Button variant="outline" onClick={handleDisconnect} className="gap-2 text-destructive hover:text-destructive">
+                <Button
+                  variant="outline"
+                  onClick={handleDisconnect}
+                  className="gap-2 text-destructive hover:text-destructive"
+                >
                   <Unplug className="h-4 w-4" /> Disconnect
                 </Button>
               </div>
-              {progress && <p className="text-xs text-muted-foreground">{progress}</p>}
+              {scanning && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{progress || "Scanning your emails for subscriptions..."}</span>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -165,7 +204,7 @@ const GmailDetect = () => {
                   </p>
                 </div>
               </div>
-              <Button onClick={startGmailAuth} className="gap-2 bg-gradient-primary hover:opacity-90">
+              <Button onClick={handleConnectClick} className="gap-2 bg-gradient-primary hover:opacity-90">
                 <Mail className="h-4 w-4" /> Connect Gmail
               </Button>
             </>
@@ -192,9 +231,14 @@ const GmailDetect = () => {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="rounded-xl border border-border p-4 space-y-3"
                   >
-                    <div>
-                      <p className="font-semibold">{sub.merchant}</p>
-                      <p className="text-xs text-muted-foreground">{sub.domain}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">{sub.merchant}</p>
+                        <p className="text-xs text-muted-foreground">{sub.domain}</p>
+                      </div>
+                      <Badge variant={confidenceVariant(sub.confidence)} className="text-[10px]">
+                        {sub.confidence}% match
+                      </Badge>
                     </div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-bold">
@@ -206,10 +250,19 @@ const GmailDetect = () => {
                       </Badge>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" onClick={() => handleConfirm(sub)} className="flex-1 gap-1 bg-gradient-primary hover:opacity-90">
+                      <Button
+                        size="sm"
+                        onClick={() => handleConfirm(sub)}
+                        className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                      >
                         <Plus className="h-3.5 w-3.5" /> Confirm
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleDismiss(sub)} className="gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleDismiss(sub)}
+                        className="gap-1"
+                      >
                         <X className="h-3.5 w-3.5" /> Dismiss
                       </Button>
                     </div>
@@ -221,7 +274,7 @@ const GmailDetect = () => {
         </Card>
       )}
 
-      {isConnected && detected.length > 0 && visible.length === 0 && (
+      {connected && detected.length > 0 && visible.length === 0 && (
         <Card className="shadow-card">
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
             <CheckCircle2 className="h-10 w-10 text-green-500" />
