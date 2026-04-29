@@ -13,6 +13,8 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { CURRENCIES, getCurrencyOverride, setCurrencyOverride, getActiveCurrencyCode } from "@/lib/currency";
+import { isGmailConnected, disconnectGmail, getConnectedEmail } from "@/lib/gmailPKCE";
+import { Mail, Unplug } from "lucide-react";
 
 const Settings = () => {
   const { user } = useAuth();
@@ -23,6 +25,15 @@ const Settings = () => {
   const [isStudent, setIsStudent] = useState(profile?.is_student ?? false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [currencyCode, setCurrencyCode] = useState(getActiveCurrencyCode(i18n.language));
+  const [gmailConnected, setGmailConnected] = useState(isGmailConnected());
+  const [gmailEmail, setGmailEmail] = useState(getConnectedEmail());
+
+  const handleGmailDisconnect = () => {
+    disconnectGmail();
+    setGmailConnected(false);
+    setGmailEmail(null);
+    toast({ title: "Gmail disconnected" });
+  };
 
   useEffect(() => {
     if (profile) {
@@ -129,6 +140,37 @@ const Settings = () => {
         </Card>
 
         <CSVImport />
+
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="font-display text-lg flex items-center gap-2">
+              <Mail className="h-5 w-5 text-primary" /> Connected accounts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {gmailConnected ? (
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-sm font-medium">Gmail connected</p>
+                  {gmailEmail && (
+                    <p className="text-xs text-muted-foreground">{gmailEmail}</p>
+                  )}
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleGmailDisconnect}
+                  className="gap-2 text-destructive hover:text-destructive"
+                >
+                  <Unplug className="h-4 w-4" /> Disconnect Gmail
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Gmail is not connected. Connect it from the dashboard's Auto-detect tab.
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="shadow-card">
           <CardHeader>
