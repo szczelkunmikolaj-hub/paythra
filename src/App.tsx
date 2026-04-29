@@ -22,6 +22,7 @@ import Demo from "./pages/Demo";
 import Suggestions from "./pages/Suggestions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/demo" element={<Demo />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/secret" element={<Secret />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
