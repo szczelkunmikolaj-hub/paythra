@@ -28,7 +28,7 @@ import {
 import { Check, Sparkles, Building2, Zap, ShieldCheck, Infinity as InfinityIcon, Heart } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-const PRICE_ONE_TIME = "€19.99";
+const PRICE_ONE_TIME = "€24.99";
 
 const Pricing = () => {
   const { user } = useAuth();
