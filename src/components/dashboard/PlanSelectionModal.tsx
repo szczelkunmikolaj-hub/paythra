@@ -91,9 +91,9 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
   };
 
   const plans = [
-    { id: "free" as PlanType, icon: Zap, name: t("planFree"), price: "€0", features: [t("planFreeF1"), t("planFreeF2"), t("planFreeF3")] },
-    { id: "premium" as PlanType, icon: Star, name: "Premium", price: "€4.99", popular: true, features: [t("planPremiumF1"), t("planPremiumF2"), t("planPremiumF3"), t("planPremiumF4"), t("planPremiumF5")] },
-    { id: "business" as PlanType, icon: Building2, name: "Business", price: "€29.99", features: [t("planBusinessF1"), t("planBusinessF2"), t("planBusinessF3"), t("planBusinessF4"), t("planBusinessF5"), t("planBusinessF6")] },
+    { id: "free" as PlanType, icon: Zap, name: t("planFree"), price: "€0", priceNote: t("planMonth"), features: [t("planFreeF1"), t("planFreeF2"), t("planFreeF3")] },
+    { id: "premium" as PlanType, icon: Star, name: "Premium", price: "€24.99", priceNote: "one-time", popular: true, features: [t("planPremiumF1"), t("planPremiumF2"), t("planPremiumF3"), t("planPremiumF4"), t("planPremiumF5")] },
+    { id: "business" as PlanType, icon: Building2, name: "Business", price: "Custom", priceNote: "contact us", features: [t("planBusinessF1"), t("planBusinessF2"), t("planBusinessF3"), t("planBusinessF4"), t("planBusinessF5"), t("planBusinessF6")] },
   ];
 
   return (
