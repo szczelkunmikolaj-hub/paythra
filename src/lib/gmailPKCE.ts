@@ -1,8 +1,10 @@
-// Client-side Google OAuth 2.0 with PKCE (no client secret).
-// Public client ID — safe to ship in the bundle.
+// Client-side Google OAuth 2.0 with PKCE.
+// Token exchange is performed by the `gmail-token-exchange` edge function
+// so the client secret never reaches the browser.
+import { supabase } from "@/integrations/supabase/client";
 
 export const GOOGLE_CLIENT_ID =
-  "240223060504-87m6gplhtq4dbipvugpvkq0o23t1k6ce.apps.googleusercontent.com";
+  "240223060504-3vsrsk3i8plb86ih3oedh6jeg4t86d2r.apps.googleusercontent.com";
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 
 const SS_VERIFIER = "gmail_pkce_verifier";
@@ -55,42 +57,32 @@ export async function startGmailAuth(): Promise<void> {
 
 export async function exchangeCodeForToken(code: string): Promise<string> {
   const verifier = sessionStorage.getItem(SS_VERIFIER);
-  console.log("[Gmail PKCE] Verifier from sessionStorage:", verifier ? `present (${verifier.length} chars)` : "MISSING");
+  console.log(
+    "[Gmail PKCE] Verifier from sessionStorage:",
+    verifier ? `present (${verifier.length} chars)` : "MISSING"
+  );
   if (!verifier) throw new Error("Missing PKCE verifier — please retry the connection.");
 
-  // PKCE-only token exchange — NO client_secret field.
-  const params: Record<string, string> = {
-    client_id: GOOGLE_CLIENT_ID,
-    code,
-    code_verifier: verifier,
-    grant_type: "authorization_code",
-    redirect_uri: getRedirectUri(),
-  };
-
-  console.log("[Gmail PKCE] Token exchange params:", {
-    client_id: params.client_id,
+  const redirect_uri = getRedirectUri();
+  console.log("[Gmail PKCE] Calling edge function gmail-token-exchange with:", {
     code: `${code.slice(0, 10)}…`,
     code_verifier: `${verifier.slice(0, 10)}… (${verifier.length} chars)`,
-    grant_type: params.grant_type,
-    redirect_uri: params.redirect_uri,
-    has_client_secret: false,
+    redirect_uri,
   });
 
-  const body = new URLSearchParams(params);
-
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
+  const { data, error } = await supabase.functions.invoke("gmail-token-exchange", {
+    body: { code, code_verifier: verifier, redirect_uri },
   });
 
-  if (!res.ok) {
-    const errText = await res.text();
-    console.error("[Gmail PKCE] Token exchange failed:", res.status, errText);
-    throw new Error(`Token exchange failed: ${errText}`);
+  if (error) {
+    console.error("[Gmail PKCE] Edge function error:", error);
+    throw new Error(error.message || "Token exchange failed");
+  }
+  if (!data?.access_token) {
+    console.error("[Gmail PKCE] Edge function returned no access_token:", data);
+    throw new Error(data?.error || "Token exchange failed");
   }
 
-  const data = await res.json();
   const accessToken: string = data.access_token;
   const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
 
@@ -98,15 +90,8 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   localStorage.setItem(LS_TOKEN_META, JSON.stringify({ expires_at: expiresAt }));
   sessionStorage.removeItem(SS_VERIFIER);
 
-  // fetch email for display (non-fatal)
-  try {
-    const profile = await fetch(
-      "https://gmail.googleapis.com/gmail/v1/users/me/profile",
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    ).then((r) => r.json());
-    if (profile.emailAddress) localStorage.setItem(LS_EMAIL, profile.emailAddress);
-  } catch {
-    /* non-fatal */
+  if (data.email) {
+    localStorage.setItem(LS_EMAIL, data.email);
   }
 
   return accessToken;
