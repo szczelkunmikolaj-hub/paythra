@@ -185,7 +185,7 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
                   <p className="font-display font-bold">{p.name}</p>
                   <p className="text-2xl font-extrabold text-foreground mt-1">
                     {isOverridden ? <><span className="text-green-600">€0</span><span className="ml-1 text-sm text-muted-foreground line-through">{p.price}</span></> : p.price}
-                    <span className="text-sm font-normal text-muted-foreground">/{t("planMonth")}</span>
+                    <span className="ml-1 text-sm font-normal text-muted-foreground">{p.priceNote}</span>
                   </p>
                 </div>
                 <ul className="space-y-2 flex-1 mb-3">
