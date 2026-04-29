@@ -12,15 +12,22 @@ const Footer = () => {
           <div className="flex items-center">
             <img src={paythraLogo} alt="Paythra" className="h-9 w-9 rounded-lg" />
           </div>
-          <div className="flex gap-8 text-sm text-muted-foreground">
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">{t("home")}</Link>
             <a href="#features" className="hover:text-foreground transition-colors">{t("features")}</a>
             <Link to="/login" className="hover:text-foreground transition-colors">{t("logIn")}</Link>
             <Link to="/signup" className="hover:text-foreground transition-colors">{t("signUp")}</Link>
           </div>
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Paythra. {t("allRightsReserved")}
-          </p>
+          <div className="flex flex-col items-center gap-2 md:items-end">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <span aria-hidden="true">·</span>
+              <Link to="/terms-of-service" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()} Paythra. {t("allRightsReserved")}
+            </p>
+          </div>
         </div>
       </div>
     </footer>
