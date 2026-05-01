@@ -22,8 +22,8 @@ const en = {
 
   // Landing - Hero
   heroChip: "Smart subscription management",
-  heroTitle1: "See Every Subscription.",
-  heroTitle2: "Save Every Month.",
+  heroTitle1: "Stop wasting money on",
+  heroTitle2: "subscriptions",
   heroDescription: "Paythra gives you a clear view of all your subscriptions, helps prevent unwanted charges, and shows where you can save money.",
   seeDemo: "See Demo",
 
