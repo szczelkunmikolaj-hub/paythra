@@ -115,6 +115,7 @@ function autoDetectColumns(headers: string[]): ColumnMapping | null {
 const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
 
 const CSVImport = () => {
+  const { t } = useTranslation();
   const { addTransaction } = useTransactions();
   const { addSubscription } = useSubscriptions();
   const [importing, setImporting] = useState(false);
