@@ -252,11 +252,11 @@ const CSVImport = () => {
   const handleFile = useCallback(
     async (file: File) => {
       if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif)$/i)) {
-        toast({ title: "Unsupported format", description: "Supported: CSV, TXT, XLSX, OFX, QIF", variant: "destructive" });
+        toast({ title: t("unsupportedFormat"), description: t("supportedFormatsList"), variant: "destructive" });
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        toast({ title: "File too large", description: "Maximum file size is 10MB.", variant: "destructive" });
+        toast({ title: t("fileTooLarge"), description: t("maxFileSize"), variant: "destructive" });
         return;
       }
 
@@ -268,7 +268,7 @@ const CSVImport = () => {
       }
 
       if (result.data.length === 0) {
-        toast({ title: "Empty file", description: "No data rows found in this file.", variant: "destructive" });
+        toast({ title: t("emptyFile"), description: t("noDataRows"), variant: "destructive" });
         return;
       }
 
@@ -290,7 +290,7 @@ const CSVImport = () => {
         setRawHeaders(headers);
         setColumnMapping(mapping);
         setShowColumnMapper(true);
-        toast({ title: "Auto-detection found 0 rows", description: "Please map columns manually.", variant: "default" });
+        toast({ title: t("autoDetectionZeroRows"), description: t("mapColumnsManually"), variant: "default" });
         return;
       }
 
