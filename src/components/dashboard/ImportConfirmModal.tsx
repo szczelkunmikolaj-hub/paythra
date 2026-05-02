@@ -170,17 +170,17 @@ const ImportConfirmModal = ({
         {detected.length > 0 && (
           <div className="flex items-center justify-between pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              {selectedCount} of {detected.length} selected
+              {t("selectedOfTotal", { selected: selectedCount, total: detected.length })}
             </p>
             <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={onSelectAll}>
-              <CheckCheck className="mr-1 h-3 w-3" /> Select all
+              <CheckCheck className="mr-1 h-3 w-3" /> {t("selectAll")}
             </Button>
           </div>
         )}
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
-            <X className="h-4 w-4" /> Cancel
+            <X className="h-4 w-4" /> {t("cancel")}
           </Button>
           <Button
             onClick={onConfirm}
@@ -188,7 +188,7 @@ const ImportConfirmModal = ({
             className="bg-gradient-primary hover:opacity-90 transition-opacity gap-2"
           >
             <Check className="h-4 w-4" />
-            {importing ? "Importing..." : selectedCount > 0 ? `Import ${transactionCount} txns + ${selectedCount} subs` : `Import ${transactionCount} transactions`}
+            {importing ? t("importing") : selectedCount > 0 ? t("importTxnsAndSubs", { txns: transactionCount, subs: selectedCount }) : t("importTransactions", { count: transactionCount })}
           </Button>
         </DialogFooter>
       </DialogContent>
