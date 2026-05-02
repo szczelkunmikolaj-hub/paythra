@@ -32,7 +32,7 @@ const Settings = () => {
     disconnectGmail();
     setGmailConnected(false);
     setGmailEmail(null);
-    toast({ title: "Gmail disconnected" });
+    toast({ title: t("gmailDisconnected") });
   };
 
   useEffect(() => {
