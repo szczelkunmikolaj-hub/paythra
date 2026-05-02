@@ -402,9 +402,9 @@ const CSVImport = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Columns className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-medium text-foreground">Map your columns</p>
+                  <p className="text-sm font-medium text-foreground">{t("mapYourColumns")}</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
+                <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> {t("cancel")}</Button>
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-border">
