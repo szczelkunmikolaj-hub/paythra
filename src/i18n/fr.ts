@@ -673,6 +673,31 @@ const fr = {
   landingReduceProblemBody: "Les abonnements sont les tueurs silencieux des budgets modernes. Sans visibilité, presque impossible de réduire les coûts ou d'économiser sur des services dont vous n'avez plus besoin.",
   landingTrackerProblemBody: "Tableurs et apps bancaires ne sont pas conçus pour suivre les abonnements. Il vous faut une app de suivi des abonnements dédiée qui détecte automatiquement les paiements récurrents.",
   learnMore: "En savoir plus",
+
+  homeSeoTitle: "Paythra – Gestionnaire d'Abonnements et Suivi des Dépenses",
+  homeSeoDescription: "Suivez, gérez et annulez facilement vos abonnements. Arrêtez de gaspiller de l'argent et reprenez le contrôle de vos dépenses mensuelles avec Paythra.",
+
+  internalLinksHeading: "Tout ce qu'il faut pour reprendre le contrôle de vos abonnements",
+  internalLinksIntro: "Avec Paythra, vous pouvez",
+  internalLinksConnector1: "automatiquement",
+  internalLinksConnector2: "et trouver des moyens intelligents de",
+  internalLinksPara2Start: "Que vous vouliez un tableau de bord unique pour",
+  internalLinksPara2Mid: "ou un puissant",
+  internalLinksPara2End: "qui tourne en arrière-plan, comparez les fonctionnalités sur notre page de",
+  internalLinksPara3Start: "Explorez le reste de Paythra :",
+  internalLinksAnd: "et",
+  anchorTrackSubscriptions: "suivre vos abonnements mensuels",
+  anchorCancelUnused: "annuler les abonnements inutilisés",
+  anchorReduceCosts: "réduire les coûts d'abonnement",
+  anchorManageRecurring: "gérer tous vos paiements récurrents",
+  anchorSubscriptionTracker: "suivi des abonnements",
+  anchorPricingPlans: "plans tarifaires",
+  anchorMonthlyTracker: "suivi mensuel des abonnements",
+  anchorStopUnwanted: "arrêter les abonnements indésirables",
+  anchorAllInOneManager: "gestionnaire d'abonnements tout-en-un",
+  anchorSaveMoney: "économiser sur les abonnements",
+  anchorAutomaticTracking: "suivi automatique des abonnements",
+
 };
 
 export default fr;

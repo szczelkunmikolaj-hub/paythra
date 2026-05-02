@@ -673,6 +673,32 @@ const es: Record<string, string> = {
   landingReduceProblemBody: "Las suscripciones son los asesinos silenciosos de los presupuestos modernos. Sin visibilidad, es casi imposible reducir costes o ahorrar dinero en suscripciones que ya no necesitas.",
   landingTrackerProblemBody: "Las hojas de cálculo y las apps bancarias no están hechas para rastrear suscripciones. Necesitas una app de seguimiento de suscripciones dedicada que detecte pagos recurrentes automáticamente.",
   learnMore: "Saber más",
+
+  // Homepage SEO
+  homeSeoTitle: "Paythra – Gestor de Suscripciones y Control de Gastos",
+  homeSeoDescription: "Rastrea, gestiona y cancela tus suscripciones fácilmente. Deja de malgastar dinero y toma el control de tus gastos mensuales con Paythra.",
+
+  internalLinksHeading: "Todo lo que necesitas para controlar tus suscripciones",
+  internalLinksIntro: "Con Paythra puedes",
+  internalLinksConnector1: "automáticamente",
+  internalLinksConnector2: "y descubrir formas inteligentes de",
+  internalLinksPara2Start: "Tanto si buscas un panel único para",
+  internalLinksPara2Mid: "como un potente",
+  internalLinksPara2End: "que funcione en segundo plano, puedes comparar funciones en nuestra página de",
+  internalLinksPara3Start: "Explora el resto de Paythra:",
+  internalLinksAnd: "y",
+  anchorTrackSubscriptions: "rastrear suscripciones mensuales",
+  anchorCancelUnused: "cancelar suscripciones sin usar",
+  anchorReduceCosts: "reducir costes de suscripciones",
+  anchorManageRecurring: "gestionar todos tus pagos recurrentes",
+  anchorSubscriptionTracker: "seguimiento de suscripciones",
+  anchorPricingPlans: "planes y precios",
+  anchorMonthlyTracker: "rastreador mensual de suscripciones",
+  anchorStopUnwanted: "detener suscripciones no deseadas",
+  anchorAllInOneManager: "gestor de suscripciones todo en uno",
+  anchorSaveMoney: "ahorrar dinero en suscripciones",
+  anchorAutomaticTracking: "seguimiento automático de suscripciones",
+
 };
 
 export default es;
