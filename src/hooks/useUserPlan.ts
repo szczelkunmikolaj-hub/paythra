@@ -6,6 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 export type PlanType = "free" | "premium" | "business";
 
 const TEST_MODE_KEY = "paythra_test_mode";
+// Test mode is a developer-only convenience and must NEVER be available
+// in production builds — it would otherwise allow any signed-in user to
+// gain premium access from the browser console.
+const TEST_MODE_ALLOWED = import.meta.env.DEV;
 
 export interface PlanLimits {
   maxSubscriptions: number;
@@ -48,6 +52,7 @@ export const useUserPlan = () => {
   const queryClient = useQueryClient();
 
   const [isTestMode, setIsTestMode] = useState(() => {
+    if (!TEST_MODE_ALLOWED) return false;
     try { return localStorage.getItem(TEST_MODE_KEY) === "true"; } catch { return false; }
   });
 
@@ -107,6 +112,10 @@ export const useUserPlan = () => {
   };
 
   const activateTestMode = async () => {
+    if (!TEST_MODE_ALLOWED) {
+      console.warn("Test mode is disabled in production builds.");
+      return;
+    }
     localStorage.setItem(TEST_MODE_KEY, "true");
     setIsTestMode(true);
   };

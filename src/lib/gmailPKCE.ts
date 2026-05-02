@@ -8,9 +8,22 @@ export const GOOGLE_CLIENT_ID =
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 
 const SS_VERIFIER = "gmail_pkce_verifier";
+// Tokens are kept in sessionStorage (not localStorage) so they're scoped
+// to the current tab and not exposed to other tabs / browser extensions.
+// One-time migration cleans up any tokens previously written to localStorage.
 const LS_TOKEN_KEY = "gmail_access_token";
 const LS_TOKEN_META = "gmail_token_meta"; // { expires_at }
 const LS_EMAIL = "gmail_connected_email";
+
+try {
+  if (typeof window !== "undefined" && window.localStorage) {
+    localStorage.removeItem(LS_TOKEN_KEY);
+    localStorage.removeItem(LS_TOKEN_META);
+    localStorage.removeItem(LS_EMAIL);
+  }
+} catch {
+  /* ignore */
+}
 
 // --- PKCE helpers ---
 function base64UrlEncode(bytes: Uint8Array): string {
@@ -86,12 +99,12 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   const accessToken: string = data.access_token;
   const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
 
-  localStorage.setItem(LS_TOKEN_KEY, accessToken);
-  localStorage.setItem(LS_TOKEN_META, JSON.stringify({ expires_at: expiresAt }));
+  sessionStorage.setItem(LS_TOKEN_KEY, accessToken);
+  sessionStorage.setItem(LS_TOKEN_META, JSON.stringify({ expires_at: expiresAt }));
   sessionStorage.removeItem(SS_VERIFIER);
 
   if (data.email) {
-    localStorage.setItem(LS_EMAIL, data.email);
+    sessionStorage.setItem(LS_EMAIL, data.email);
   }
 
   return accessToken;
@@ -99,9 +112,9 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
 
 /** Returns the access token if present and not expired, else null. */
 export function getAccessToken(): string | null {
-  const token = localStorage.getItem(LS_TOKEN_KEY);
+  const token = sessionStorage.getItem(LS_TOKEN_KEY);
   if (!token) return null;
-  const metaRaw = localStorage.getItem(LS_TOKEN_META);
+  const metaRaw = sessionStorage.getItem(LS_TOKEN_META);
   if (metaRaw) {
     try {
       const meta = JSON.parse(metaRaw);
@@ -118,12 +131,20 @@ export function isGmailConnected(): boolean {
 }
 
 export function getConnectedEmail(): string | null {
-  return localStorage.getItem(LS_EMAIL);
+  return sessionStorage.getItem(LS_EMAIL);
 }
 
 export function disconnectGmail() {
-  localStorage.removeItem(LS_TOKEN_KEY);
-  localStorage.removeItem(LS_TOKEN_META);
-  localStorage.removeItem(LS_EMAIL);
+  sessionStorage.removeItem(LS_TOKEN_KEY);
+  sessionStorage.removeItem(LS_TOKEN_META);
+  sessionStorage.removeItem(LS_EMAIL);
   sessionStorage.removeItem(SS_VERIFIER);
+  // Clean up legacy localStorage entries from older versions
+  try {
+    localStorage.removeItem(LS_TOKEN_KEY);
+    localStorage.removeItem(LS_TOKEN_META);
+    localStorage.removeItem(LS_EMAIL);
+  } catch {
+    /* ignore */
+  }
 }
