@@ -628,6 +628,19 @@ const es: Record<string, string> = {
   unusedSubscriptionMsg: "Parece que no usas {{name}}. Cancelarla podría ahorrarte €{{savings}}/año.",
   categoryOverlap: "Solapamiento de categoría",
   categoryOverlapMsg: "Tienes {{count}} suscripciones de {{category}}. Considera consolidarlas para reducir costes.",
+  cumulative: "Acumulado",
+  currentPlanLabel: "Plan actual",
+  monthlyOption: "Mensual",
+  yearlyOption: "Anual",
+  connecting: "Conectando…",
+  connected: "¡Conectado!",
+  connectionFailed: "Error de conexión",
+  connectingGmailDots: "Conectando tu cuenta de Gmail…",
+  gmailConnectedScanning: "Gmail conectado. Iniciando análisis…",
+  googleErrorPrefix: "Google devolvió un error:",
+  noAuthCode: "No se devolvió ningún código de autorización.",
+  failedToConnectGmail: "No se pudo conectar Gmail.",
+  backToDashboard: "Volver al panel",
 };
 
 export default es;
