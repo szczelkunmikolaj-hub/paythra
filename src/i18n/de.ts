@@ -427,7 +427,7 @@ const de = {
   suggestionsTimeFutureTitle: "12-Monats-Projektion",
   suggestionsTimeFutureMsg: "Bei Umsetzung aller Vorschläge könntest du {{amount}} im nächsten Jahr sparen.",
   suggestionsTimeOverlapTitle: "Streaming-Überschneidung",
-  suggestionsTimeOverlapMsg: "Das Abbestellen redundanter Streaming-Abos könnte {{amount}}/Jahr sparen.",,
+  suggestionsTimeOverlapMsg: "Das Abbestellen redundanter Streaming-Abos könnte {{amount}}/Jahr sparen.",
   trackSubscriptionsNav: "Abos verfolgen",
   cancelSubscriptionsNav: "Abos kündigen",
   subscriptionManagerNav: "Abo-Manager",

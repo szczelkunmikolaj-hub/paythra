@@ -427,7 +427,7 @@ const fr = {
   suggestionsTimeFutureTitle: "Projection 12 Mois",
   suggestionsTimeFutureMsg: "En agissant sur toutes les suggestions, vous pourriez économiser {{amount}} sur l'année.",
   suggestionsTimeOverlapTitle: "Chevauchement Streaming",
-  suggestionsTimeOverlapMsg: "Supprimer les abonnements redondants pourrait économiser {{amount}}/an.",,
+  suggestionsTimeOverlapMsg: "Supprimer les abonnements redondants pourrait économiser {{amount}}/an.",
   trackSubscriptionsNav: "Suivre les abonnements",
   cancelSubscriptionsNav: "Résilier des abonnements",
   subscriptionManagerNav: "Gestionnaire d’abonnements",

@@ -464,7 +464,7 @@ const en = {
   suggestionsTimeFutureTitle: "12-Month Projection",
   suggestionsTimeFutureMsg: "By acting on all suggestions, you could save {{amount}} over the next year.",
   suggestionsTimeOverlapTitle: "Streaming Overlap",
-  suggestionsTimeOverlapMsg: "Dropping redundant streaming subs could save {{amount}}/year.",,
+  suggestionsTimeOverlapMsg: "Dropping redundant streaming subs could save {{amount}}/year.",
   trackSubscriptionsNav: "Track Subscriptions",
   cancelSubscriptionsNav: "Cancel Subscriptions",
   subscriptionManagerNav: "Subscription Manager",

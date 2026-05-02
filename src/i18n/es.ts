@@ -427,7 +427,7 @@ const es: Record<string, string> = {
   suggestionsTimeFutureTitle: "Proyección 12 Meses",
   suggestionsTimeFutureMsg: "Actuando en todas las sugerencias, podrías ahorrar {{amount}} en el próximo año.",
   suggestionsTimeOverlapTitle: "Solapamiento de Streaming",
-  suggestionsTimeOverlapMsg: "Eliminar suscripciones redundantes podría ahorrarte {{amount}}/año.",,
+  suggestionsTimeOverlapMsg: "Eliminar suscripciones redundantes podría ahorrarte {{amount}}/año.",
   trackSubscriptionsNav: "Rastrear suscripciones",
   cancelSubscriptionsNav: "Cancelar suscripciones",
   subscriptionManagerNav: "Gestor de suscripciones",

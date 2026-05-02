@@ -427,7 +427,7 @@ const pl = {
   suggestionsTimeFutureTitle: "Projekcja 12 Miesięcy",
   suggestionsTimeFutureMsg: "Realizując wszystkie sugestie, możesz zaoszczędzić {{amount}} w ciągu roku.",
   suggestionsTimeOverlapTitle: "Nakładanie się Streamingu",
-  suggestionsTimeOverlapMsg: "Rezygnacja z nadmiarowych subskrypcji może zaoszczędzić {{amount}}/rok.",,
+  suggestionsTimeOverlapMsg: "Rezygnacja z nadmiarowych subskrypcji może zaoszczędzić {{amount}}/rok.",
   trackSubscriptionsNav: "Śledź subskrypcje",
   cancelSubscriptionsNav: "Anuluj subskrypcje",
   subscriptionManagerNav: "Menedżer subskrypcji",
