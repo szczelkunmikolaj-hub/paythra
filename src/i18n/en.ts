@@ -679,6 +679,41 @@ const en = {
   noAuthCode: "No authorization code returned.",
   failedToConnectGmail: "Failed to connect Gmail.",
   backToDashboard: "Back to dashboard",
+
+  // SEO landing — shared structure
+  whatIsTheProblemTitle: "What is the problem?",
+  whyItMattersTitle: "Why it matters",
+  howPaythraSolvesTitle: "How Paythra solves it",
+  howItWorksTitle: "How it works",
+  howItWorksStep1Title: "Connect or list your subscriptions",
+  howItWorksStep1Body: "Add subscriptions manually or let Paythra detect them automatically from your bank transactions and email receipts.",
+  howItWorksStep2Title: "Track and analyze your spending",
+  howItWorksStep2Body: "See every recurring charge, category, monthly total and forecast — all in one clean dashboard.",
+  howItWorksStep3Title: "Cancel or optimize subscriptions",
+  howItWorksStep3Body: "Get smart suggestions, spot duplicates and unused services, then cancel unused subscriptions in a few taps.",
+  benefitsTitle: "Benefits of using Paythra",
+  benefit1Title: "Save real money every month",
+  benefit1Body: "Most users find dozens of euros in unused subscriptions within their first week of using Paythra.",
+  benefit2Title: "Never get surprised again",
+  
+  benefit2Body: "Reminders before trials end and price increases mean no more silent charges.",
+  benefit3Title: "Beautifully simple, on every device",
+  benefit3Body: "A modern, mobile-first app that you'll actually want to open every week.",
+  relatedFeaturesTitle: "Explore more features",
+  relatedFeaturesSubtitle: "Everything Paythra does, all connected.",
+  relatedTrackDesc: "Track all your monthly subscriptions in one place.",
+  relatedCancelDesc: "Cancel unused subscriptions and stop unwanted charges.",
+  relatedManagerDesc: "Your personal subscription manager for every recurring payment.",
+  relatedReduceDesc: "Reduce subscription costs with smart insights and savings tips.",
+  relatedTrackerDesc: "The simple, modern subscription tracking app for everyday life.",
+
+  // Per-page problem statements
+  landingTrackProblemBody: "Most people lose track of how many subscriptions they actually pay for. Streaming, software, gym, cloud — they all renew silently. Without a way to track monthly subscriptions in one place, the costs creep up and your money quietly disappears.",
+  landingCancelProblemBody: "Cancelling subscriptions is intentionally hard. Buried settings, retention flows, forgotten free trials — they all keep money flowing out of your account. To cancel subscriptions easily, you first need to see them clearly.",
+  landingManagerProblemBody: "Without a personal subscription manager, recurring payments live across emails, app stores, banks and memory. That makes it almost impossible to manage subscriptions or budget with confidence.",
+  landingReduceProblemBody: "Subscriptions are the silent killers of modern budgets. Without visibility, it's almost impossible to reduce subscription costs or save money on subscriptions you don't really need.",
+  landingTrackerProblemBody: "Manual spreadsheets and bank apps weren't built to track subscriptions. You need a dedicated subscription tracking app that detects recurring payments automatically and shows them in a clean, modern view.",
+  learnMore: "Learn more",
 };
 
 export default en;

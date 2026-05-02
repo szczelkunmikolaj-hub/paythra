@@ -11,6 +11,8 @@ const CancelSubscriptions = () => {
       canonical="https://paythra.com/cancel-subscriptions"
       h1={t("landingCancelH1")}
       intro={t("landingCancelIntro")}
+      problemHeading={t("whatIsTheProblemTitle")}
+      problemBody={t("landingCancelProblemBody")}
       sections={[
         {
           heading: t("landingCancelSection1Heading"),

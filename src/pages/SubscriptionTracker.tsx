@@ -11,6 +11,8 @@ const SubscriptionTracker = () => {
       canonical="https://paythra.com/subscription-tracker"
       h1={t("landingTrackerH1")}
       intro={t("landingTrackerIntro")}
+      problemHeading={t("whatIsTheProblemTitle")}
+      problemBody={t("landingTrackerProblemBody")}
       sections={[
         {
           heading: t("landingTrackerSection1Heading"),

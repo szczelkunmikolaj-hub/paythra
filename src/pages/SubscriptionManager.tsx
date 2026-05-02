@@ -11,6 +11,8 @@ const SubscriptionManager = () => {
       canonical="https://paythra.com/subscription-manager"
       h1={t("landingManagerH1")}
       intro={t("landingManagerIntro")}
+      problemHeading={t("whatIsTheProblemTitle")}
+      problemBody={t("landingManagerProblemBody")}
       sections={[
         {
           heading: t("landingManagerSection1Heading"),

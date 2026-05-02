@@ -11,6 +11,8 @@ const TrackSubscriptions = () => {
       canonical="https://paythra.com/track-subscriptions"
       h1={t("landingTrackH1")}
       intro={t("landingTrackIntro")}
+      problemHeading={t("whatIsTheProblemTitle")}
+      problemBody={t("landingTrackProblemBody")}
       sections={[
         {
           heading: t("landingTrackSection1Heading"),
