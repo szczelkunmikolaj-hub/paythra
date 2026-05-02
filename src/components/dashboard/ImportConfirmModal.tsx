@@ -133,8 +133,8 @@ const ImportConfirmModal = ({
           {detected.length === 0 && (
             <div className="rounded-xl bg-muted/50 p-6 text-center">
               <Package className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">No recurring subscriptions detected in this file.</p>
-              <p className="text-xs text-muted-foreground mt-1">All {transactionCount} transactions will be imported as regular transactions.</p>
+              <p className="text-sm text-muted-foreground">{t("noRecurringDetected")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("allTransactionsRegular", { count: transactionCount })}</p>
             </div>
           )}
 
