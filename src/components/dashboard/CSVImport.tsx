@@ -393,7 +393,7 @@ const CSVImport = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Upload className="h-5 w-5 text-primary" />
-            Import Bank Transactions
+            {t("importBankTransactions")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
