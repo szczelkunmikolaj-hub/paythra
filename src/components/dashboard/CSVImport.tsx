@@ -431,7 +431,7 @@ const CSVImport = () => {
               <div className="grid gap-3 sm:grid-cols-3">
                 {(["date", "merchant", "amount"] as const).map((field) => (
                   <div key={field}>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{field} Column</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{t(`${field}Column`)}</label>
                     <Select value={columnMapping[field]} onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, [field]: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
