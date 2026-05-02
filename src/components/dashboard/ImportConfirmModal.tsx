@@ -41,6 +41,7 @@ const ImportConfirmModal = ({
   open, onOpenChange, detected, otherTransactions = [], onToggle, onSelectAll,
   onUpdateCycle, onConfirm, importing, transactionCount,
 }: ImportConfirmModalProps) => {
+  const { t } = useTranslation();
   const selectedCount = detected.filter((d) => d.selected).length;
   const highConfidence = detected.filter((d) => d.confidence === "high");
   const mediumConfidence = detected.filter((d) => d.confidence === "medium");
