@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import { useSubscriptions } from "@/hooks/useSubscriptions";
 const GmailDetect = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addSubscription } = useSubscriptions();
+  const { t } = useTranslation();
 
   const [connected, setConnected] = useState(isGmailConnected());
   const [email, setEmail] = useState(getConnectedEmail());
@@ -43,23 +45,23 @@ const GmailDetect = () => {
     const t = getAccessToken();
     if (!t) {
       toast({
-        title: "Session expired",
-        description: "Please reconnect Gmail.",
+        title: t("gmailSessionExpired"),
+        description: t("reconnectGmail"),
         variant: "destructive",
       });
       setConnected(false);
       return;
     }
     setScanning(true);
-    setProgress("Scanning your emails for subscriptions...");
+    setProgress(t("scanningEmailsForSubscriptions"));
     try {
       const emails = await fetchEmailsLast90Days(t, setProgress);
       const groups = groupRecurring(emails);
       saveDetected(groups);
       setDetected(groups);
       toast({
-        title: "Scan complete",
-        description: `${groups.length} subscription${groups.length === 1 ? "" : "s"} detected.`,
+        title: t("scanComplete"),
+        description: t("detectedSubscriptionsCount", { count: groups.length }),
       });
     } catch (e: any) {
       const msg = String(e?.message || "");
@@ -68,12 +70,12 @@ const GmailDetect = () => {
         setConnected(false);
         setEmail(null);
         toast({
-          title: "Session expired",
-          description: "Please reconnect Gmail.",
+          title: t("gmailSessionExpired"),
+          description: t("reconnectGmail"),
           variant: "destructive",
         });
       } else {
-        toast({ title: "Scan failed", description: msg, variant: "destructive" });
+        toast({ title: t("scanFailed"), description: msg, variant: "destructive" });
       }
     } finally {
       setScanning(false);
@@ -109,7 +111,7 @@ const GmailDetect = () => {
     setEmail(null);
     setDetected([]);
     saveDetected([]);
-    toast({ title: "Gmail disconnected" });
+    toast({ title: t("gmailDisconnected") });
   };
 
   const handleConfirm = async (sub: DetectedSubscription) => {
@@ -127,9 +129,9 @@ const GmailDetect = () => {
       appendPaythraSubscription(sub);
       recordConfirmed(sub.domain);
       setConfirmed((c) => [...c, sub.domain]);
-      toast({ title: `${sub.merchant} added to your subscriptions` });
+      toast({ title: t("merchantAddedToSubscriptions", { merchant: sub.merchant }) });
     } catch (e: any) {
-      toast({ title: "Failed to add", description: e.message, variant: "destructive" });
+      toast({ title: t("failedToAdd"), description: e.message, variant: "destructive" });
     }
   };
 
@@ -154,7 +156,7 @@ const GmailDetect = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Mail className="h-5 w-5 text-primary" />
-            Gmail subscription detection
+            {t("gmailSubscriptionDetection")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -164,7 +166,7 @@ const GmailDetect = () => {
                 <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                    Gmail connected
+                    {t("gmailConnected")}
                   </p>
                   {email && <p className="text-xs text-green-600 dark:text-green-500">{email}</p>}
                 </div>
@@ -176,20 +178,20 @@ const GmailDetect = () => {
                   className="gap-2 bg-gradient-primary hover:opacity-90"
                 >
                   {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                  {scanning ? "Scanning…" : "Scan last 90 days"}
+                  {scanning ? t("scanning") : t("scanLast90Days")}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleDisconnect}
                   className="gap-2 text-destructive hover:text-destructive"
                 >
-                  <Unplug className="h-4 w-4" /> Disconnect
+                  <Unplug className="h-4 w-4" /> {t("disconnect")}
                 </Button>
               </div>
               {scanning && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>{progress || "Scanning your emails for subscriptions..."}</span>
+                  <span>{progress || t("scanningEmailsForSubscriptions")}</span>
                 </div>
               )}
             </>
@@ -198,14 +200,14 @@ const GmailDetect = () => {
               <div className="flex items-center gap-3 rounded-xl border border-border p-4">
                 <AlertCircle className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Gmail not connected</p>
+                  <p className="text-sm font-medium">{t("gmailNotConnectedTitle")}</p>
                   <p className="text-xs text-muted-foreground">
-                    We'll scan emails from the last 90 days to find recurring subscriptions.
+                    {t("gmailScanLast90DaysHint")}
                   </p>
                 </div>
               </div>
               <Button onClick={handleConnectClick} className="gap-2 bg-gradient-primary hover:opacity-90">
-                <Mail className="h-4 w-4" /> Connect Gmail
+                <Mail className="h-4 w-4" /> {t("connectGmail")}
               </Button>
             </>
           )}
@@ -217,7 +219,7 @@ const GmailDetect = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-display text-lg">
               <Search className="h-5 w-5 text-primary" />
-              Detected subscriptions ({visible.length})
+              {t("detectedSubscriptionsTitle", { count: visible.length })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -237,7 +239,7 @@ const GmailDetect = () => {
                         <p className="text-xs text-muted-foreground">{sub.domain}</p>
                       </div>
                       <Badge variant={confidenceVariant(sub.confidence)} className="text-[10px]">
-                        {sub.confidence}% match
+                        {t("percentMatch", { count: sub.confidence })}
                       </Badge>
                     </div>
                     <div className="flex items-baseline gap-2">
@@ -246,7 +248,7 @@ const GmailDetect = () => {
                         {sub.amount.toFixed(2)}
                       </span>
                       <Badge variant="secondary" className="text-[10px]">
-                        {sub.frequency === "unknown" ? `${sub.occurrences}× seen` : sub.frequency}
+                        {sub.frequency === "unknown" ? t("timesSeen", { count: sub.occurrences }) : t(sub.frequency)}
                       </Badge>
                     </div>
                     <div className="flex gap-2">
@@ -255,7 +257,7 @@ const GmailDetect = () => {
                         onClick={() => handleConfirm(sub)}
                         className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
                       >
-                        <Plus className="h-3.5 w-3.5" /> Confirm
+                        <Plus className="h-3.5 w-3.5" /> {t("confirmLabel")}
                       </Button>
                       <Button
                         size="sm"
@@ -263,7 +265,7 @@ const GmailDetect = () => {
                         onClick={() => handleDismiss(sub)}
                         className="gap-1"
                       >
-                        <X className="h-3.5 w-3.5" /> Dismiss
+                        <X className="h-3.5 w-3.5" /> {t("dismissLabel")}
                       </Button>
                     </div>
                   </motion.div>
@@ -278,7 +280,7 @@ const GmailDetect = () => {
         <Card className="shadow-card">
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
             <CheckCircle2 className="h-10 w-10 text-green-500" />
-            <p className="text-sm text-muted-foreground">All detected subscriptions reviewed.</p>
+            <p className="text-sm text-muted-foreground">{t("allDetectedSubscriptionsReviewed")}</p>
           </CardContent>
         </Card>
       )}
