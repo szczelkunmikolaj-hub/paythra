@@ -672,6 +672,7 @@ const de = {
   landingManagerProblemBody: "Ohne persönlichen Abo-Manager leben wiederkehrende Zahlungen in E-Mails, App-Stores, Banken und im Kopf. So ist es fast unmöglich, Abos zu verwalten oder sicher zu budgetieren.",
   landingReduceProblemBody: "Abos sind die stillen Killer moderner Budgets. Ohne Übersicht ist es kaum möglich, Abo-Kosten zu senken oder bei Diensten zu sparen, die du nicht mehr brauchst.",
   landingTrackerProblemBody: "Tabellen und Banking-Apps sind nicht dafür gemacht, Abos zu verfolgen. Du brauchst eine dedizierte Abo-Tracking-App, die wiederkehrende Zahlungen automatisch erkennt.",
+  learnMore: "Mehr erfahren",
 };
 
 export default de;

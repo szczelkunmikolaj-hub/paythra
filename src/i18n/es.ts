@@ -672,6 +672,7 @@ const es: Record<string, string> = {
   landingManagerProblemBody: "Sin un gestor personal de suscripciones, los pagos recurrentes viven entre correos, tiendas de apps, bancos y la memoria. Así es casi imposible gestionar suscripciones o presupuestar con confianza.",
   landingReduceProblemBody: "Las suscripciones son los asesinos silenciosos de los presupuestos modernos. Sin visibilidad, es casi imposible reducir costes o ahorrar dinero en suscripciones que ya no necesitas.",
   landingTrackerProblemBody: "Las hojas de cálculo y las apps bancarias no están hechas para rastrear suscripciones. Necesitas una app de seguimiento de suscripciones dedicada que detecte pagos recurrentes automáticamente.",
+  learnMore: "Saber más",
 };
 
 export default es;

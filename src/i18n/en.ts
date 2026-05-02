@@ -713,6 +713,7 @@ const en = {
   landingManagerProblemBody: "Without a personal subscription manager, recurring payments live across emails, app stores, banks and memory. That makes it almost impossible to manage subscriptions or budget with confidence.",
   landingReduceProblemBody: "Subscriptions are the silent killers of modern budgets. Without visibility, it's almost impossible to reduce subscription costs or save money on subscriptions you don't really need.",
   landingTrackerProblemBody: "Manual spreadsheets and bank apps weren't built to track subscriptions. You need a dedicated subscription tracking app that detects recurring payments automatically and shows them in a clean, modern view.",
+  learnMore: "Learn more",
 };
 
 export default en;

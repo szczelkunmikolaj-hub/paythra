@@ -672,6 +672,7 @@ const fr = {
   landingManagerProblemBody: "Sans gestionnaire personnel d'abonnements, les paiements récurrents vivent entre emails, stores, banques et mémoire. Difficile alors de gérer vos abonnements ou de budgéter sereinement.",
   landingReduceProblemBody: "Les abonnements sont les tueurs silencieux des budgets modernes. Sans visibilité, presque impossible de réduire les coûts ou d'économiser sur des services dont vous n'avez plus besoin.",
   landingTrackerProblemBody: "Tableurs et apps bancaires ne sont pas conçus pour suivre les abonnements. Il vous faut une app de suivi des abonnements dédiée qui détecte automatiquement les paiements récurrents.",
+  learnMore: "En savoir plus",
 };
 
 export default fr;

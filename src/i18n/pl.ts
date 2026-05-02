@@ -672,6 +672,7 @@ const pl = {
   landingManagerProblemBody: "Bez osobistego menedżera subskrypcji cykliczne płatności żyją w mailach, sklepach z aplikacjami, bankach i pamięci. Wtedy prawie niemożliwe jest zarządzanie subskrypcjami i pewne planowanie budżetu.",
   landingReduceProblemBody: "Subskrypcje to cisi zabójcy nowoczesnych budżetów. Bez wglądu trudno ograniczyć koszty subskrypcji i oszczędzać na tych, których już nie potrzebujesz.",
   landingTrackerProblemBody: "Arkusze i aplikacje bankowe nie są stworzone do śledzenia subskrypcji. Potrzebujesz dedykowanej aplikacji do śledzenia subskrypcji, która wykrywa cykliczne płatności automatycznie.",
+  learnMore: "Dowiedz się więcej",
 };
 
 export default pl;
