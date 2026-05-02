@@ -146,7 +146,7 @@ const ImportConfirmModal = ({
                 onClick={() => setShowOther(!showOther)}
                 className="flex w-full items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/60 transition-colors"
               >
-                <span>❌ Other transactions ({otherTransactions.length}) — not subscriptions</span>
+                <span>❌ {t("otherTransactionsLabel")} ({otherTransactions.length}) — {t("notSubscriptions")}</span>
                 {showOther ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               </button>
               {showOther && (
