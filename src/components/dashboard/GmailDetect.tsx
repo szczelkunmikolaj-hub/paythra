@@ -42,8 +42,8 @@ const GmailDetect = () => {
   const [confirmed, setConfirmed] = useState<string[]>(getConfirmed());
 
   const handleScan = async () => {
-    const t = getAccessToken();
-    if (!t) {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
       toast({
         title: t("gmailSessionExpired"),
         description: t("reconnectGmail"),
@@ -55,7 +55,7 @@ const GmailDetect = () => {
     setScanning(true);
     setProgress(t("scanningEmailsForSubscriptions"));
     try {
-      const emails = await fetchEmailsLast90Days(t, setProgress);
+      const emails = await fetchEmailsLast90Days(accessToken, setProgress);
       const groups = groupRecurring(emails);
       saveDetected(groups);
       setDetected(groups);
