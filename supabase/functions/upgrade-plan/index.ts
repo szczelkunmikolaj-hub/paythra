@@ -11,7 +11,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ALLOWED_PLANS = new Set(["free", "premium", "business"]);
+// Only `free` is allowed via this endpoint (used for downgrade / initialization).
+// Promotion to `premium` / `business` MUST go through a verified payment flow
+// (Stripe / Paddle webhook with signature verification) and is intentionally
+// not exposed to the client.
+const ALLOWED_PLANS = new Set(["free"]);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -46,13 +50,17 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const plan = typeof body?.plan === "string" ? body.plan : "";
     if (!ALLOWED_PLANS.has(plan)) {
-      return new Response(JSON.stringify({ error: "Invalid plan" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error:
+            "Plan promotion requires a verified payment. Only 'free' is allowed via this endpoint.",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
-
-    // TODO: verify payment / trial eligibility here before promoting.
 
     const adminClient = createClient(supabaseUrl, serviceKey);
     const { data: existing } = await adminClient
