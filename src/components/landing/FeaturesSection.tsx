@@ -1,16 +1,17 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Scan, LayoutDashboard, ShieldAlert, BarChart3, Lightbulb } from "lucide-react";
+import { Scan, LayoutDashboard, ShieldAlert, BarChart3, Lightbulb, ArrowRight } from "lucide-react";
 
 const FeaturesSection = () => {
   const { t } = useTranslation();
 
   const features = [
-    { icon: Scan, title: t("autoDetection"), description: t("autoDetectionDesc") },
-    { icon: LayoutDashboard, title: t("subscriptionDashboard"), description: t("subscriptionDashboardDesc") },
-    { icon: ShieldAlert, title: t("trialGuardian"), description: t("trialGuardianDesc") },
-    { icon: BarChart3, title: t("spendingInsights"), description: t("spendingInsightsDesc") },
-    { icon: Lightbulb, title: t("optimizationSuggestions"), description: t("optimizationSuggestionsDesc") },
+    { icon: Scan, title: t("autoDetection"), description: t("autoDetectionDesc"), to: "/track-subscriptions" },
+    { icon: LayoutDashboard, title: t("subscriptionDashboard"), description: t("subscriptionDashboardDesc"), to: "/subscription-manager" },
+    { icon: ShieldAlert, title: t("trialGuardian"), description: t("trialGuardianDesc"), to: "/cancel-subscriptions" },
+    { icon: BarChart3, title: t("spendingInsights"), description: t("spendingInsightsDesc"), to: "/subscription-tracker" },
+    { icon: Lightbulb, title: t("optimizationSuggestions"), description: t("optimizationSuggestionsDesc"), to: "/reduce-subscription-costs" },
   ];
 
   return (
@@ -38,15 +39,24 @@ const FeaturesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className={`group rounded-2xl border border-border bg-card p-8 shadow-card transition-all hover:shadow-elevated hover:-translate-y-1 ${
-                i === 0 ? "sm:col-span-2 lg:col-span-1" : ""
-              }`}
+              className={i === 0 ? "sm:col-span-2 lg:col-span-1" : ""}
             >
-              <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
-                <feature.icon className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <h3 className="font-display text-lg font-semibold text-foreground">{feature.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
+              <Link
+                to={feature.to}
+                className="group block h-full rounded-2xl border border-border bg-card p-8 shadow-card transition-all hover:shadow-elevated hover:-translate-y-1 hover:border-primary/40"
+              >
+                <div className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                  <feature.icon className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <h3 className="font-display text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{feature.description}</p>
+                <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary opacity-80 group-hover:opacity-100 transition-opacity">
+                  {t("learnMore")}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
             </motion.div>
           ))}
         </div>
