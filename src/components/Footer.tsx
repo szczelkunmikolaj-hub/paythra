@@ -14,7 +14,12 @@ const Footer = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">{t("home")}</Link>
-            <a href="#features" className="hover:text-foreground transition-colors">{t("features")}</a>
+            <Link to="/track-subscriptions" className="hover:text-foreground transition-colors">Track Subscriptions</Link>
+            <Link to="/cancel-subscriptions" className="hover:text-foreground transition-colors">Cancel Subscriptions</Link>
+            <Link to="/subscription-manager" className="hover:text-foreground transition-colors">Subscription Manager</Link>
+            <Link to="/reduce-subscription-costs" className="hover:text-foreground transition-colors">Reduce Costs</Link>
+            <Link to="/subscription-tracker" className="hover:text-foreground transition-colors">Subscription Tracker</Link>
+            <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
             <Link to="/login" className="hover:text-foreground transition-colors">{t("logIn")}</Link>
             <Link to="/signup" className="hover:text-foreground transition-colors">{t("signUp")}</Link>
           </div>
