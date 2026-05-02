@@ -9,7 +9,7 @@ interface StatsCardsProps {
 }
 
 const StatsCards = ({ subscriptions }: StatsCardsProps) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const active = subscriptions.filter((s) => s.status === "active");
   const monthly = active.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
@@ -17,10 +17,10 @@ const StatsCards = ({ subscriptions }: StatsCardsProps) => {
   const unused = active.filter((s) => s.is_unused).length;
 
   const stats = [
-    { title: "Monthly Cost", value: formatCurrency(monthly, lang), icon: CreditCard, color: "text-primary" },
-    { title: "Yearly Cost", value: formatCurrency(yearly, lang), icon: TrendingUp, color: "text-accent-foreground" },
-    { title: "Active Subscriptions", value: active.length.toString(), icon: Zap, color: "text-primary" },
-    { title: "Unused Alerts", value: unused.toString(), icon: AlertTriangle, color: "text-destructive" },
+    { title: t("monthlyCost"), value: formatCurrency(monthly, lang), icon: CreditCard, color: "text-primary" },
+    { title: t("yearlyCost"), value: formatCurrency(yearly, lang), icon: TrendingUp, color: "text-accent-foreground" },
+    { title: t("activeSubscriptions"), value: active.length.toString(), icon: Zap, color: "text-primary" },
+    { title: t("unusedAlerts"), value: unused.toString(), icon: AlertTriangle, color: "text-destructive" },
   ];
 
   return (
