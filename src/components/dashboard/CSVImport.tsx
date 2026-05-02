@@ -358,12 +358,12 @@ const CSVImport = () => {
       }
 
       toast({
-        title: `Imported ${imported} transactions`,
-        description: selected.length > 0 ? `Added ${selected.length} subscriptions.` : undefined,
+        title: t("importedTransactions", { count: imported }),
+        description: selected.length > 0 ? t("addedSubscriptions", { count: selected.length }) : undefined,
       });
       resetAll();
     } catch (err: any) {
-      toast({ title: "Import failed", description: err.message, variant: "destructive" });
+      toast({ title: t("importFailed"), description: err.message, variant: "destructive" });
     } finally {
       setImporting(false);
     }
