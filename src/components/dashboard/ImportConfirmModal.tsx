@@ -110,7 +110,7 @@ const ImportConfirmModal = ({
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-green-500" />
                 <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                  ✅ Detected Subscriptions ({highConfidence.length})
+                  ✅ {t("detectedSubscriptionsLabel")} ({highConfidence.length})
                 </p>
               </div>
               {highConfidence.map(renderSubItem)}
