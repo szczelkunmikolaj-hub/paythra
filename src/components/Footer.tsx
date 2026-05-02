@@ -14,20 +14,20 @@ const Footer = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <Link to="/" className="hover:text-foreground transition-colors">{t("home")}</Link>
-            <Link to="/track-subscriptions" className="hover:text-foreground transition-colors">Track Subscriptions</Link>
-            <Link to="/cancel-subscriptions" className="hover:text-foreground transition-colors">Cancel Subscriptions</Link>
-            <Link to="/subscription-manager" className="hover:text-foreground transition-colors">Subscription Manager</Link>
-            <Link to="/reduce-subscription-costs" className="hover:text-foreground transition-colors">Reduce Costs</Link>
-            <Link to="/subscription-tracker" className="hover:text-foreground transition-colors">Subscription Tracker</Link>
-            <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
+            <Link to="/track-subscriptions" className="hover:text-foreground transition-colors">{t("trackSubscriptionsNav")}</Link>
+            <Link to="/cancel-subscriptions" className="hover:text-foreground transition-colors">{t("cancelSubscriptionsNav")}</Link>
+            <Link to="/subscription-manager" className="hover:text-foreground transition-colors">{t("subscriptionManagerNav")}</Link>
+            <Link to="/reduce-subscription-costs" className="hover:text-foreground transition-colors">{t("reduceCostsNav")}</Link>
+            <Link to="/subscription-tracker" className="hover:text-foreground transition-colors">{t("subscriptionTrackerNav")}</Link>
+            <Link to="/pricing" className="hover:text-foreground transition-colors">{t("pricingNav")}</Link>
             <Link to="/login" className="hover:text-foreground transition-colors">{t("logIn")}</Link>
             <Link to="/signup" className="hover:text-foreground transition-colors">{t("signUp")}</Link>
           </div>
           <div className="flex flex-col items-center gap-2 md:items-end">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+              <Link to="/privacy-policy" className="hover:text-foreground transition-colors">{t("privacyPolicy")}</Link>
               <span aria-hidden="true">·</span>
-              <Link to="/terms-of-service" className="hover:text-foreground transition-colors">Terms of Service</Link>
+              <Link to="/terms-of-service" className="hover:text-foreground transition-colors">{t("termsOfService")}</Link>
             </div>
             <p className="text-xs text-muted-foreground">
               © {new Date().getFullYear()} Paythra. {t("allRightsReserved")}
