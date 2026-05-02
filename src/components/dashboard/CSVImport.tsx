@@ -443,7 +443,7 @@ const CSVImport = () => {
               </div>
 
               <Button onClick={applyColumnMapping} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
-                <Check className="mr-2 h-4 w-4" /> Apply & Continue
+                <Check className="mr-2 h-4 w-4" /> {t("applyContinue")}
               </Button>
             </div>
           )}
