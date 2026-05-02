@@ -13,20 +13,19 @@ import {
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import paythraLogo from "@/assets/paythra-logo.png";
 
-const seoLinks = [
-  { to: "/track-subscriptions", label: "Track Subscriptions" },
-  { to: "/cancel-subscriptions", label: "Cancel Subscriptions" },
-  { to: "/subscription-manager", label: "Subscription Manager" },
-  { to: "/reduce-subscription-costs", label: "Reduce Costs" },
-  { to: "/subscription-tracker", label: "Subscription Tracker" },
-  { to: "/pricing", label: "Pricing" },
-  { to: "/", label: "Home" },
-];
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { t } = useTranslation();
+  const seoLinks = [
+    { to: "/track-subscriptions", label: t("trackSubscriptionsNav") },
+    { to: "/cancel-subscriptions", label: t("cancelSubscriptionsNav") },
+    { to: "/subscription-manager", label: t("subscriptionManagerNav") },
+    { to: "/reduce-subscription-costs", label: t("reduceCostsNav") },
+    { to: "/subscription-tracker", label: t("subscriptionTrackerNav") },
+    { to: "/pricing", label: t("pricingNav") },
+    { to: "/", label: t("home") },
+  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -35,7 +34,7 @@ const Navbar = () => {
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <button
-                aria-label="Open menu"
+                aria-label={t("openMenu")}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground hover:bg-accent"
               >
                 <Menu className="h-5 w-5" />
@@ -87,7 +86,7 @@ const Navbar = () => {
           </Link>
         </div>
 
-        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
+        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)} aria-label={t("toggleMenu")}>
           {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
