@@ -144,14 +144,14 @@ const Settings = () => {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="font-display text-lg flex items-center gap-2">
-              <Mail className="h-5 w-5 text-primary" /> Connected accounts
+              <Mail className="h-5 w-5 text-primary" /> {t("settingsConnectedAccountsTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {gmailConnected ? (
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div>
-                  <p className="text-sm font-medium">Gmail connected</p>
+                  <p className="text-sm font-medium">{t("settingsGmailConnected")}</p>
                   {gmailEmail && (
                     <p className="text-xs text-muted-foreground">{gmailEmail}</p>
                   )}
@@ -161,12 +161,12 @@ const Settings = () => {
                   onClick={handleGmailDisconnect}
                   className="gap-2 text-destructive hover:text-destructive"
                 >
-                  <Unplug className="h-4 w-4" /> Disconnect Gmail
+                  <Unplug className="h-4 w-4" /> {t("settingsDisconnectGmail")}
                 </Button>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Gmail is not connected. Connect it from the dashboard's Auto-detect tab.
+                {t("settingsGmailNotConnected")}
               </p>
             )}
           </CardContent>
@@ -174,13 +174,13 @@ const Settings = () => {
 
         <Card className="shadow-card">
           <CardHeader>
-            <CardTitle className="font-display text-lg">Legal</CardTitle>
+            <CardTitle className="font-display text-lg">{t("legal")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-              <Link to="/privacy-policy" className="text-primary hover:underline">Privacy Policy</Link>
+              <Link to="/privacy-policy" className="text-primary hover:underline">{t("privacyPolicy")}</Link>
               <span className="text-muted-foreground" aria-hidden="true">·</span>
-              <Link to="/terms-of-service" className="text-primary hover:underline">Terms of Service</Link>
+              <Link to="/terms-of-service" className="text-primary hover:underline">{t("termsOfService")}</Link>
             </div>
           </CardContent>
         </Card>
