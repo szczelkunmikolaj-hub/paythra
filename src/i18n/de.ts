@@ -628,6 +628,19 @@ const de = {
   unusedSubscriptionMsg: "{{name}} scheint ungenutzt zu sein. Eine Kündigung könnte €{{savings}} pro Jahr sparen.",
   categoryOverlap: "Kategorie-Überschneidung",
   categoryOverlapMsg: "Du hast {{count}} Abonnements in der Kategorie {{category}}. Erwäge eine Konsolidierung, um Kosten zu senken.",
+  cumulative: "Kumuliert",
+  currentPlanLabel: "Aktueller Plan",
+  monthlyOption: "Monatlich",
+  yearlyOption: "Jährlich",
+  connecting: "Verbinden…",
+  connected: "Verbunden!",
+  connectionFailed: "Verbindung fehlgeschlagen",
+  connectingGmailDots: "Gmail-Konto wird verbunden…",
+  gmailConnectedScanning: "Gmail verbunden. Scan wird gestartet…",
+  googleErrorPrefix: "Google hat einen Fehler zurückgegeben:",
+  noAuthCode: "Kein Autorisierungscode zurückgegeben.",
+  failedToConnectGmail: "Gmail konnte nicht verbunden werden.",
+  backToDashboard: "Zurück zum Dashboard",
 };
 
 export default de;
