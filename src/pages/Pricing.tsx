@@ -239,20 +239,17 @@ const Pricing = () => {
                         <Button
                           className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-md"
                           size="lg"
-                          disabled={isUpgrading || isCurrent}
+                          disabled={checkoutLoading || isCurrent}
                           onClick={handleBuy}
                         >
-                          {isCurrent ? "You own Premium" : "Buy once, own forever"}
+                          {isCurrent
+                            ? "You own Premium"
+                            : checkoutLoading
+                              ? "Redirecting to checkout…"
+                              : "Choose Premium"}
                         </Button>
-                        <button
-                          onClick={handleTrial}
-                          disabled={isUpgrading}
-                          className="w-full text-xs text-primary hover:underline font-medium"
-                        >
-                          Try Premium free for 30 days
-                        </button>
                         <p className="text-[11px] text-center text-muted-foreground flex items-center justify-center gap-1 pt-1">
-                          <ShieldCheck className="h-3 w-3" /> No recurring charges. Ever.
+                          <ShieldCheck className="h-3 w-3" /> Secure checkout via Stripe. No recurring charges.
                         </p>
                       </>
                     ) : t.id === "business" ? (
