@@ -673,6 +673,31 @@ const de = {
   landingReduceProblemBody: "Abos sind die stillen Killer moderner Budgets. Ohne Übersicht ist es kaum möglich, Abo-Kosten zu senken oder bei Diensten zu sparen, die du nicht mehr brauchst.",
   landingTrackerProblemBody: "Tabellen und Banking-Apps sind nicht dafür gemacht, Abos zu verfolgen. Du brauchst eine dedizierte Abo-Tracking-App, die wiederkehrende Zahlungen automatisch erkennt.",
   learnMore: "Mehr erfahren",
+
+  homeSeoTitle: "Paythra – Abo-Verwaltung & Ausgaben-Tracker",
+  homeSeoDescription: "Verfolge, verwalte und kündige deine Abos ganz einfach. Hör auf, Geld zu verschwenden, und übernimm mit Paythra die Kontrolle über deine monatlichen Ausgaben.",
+
+  internalLinksHeading: "Alles, was du brauchst, um deine Abos im Griff zu haben",
+  internalLinksIntro: "Mit Paythra kannst du",
+  internalLinksConnector1: "automatisch",
+  internalLinksConnector2: "und clevere Wege finden,",
+  internalLinksPara2Start: "Egal, ob du ein zentrales Dashboard zum",
+  internalLinksPara2Mid: "oder einen leistungsstarken",
+  internalLinksPara2End: "im Hintergrund willst – Funktionen vergleichst du auf unserer",
+  internalLinksPara3Start: "Entdecke den Rest von Paythra:",
+  internalLinksAnd: "und",
+  anchorTrackSubscriptions: "monatliche Abos verfolgen",
+  anchorCancelUnused: "ungenutzte Abos kündigen",
+  anchorReduceCosts: "Abo-Kosten senken",
+  anchorManageRecurring: "alle wiederkehrenden Zahlungen verwalten",
+  anchorSubscriptionTracker: "Abo-Tracker",
+  anchorPricingPlans: "Preise & Tarife",
+  anchorMonthlyTracker: "monatlicher Abo-Tracker",
+  anchorStopUnwanted: "unerwünschte Abos stoppen",
+  anchorAllInOneManager: "All-in-One-Abo-Manager",
+  anchorSaveMoney: "Geld bei Abos sparen",
+  anchorAutomaticTracking: "automatisches Abo-Tracking",
+
 };
 
 export default de;

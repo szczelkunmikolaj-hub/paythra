@@ -714,6 +714,33 @@ const en = {
   landingReduceProblemBody: "Subscriptions are the silent killers of modern budgets. Without visibility, it's almost impossible to reduce subscription costs or save money on subscriptions you don't really need.",
   landingTrackerProblemBody: "Manual spreadsheets and bank apps weren't built to track subscriptions. You need a dedicated subscription tracking app that detects recurring payments automatically and shows them in a clean, modern view.",
   learnMore: "Learn more",
+
+  // Homepage SEO
+  homeSeoTitle: "Paythra – Subscription Manager & Expense Tracker",
+  homeSeoDescription: "Track, manage, and cancel your subscriptions easily. Stop wasting money and take control of your monthly expenses with Paythra.",
+
+  // Internal links paragraph (homepage)
+  internalLinksHeading: "Everything you need to take control of your subscriptions",
+  internalLinksIntro: "With Paythra you can",
+  internalLinksConnector1: "automatically",
+  internalLinksConnector2: "and find smart ways to",
+  internalLinksPara2Start: "Whether you want a single dashboard to",
+  internalLinksPara2Mid: "or a powerful",
+  internalLinksPara2End: "that runs in the background, you can compare features on our",
+  internalLinksPara3Start: "Explore the rest of Paythra:",
+  internalLinksAnd: "and",
+  anchorTrackSubscriptions: "track monthly subscriptions",
+  anchorCancelUnused: "cancel unused subscriptions",
+  anchorReduceCosts: "reduce subscription costs",
+  anchorManageRecurring: "manage all your recurring payments",
+  anchorSubscriptionTracker: "subscription tracker",
+  anchorPricingPlans: "pricing plans",
+  anchorMonthlyTracker: "monthly subscription tracker",
+  anchorStopUnwanted: "stop unwanted subscriptions",
+  anchorAllInOneManager: "all-in-one subscription manager",
+  anchorSaveMoney: "save money on subscriptions",
+  anchorAutomaticTracking: "automatic subscription tracking",
+
 };
 
 export default en;

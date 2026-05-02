@@ -673,6 +673,31 @@ const pl = {
   landingReduceProblemBody: "Subskrypcje to cisi zabójcy nowoczesnych budżetów. Bez wglądu trudno ograniczyć koszty subskrypcji i oszczędzać na tych, których już nie potrzebujesz.",
   landingTrackerProblemBody: "Arkusze i aplikacje bankowe nie są stworzone do śledzenia subskrypcji. Potrzebujesz dedykowanej aplikacji do śledzenia subskrypcji, która wykrywa cykliczne płatności automatycznie.",
   learnMore: "Dowiedz się więcej",
+
+  homeSeoTitle: "Paythra – Menedżer Subskrypcji i Kontrola Wydatków",
+  homeSeoDescription: "Śledź, zarządzaj i anuluj subskrypcje w prosty sposób. Przestań marnować pieniądze i przejmij kontrolę nad miesięcznymi wydatkami z Paythra.",
+
+  internalLinksHeading: "Wszystko, czego potrzebujesz, by zapanować nad subskrypcjami",
+  internalLinksIntro: "Z Paythra możesz",
+  internalLinksConnector1: "automatycznie",
+  internalLinksConnector2: "i znaleźć sprytne sposoby, by",
+  internalLinksPara2Start: "Niezależnie czy chcesz jeden panel, by",
+  internalLinksPara2Mid: "czy potężny",
+  internalLinksPara2End: "działający w tle – funkcje porównasz na stronie",
+  internalLinksPara3Start: "Odkryj resztę Paythra:",
+  internalLinksAnd: "oraz",
+  anchorTrackSubscriptions: "śledzić miesięczne subskrypcje",
+  anchorCancelUnused: "anulować nieużywane subskrypcje",
+  anchorReduceCosts: "ograniczyć koszty subskrypcji",
+  anchorManageRecurring: "zarządzać wszystkimi płatnościami cyklicznymi",
+  anchorSubscriptionTracker: "tracker subskrypcji",
+  anchorPricingPlans: "plany cenowe",
+  anchorMonthlyTracker: "miesięczny tracker subskrypcji",
+  anchorStopUnwanted: "zatrzymać niechciane subskrypcje",
+  anchorAllInOneManager: "menedżer subskrypcji all-in-one",
+  anchorSaveMoney: "oszczędzać na subskrypcjach",
+  anchorAutomaticTracking: "automatyczne śledzenie subskrypcji",
+
 };
 
 export default pl;
