@@ -38,7 +38,7 @@ const Success = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <SEO title="Payment Successful — Paythra Premium" description="Welcome to Paythra Premium." />
+      <SEO title="Payment Successful — Paythra Premium" description="Welcome to Paythra Premium." canonical="https://paythra.com/success" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
