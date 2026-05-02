@@ -159,7 +159,7 @@ const ImportConfirmModal = ({
                     </div>
                   ))}
                   {otherTransactions.length > 50 && (
-                    <p className="text-center text-[10px] text-muted-foreground py-1">...and {otherTransactions.length - 50} more</p>
+                    <p className="text-center text-[10px] text-muted-foreground py-1">{t("andMoreTransactions", { count: otherTransactions.length - 50 })}</p>
                   )}
                 </div>
               )}
