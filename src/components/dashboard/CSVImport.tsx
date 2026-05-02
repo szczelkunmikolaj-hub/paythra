@@ -460,16 +460,16 @@ const CSVImport = () => {
                 onClick={openFilePicker}
               >
                 <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">Drop your bank statement here</p>
-                <p className="mt-1 text-xs text-muted-foreground">CSV, XLSX, OFX, QIF supported</p>
+                <p className="text-sm font-medium text-foreground">{t("dropBankStatement")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t("supportedFormats")}</p>
                 <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
-                  Choose File
+                  {t("chooseFile")}
                 </Button>
               </div>
               <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">
-                  Smart detection: only recurring payments are flagged as subscriptions. One-time purchases are kept as regular transactions.
+                  {t("smartDetectionHint")}
                 </p>
               </div>
             </>
