@@ -695,7 +695,7 @@ const en = {
   benefit1Title: "Save real money every month",
   benefit1Body: "Most users find dozens of euros in unused subscriptions within their first week of using Paythra.",
   benefit2Title: "Never get surprised again",
-  benef2Body: "Reminders before trials end and price increases mean no more silent charges.",
+  
   benefit2Body: "Reminders before trials end and price increases mean no more silent charges.",
   benefit3Title: "Beautifully simple, on every device",
   benefit3Body: "A modern, mobile-first app that you'll actually want to open every week.",
