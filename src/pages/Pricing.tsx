@@ -34,6 +34,7 @@ const PRICE_ONE_TIME = "€24.99";
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { plan: currentPlan, upgradePlan, isUpgrading } = useUserPlan();
 
   const [contactOpen, setContactOpen] = useState(false);
