@@ -306,7 +306,7 @@ const CSVImport = () => {
   const applyColumnMapping = () => {
     const transactions = parseRows(rawRows, columnMapping);
     if (transactions.length === 0) {
-      toast({ title: "No valid rows", description: "Check your column mapping and try again.", variant: "destructive" });
+      toast({ title: t("noValidRows"), description: t("checkColumnMapping"), variant: "destructive" });
       return;
     }
     setParsed(transactions);
