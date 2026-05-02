@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -28,8 +29,11 @@ const SeoLandingLayout = ({
   h1,
   intro,
   sections,
-  ctaText = "Start using Paythra",
+  ctaText,
 }: SeoLandingLayoutProps) => {
+  const { t } = useTranslation();
+  const primaryCta = ctaText ?? t("startUsingPaythra");
+
   return (
     <div className="min-h-screen bg-background">
       <SEO title={title} description={description} canonical={canonical} />
@@ -43,7 +47,7 @@ const SeoLandingLayout = ({
             <p className="mt-6 text-lg text-muted-foreground">{intro}</p>
             <Link to="/signup" className="mt-8 inline-block">
               <Button size="lg" className="bg-gradient-primary px-10 text-base shadow-glow hover:opacity-90 transition-opacity">
-                {ctaText}
+                {primaryCta}
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
@@ -64,14 +68,14 @@ const SeoLandingLayout = ({
         <section className="container mx-auto px-4 pb-24">
           <div className="mx-auto max-w-2xl rounded-2xl bg-gradient-primary p-10 text-center shadow-glow">
             <h2 className="font-display text-2xl font-bold text-primary-foreground sm:text-3xl">
-              Ready to take control of your subscriptions?
+              {t("readyToTakeControl")}
             </h2>
             <p className="mt-3 text-primary-foreground/90">
-              Join thousands of people saving money every month with Paythra.
+              {t("joinThousandsSaving")}
             </p>
             <Link to="/signup" className="mt-6 inline-block">
               <Button size="lg" variant="secondary" className="px-10 text-base">
-                {ctaText}
+                {primaryCta}
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
@@ -80,14 +84,14 @@ const SeoLandingLayout = ({
 
         <section className="container mx-auto px-4 pb-16">
           <div className="mx-auto max-w-4xl">
-            <h2 className="font-display text-xl font-semibold text-foreground">Explore more</h2>
+            <h2 className="font-display text-xl font-semibold text-foreground">{t("exploreMore")}</h2>
             <ul className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-              <li><Link to="/track-subscriptions" className="text-primary hover:underline">Track Monthly Subscriptions</Link></li>
-              <li><Link to="/cancel-subscriptions" className="text-primary hover:underline">Cancel Subscriptions Easily</Link></li>
-              <li><Link to="/subscription-manager" className="text-primary hover:underline">Personal Subscription Manager</Link></li>
-              <li><Link to="/reduce-subscription-costs" className="text-primary hover:underline">Reduce Subscription Costs</Link></li>
-              <li><Link to="/subscription-tracker" className="text-primary hover:underline">Best Subscription Tracking App</Link></li>
-              <li><Link to="/pricing" className="text-primary hover:underline">Pricing</Link></li>
+              <li><Link to="/track-subscriptions" className="text-primary hover:underline">{t("trackSubscriptionsNav")}</Link></li>
+              <li><Link to="/cancel-subscriptions" className="text-primary hover:underline">{t("cancelSubscriptionsNav")}</Link></li>
+              <li><Link to="/subscription-manager" className="text-primary hover:underline">{t("subscriptionManagerNav")}</Link></li>
+              <li><Link to="/reduce-subscription-costs" className="text-primary hover:underline">{t("reduceCostsNav")}</Link></li>
+              <li><Link to="/subscription-tracker" className="text-primary hover:underline">{t("subscriptionTrackerNav")}</Link></li>
+              <li><Link to="/pricing" className="text-primary hover:underline">{t("pricingNav")}</Link></li>
             </ul>
           </div>
         </section>
