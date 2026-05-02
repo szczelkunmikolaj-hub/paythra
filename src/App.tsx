@@ -23,6 +23,11 @@ import Suggestions from "./pages/Suggestions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AuthCallback from "./pages/AuthCallback";
+import TrackSubscriptions from "./pages/TrackSubscriptions";
+import CancelSubscriptions from "./pages/CancelSubscriptions";
+import SubscriptionManager from "./pages/SubscriptionManager";
+import ReduceSubscriptionCosts from "./pages/ReduceSubscriptionCosts";
+import SubscriptionTracker from "./pages/SubscriptionTracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +57,11 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/track-subscriptions" element={<TrackSubscriptions />} />
+            <Route path="/cancel-subscriptions" element={<CancelSubscriptions />} />
+            <Route path="/subscription-manager" element={<SubscriptionManager />} />
+            <Route path="/reduce-subscription-costs" element={<ReduceSubscriptionCosts />} />
+            <Route path="/subscription-tracker" element={<SubscriptionTracker />} />
             <Route path="/secret" element={<Secret />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
