@@ -18,6 +18,7 @@ import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
 import Secret from "./pages/Secret";
 import Pricing from "./pages/Pricing";
+import Success from "./pages/Success";
 import Demo from "./pages/Demo";
 import Suggestions from "./pages/Suggestions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
