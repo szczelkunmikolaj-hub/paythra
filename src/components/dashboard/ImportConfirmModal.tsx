@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ const ImportConfirmModal = ({
   open, onOpenChange, detected, otherTransactions = [], onToggle, onSelectAll,
   onUpdateCycle, onConfirm, importing, transactionCount,
 }: ImportConfirmModalProps) => {
+  const { t } = useTranslation();
   const selectedCount = detected.filter((d) => d.selected).length;
   const highConfidence = detected.filter((d) => d.confidence === "high");
   const mediumConfidence = detected.filter((d) => d.confidence === "medium");
@@ -57,11 +59,11 @@ const ImportConfirmModal = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-sm font-medium text-foreground truncate">{d.merchant}</p>
-            {d.confidence === "high" && <Badge variant="outline" className="border-green-500/30 text-green-600 text-[10px] px-1.5">confirmed</Badge>}
-            {d.confidence === "medium" && <Badge variant="outline" className="border-yellow-500/30 text-yellow-600 text-[10px] px-1.5">uncertain</Badge>}
+            {d.confidence === "high" && <Badge variant="outline" className="border-green-500/30 text-green-600 text-[10px] px-1.5">{t("confirmed")}</Badge>}
+            {d.confidence === "medium" && <Badge variant="outline" className="border-yellow-500/30 text-yellow-600 text-[10px] px-1.5">{t("uncertain")}</Badge>}
           </div>
           <p className="text-xs text-muted-foreground">
-            €{d.amount.toFixed(2)} • {d.count} charges
+            €{d.amount.toFixed(2)} • {d.count} {t("charges")}
           </p>
         </div>
       </button>
@@ -71,11 +73,11 @@ const ImportConfirmModal = ({
         onValueChange={(v) => onUpdateCycle(d.merchant, v as "monthly" | "yearly")}
       >
         <SelectTrigger className="w-24 h-8 text-xs">
-          <SelectValue placeholder={d.cycle === "unknown" ? "Cycle?" : d.cycle} />
+          <SelectValue placeholder={d.cycle === "unknown" ? t("cyclePlaceholder") : t(d.cycle === "monthly" ? "monthlyOption" : "yearlyOption")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="monthly">Monthly</SelectItem>
-          <SelectItem value="yearly">Yearly</SelectItem>
+          <SelectItem value="monthly">{t("monthlyOption")}</SelectItem>
+          <SelectItem value="yearly">{t("yearlyOption")}</SelectItem>
         </SelectContent>
       </Select>
 
@@ -95,9 +97,9 @@ const ImportConfirmModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display">Import Results</DialogTitle>
+          <DialogTitle className="font-display">{t("importResults")}</DialogTitle>
           <DialogDescription>
-            Found {transactionCount} transactions. {detected.length > 0 ? `${detected.length} look like subscriptions.` : "No subscriptions detected."} {otherTransactions.length > 0 ? `${otherTransactions.length} are regular transactions.` : ""}
+            {t("foundTransactions", { count: transactionCount })} {detected.length > 0 ? t("lookLikeSubscriptions", { count: detected.length }) : t("noSubscriptionsDetected")} {otherTransactions.length > 0 ? t("regularTransactions", { count: otherTransactions.length }) : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -108,7 +110,7 @@ const ImportConfirmModal = ({
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-green-500" />
                 <p className="text-xs font-semibold uppercase tracking-wide text-green-600">
-                  ✅ Detected Subscriptions ({highConfidence.length})
+                  ✅ {t("detectedSubscriptionsLabel")} ({highConfidence.length})
                 </p>
               </div>
               {highConfidence.map(renderSubItem)}
@@ -121,7 +123,7 @@ const ImportConfirmModal = ({
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
                 <p className="text-xs font-semibold uppercase tracking-wide text-yellow-600">
-                  ⚠️ Uncertain — Confirm with toggle ({mediumConfidence.length})
+                  ⚠️ {t("uncertainConfirm")} ({mediumConfidence.length})
                 </p>
               </div>
               {mediumConfidence.map(renderSubItem)}
@@ -131,8 +133,8 @@ const ImportConfirmModal = ({
           {detected.length === 0 && (
             <div className="rounded-xl bg-muted/50 p-6 text-center">
               <Package className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">No recurring subscriptions detected in this file.</p>
-              <p className="text-xs text-muted-foreground mt-1">All {transactionCount} transactions will be imported as regular transactions.</p>
+              <p className="text-sm text-muted-foreground">{t("noRecurringDetected")}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t("allTransactionsRegular", { count: transactionCount })}</p>
             </div>
           )}
 
@@ -144,7 +146,7 @@ const ImportConfirmModal = ({
                 onClick={() => setShowOther(!showOther)}
                 className="flex w-full items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/60 transition-colors"
               >
-                <span>❌ Other transactions ({otherTransactions.length}) — not subscriptions</span>
+                <span>❌ {t("otherTransactionsLabel")} ({otherTransactions.length}) — {t("notSubscriptions")}</span>
                 {showOther ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               </button>
               {showOther && (
@@ -157,7 +159,7 @@ const ImportConfirmModal = ({
                     </div>
                   ))}
                   {otherTransactions.length > 50 && (
-                    <p className="text-center text-[10px] text-muted-foreground py-1">...and {otherTransactions.length - 50} more</p>
+                    <p className="text-center text-[10px] text-muted-foreground py-1">{t("andMoreTransactions", { count: otherTransactions.length - 50 })}</p>
                   )}
                 </div>
               )}
@@ -168,17 +170,17 @@ const ImportConfirmModal = ({
         {detected.length > 0 && (
           <div className="flex items-center justify-between pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground">
-              {selectedCount} of {detected.length} selected
+              {t("selectedOfTotal", { selected: selectedCount, total: detected.length })}
             </p>
             <Button variant="ghost" size="sm" className="h-7 text-xs text-primary" onClick={onSelectAll}>
-              <CheckCheck className="mr-1 h-3 w-3" /> Select all
+              <CheckCheck className="mr-1 h-3 w-3" /> {t("selectAll")}
             </Button>
           </div>
         )}
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="gap-2">
-            <X className="h-4 w-4" /> Cancel
+            <X className="h-4 w-4" /> {t("cancel")}
           </Button>
           <Button
             onClick={onConfirm}
@@ -186,7 +188,7 @@ const ImportConfirmModal = ({
             className="bg-gradient-primary hover:opacity-90 transition-opacity gap-2"
           >
             <Check className="h-4 w-4" />
-            {importing ? "Importing..." : selectedCount > 0 ? `Import ${transactionCount} txns + ${selectedCount} subs` : `Import ${transactionCount} transactions`}
+            {importing ? t("importing") : selectedCount > 0 ? t("importTxnsAndSubs", { txns: transactionCount, subs: selectedCount }) : t("importTransactions", { count: transactionCount })}
           </Button>
         </DialogFooter>
       </DialogContent>

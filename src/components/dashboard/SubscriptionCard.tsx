@@ -14,7 +14,7 @@ interface SubscriptionCardProps {
 }
 
 const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionCardProps) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const daysUntilBilling = Math.ceil(
     (new Date(sub.next_billing_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
@@ -28,18 +28,18 @@ const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionC
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-foreground truncate">{sub.name}</h3>
             {sub.is_trial && (
-              <Badge variant="outline" className="border-primary text-primary text-[10px]">Trial</Badge>
+              <Badge variant="outline" className="border-primary text-primary text-[10px]">{t("trial")}</Badge>
             )}
             {sub.is_unused && (
-              <Badge variant="destructive" className="text-[10px]">Unused</Badge>
+              <Badge variant="destructive" className="text-[10px]">{t("unused")}</Badge>
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="capitalize text-xs">{sub.category}</span>
             <span>•</span>
             <span>
-              Next: {daysUntilBilling <= 0
-                ? "Due today"
+              {t("next")}: {daysUntilBilling <= 0
+                ? t("dueToday")
                 : new Date(sub.next_billing_date).toLocaleDateString(i18n.language, { month: "short", day: "numeric" })}
             </span>
           </div>

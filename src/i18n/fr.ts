@@ -628,6 +628,19 @@ const fr = {
   unusedSubscriptionMsg: "{{name}} semble inutilisé. Le résilier pourrait vous faire économiser €{{savings}}/an.",
   categoryOverlap: "Chevauchement de catégorie",
   categoryOverlapMsg: "Vous avez {{count}} abonnements dans la catégorie {{category}}. Envisagez de les regrouper pour réduire les coûts.",
+  cumulative: "Cumulé",
+  currentPlanLabel: "Plan actuel",
+  monthlyOption: "Mensuel",
+  yearlyOption: "Annuel",
+  connecting: "Connexion…",
+  connected: "Connecté !",
+  connectionFailed: "Échec de la connexion",
+  connectingGmailDots: "Connexion de votre compte Gmail…",
+  gmailConnectedScanning: "Gmail connecté. Démarrage de l'analyse…",
+  googleErrorPrefix: "Google a renvoyé une erreur :",
+  noAuthCode: "Aucun code d'autorisation renvoyé.",
+  failedToConnectGmail: "Échec de la connexion à Gmail.",
+  backToDashboard: "Retour au tableau de bord",
 };
 
 export default fr;

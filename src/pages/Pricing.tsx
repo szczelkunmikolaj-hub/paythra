@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan, PlanType } from "@/hooks/useUserPlan";
@@ -33,6 +34,7 @@ const PRICE_ONE_TIME = "€24.99";
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { plan: currentPlan, upgradePlan, isUpgrading } = useUserPlan();
 
   const [contactOpen, setContactOpen] = useState(false);

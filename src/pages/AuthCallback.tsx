@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { exchangeCodeForToken } from "@/lib/gmailPKCE";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("Connecting your Gmail account…");
+  const [message, setMessage] = useState(t("connectingGmailDots"));
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -15,26 +17,26 @@ const AuthCallback = () => {
 
     if (error) {
       setStatus("error");
-      setMessage(`Google returned an error: ${error}`);
+      setMessage(`${t("googleErrorPrefix")} ${error}`);
       return;
     }
     if (!code) {
       setStatus("error");
-      setMessage("No authorization code returned.");
+      setMessage(t("noAuthCode"));
       return;
     }
 
     exchangeCodeForToken(code)
       .then(() => {
         setStatus("success");
-        setMessage("Gmail connected. Starting scan…");
+        setMessage(t("gmailConnectedScanning"));
         setTimeout(() => navigate("/dashboard?tab=autodetect&scan=1", { replace: true }), 800);
       })
       .catch((e) => {
         setStatus("error");
-        setMessage(e.message || "Failed to connect Gmail.");
+        setMessage(e.message || t("failedToConnectGmail"));
       });
-  }, [navigate]);
+  }, [navigate, t]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-6">
@@ -43,9 +45,9 @@ const AuthCallback = () => {
         {status === "success" && <CheckCircle2 className="h-12 w-12 mx-auto text-green-500" />}
         {status === "error" && <AlertCircle className="h-12 w-12 mx-auto text-destructive" />}
         <h1 className="font-display text-2xl font-bold">
-          {status === "loading" && "Connecting…"}
-          {status === "success" && "Connected!"}
-          {status === "error" && "Connection failed"}
+          {status === "loading" && t("connecting")}
+          {status === "success" && t("connected")}
+          {status === "error" && t("connectionFailed")}
         </h1>
         <p className="text-sm text-muted-foreground">{message}</p>
         {status === "error" && (
@@ -53,7 +55,7 @@ const AuthCallback = () => {
             onClick={() => navigate("/dashboard")}
             className="text-sm text-primary hover:underline"
           >
-            Back to dashboard
+            {t("backToDashboard")}
           </button>
         )}
       </div>

@@ -665,6 +665,20 @@ const en = {
   unusedSubscriptionMsg: "{{name}} appears unused. Cancelling could save €{{savings}}/year.",
   categoryOverlap: "Category Overlap",
   categoryOverlapMsg: "You have {{count}} {{category}} subscriptions. Consider consolidating to reduce costs.",
+  // Misc additions
+  cumulative: "Cumulative",
+  currentPlanLabel: "Current plan",
+  monthlyOption: "Monthly",
+  yearlyOption: "Yearly",
+  connecting: "Connecting…",
+  connected: "Connected!",
+  connectionFailed: "Connection failed",
+  connectingGmailDots: "Connecting your Gmail account…",
+  gmailConnectedScanning: "Gmail connected. Starting scan…",
+  googleErrorPrefix: "Google returned an error:",
+  noAuthCode: "No authorization code returned.",
+  failedToConnectGmail: "Failed to connect Gmail.",
+  backToDashboard: "Back to dashboard",
 };
 
 export default en;

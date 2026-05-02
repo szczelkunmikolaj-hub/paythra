@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -114,6 +115,7 @@ function autoDetectColumns(headers: string[]): ColumnMapping | null {
 const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
 
 const CSVImport = () => {
+  const { t } = useTranslation();
   const { addTransaction } = useTransactions();
   const { addSubscription } = useSubscriptions();
   const [importing, setImporting] = useState(false);
@@ -250,11 +252,11 @@ const CSVImport = () => {
   const handleFile = useCallback(
     async (file: File) => {
       if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif)$/i)) {
-        toast({ title: "Unsupported format", description: "Supported: CSV, TXT, XLSX, OFX, QIF", variant: "destructive" });
+        toast({ title: t("unsupportedFormat"), description: t("supportedFormatsList"), variant: "destructive" });
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
-        toast({ title: "File too large", description: "Maximum file size is 10MB.", variant: "destructive" });
+        toast({ title: t("fileTooLarge"), description: t("maxFileSize"), variant: "destructive" });
         return;
       }
 
@@ -266,7 +268,7 @@ const CSVImport = () => {
       }
 
       if (result.data.length === 0) {
-        toast({ title: "Empty file", description: "No data rows found in this file.", variant: "destructive" });
+        toast({ title: t("emptyFile"), description: t("noDataRows"), variant: "destructive" });
         return;
       }
 
@@ -288,7 +290,7 @@ const CSVImport = () => {
         setRawHeaders(headers);
         setColumnMapping(mapping);
         setShowColumnMapper(true);
-        toast({ title: "Auto-detection found 0 rows", description: "Please map columns manually.", variant: "default" });
+        toast({ title: t("autoDetectionZeroRows"), description: t("mapColumnsManually"), variant: "default" });
         return;
       }
 
@@ -304,7 +306,7 @@ const CSVImport = () => {
   const applyColumnMapping = () => {
     const transactions = parseRows(rawRows, columnMapping);
     if (transactions.length === 0) {
-      toast({ title: "No valid rows", description: "Check your column mapping and try again.", variant: "destructive" });
+      toast({ title: t("noValidRows"), description: t("checkColumnMapping"), variant: "destructive" });
       return;
     }
     setParsed(transactions);
@@ -356,12 +358,12 @@ const CSVImport = () => {
       }
 
       toast({
-        title: `Imported ${imported} transactions`,
-        description: selected.length > 0 ? `Added ${selected.length} subscriptions.` : undefined,
+        title: t("importedTransactions", { count: imported }),
+        description: selected.length > 0 ? t("addedSubscriptions", { count: selected.length }) : undefined,
       });
       resetAll();
     } catch (err: any) {
-      toast({ title: "Import failed", description: err.message, variant: "destructive" });
+      toast({ title: t("importFailed"), description: err.message, variant: "destructive" });
     } finally {
       setImporting(false);
     }
@@ -391,7 +393,7 @@ const CSVImport = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Upload className="h-5 w-5 text-primary" />
-            Import Bank Transactions
+            {t("importBankTransactions")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -400,9 +402,9 @@ const CSVImport = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Columns className="h-4 w-4 text-primary" />
-                  <p className="text-sm font-medium text-foreground">Map your columns</p>
+                  <p className="text-sm font-medium text-foreground">{t("mapYourColumns")}</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> Cancel</Button>
+                <Button variant="ghost" size="sm" onClick={resetAll}><X className="mr-1 h-3.5 w-3.5" /> {t("cancel")}</Button>
               </div>
 
               <div className="overflow-x-auto rounded-xl border border-border">
@@ -429,7 +431,7 @@ const CSVImport = () => {
               <div className="grid gap-3 sm:grid-cols-3">
                 {(["date", "merchant", "amount"] as const).map((field) => (
                   <div key={field}>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{field} Column</label>
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground capitalize">{t(`${field}Column`)}</label>
                     <Select value={columnMapping[field]} onValueChange={(v) => setColumnMapping((prev) => ({ ...prev, [field]: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -441,7 +443,7 @@ const CSVImport = () => {
               </div>
 
               <Button onClick={applyColumnMapping} className="w-full bg-gradient-primary hover:opacity-90 transition-opacity">
-                <Check className="mr-2 h-4 w-4" /> Apply & Continue
+                <Check className="mr-2 h-4 w-4" /> {t("applyContinue")}
               </Button>
             </div>
           )}
@@ -458,16 +460,16 @@ const CSVImport = () => {
                 onClick={openFilePicker}
               >
                 <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">Drop your bank statement here</p>
-                <p className="mt-1 text-xs text-muted-foreground">CSV, XLSX, OFX, QIF supported</p>
+                <p className="text-sm font-medium text-foreground">{t("dropBankStatement")}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{t("supportedFormats")}</p>
                 <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
-                  Choose File
+                  {t("chooseFile")}
                 </Button>
               </div>
               <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <p className="text-xs text-muted-foreground">
-                  Smart detection: only recurring payments are flagged as subscriptions. One-time purchases are kept as regular transactions.
+                  {t("smartDetectionHint")}
                 </p>
               </div>
             </>
