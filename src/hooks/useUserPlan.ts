@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export type PlanType = "free" | "premium" | "business";
 
-const VALID_DISCOUNT_CODE = "TheLesters67";
 const TEST_MODE_KEY = "paythra_test_mode";
 
 export interface PlanLimits {
@@ -66,7 +65,7 @@ export const useUserPlan = () => {
     enabled: !!user,
   });
 
-  const hasValidDiscount = query.data?.discount_code === VALID_DISCOUNT_CODE;
+  const hasValidDiscount = !!query.data?.discount_code;
 
   const plan: PlanType = hasValidDiscount
     ? "business"
@@ -78,18 +77,11 @@ export const useUserPlan = () => {
 
   const upgradeMutation = useMutation({
     mutationFn: async (newPlan: PlanType) => {
-      if (query.data) {
-        const { error } = await supabase
-          .from("user_plans")
-          .update({ plan: newPlan, updated_at: new Date().toISOString() })
-          .eq("user_id", user!.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("user_plans")
-          .insert({ user_id: user!.id, plan: newPlan });
-        if (error) throw error;
-      }
+      const { data, error } = await supabase.functions.invoke("upgrade-plan", {
+        body: { plan: newPlan },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user_plan"] });
@@ -97,29 +89,19 @@ export const useUserPlan = () => {
   });
 
   const applyDiscountCode = async (code: string): Promise<boolean> => {
-    if (code !== VALID_DISCOUNT_CODE) return false;
-    if (query.data) {
-      const { error } = await supabase
-        .from("user_plans")
-        .update({ discount_code: code, plan: "business", updated_at: new Date().toISOString() })
-        .eq("user_id", user!.id);
-      if (error) throw error;
-    } else {
-      const { error } = await supabase
-        .from("user_plans")
-        .insert({ user_id: user!.id, plan: "business", discount_code: code });
-      if (error) throw error;
-    }
+    const { data, error } = await supabase.functions.invoke("redeem-discount-code", {
+      body: { code, action: "apply" },
+    });
+    if (error) return false;
+    if (!data?.success) return false;
     queryClient.invalidateQueries({ queryKey: ["user_plan"] });
     return true;
   };
 
   const removeDiscountCode = async () => {
-    if (!query.data) return;
-    const { error } = await supabase
-      .from("user_plans")
-      .update({ discount_code: null, plan: "free", updated_at: new Date().toISOString() })
-      .eq("user_id", user!.id);
+    const { error } = await supabase.functions.invoke("redeem-discount-code", {
+      body: { action: "remove" },
+    });
     if (error) throw error;
     queryClient.invalidateQueries({ queryKey: ["user_plan"] });
   };
