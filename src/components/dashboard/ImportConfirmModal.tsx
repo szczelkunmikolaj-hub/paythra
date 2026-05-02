@@ -97,9 +97,9 @@ const ImportConfirmModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-display">Import Results</DialogTitle>
+          <DialogTitle className="font-display">{t("importResults")}</DialogTitle>
           <DialogDescription>
-            Found {transactionCount} transactions. {detected.length > 0 ? `${detected.length} look like subscriptions.` : "No subscriptions detected."} {otherTransactions.length > 0 ? `${otherTransactions.length} are regular transactions.` : ""}
+            {t("foundTransactions", { count: transactionCount })} {detected.length > 0 ? t("lookLikeSubscriptions", { count: detected.length }) : t("noSubscriptionsDetected")} {otherTransactions.length > 0 ? t("regularTransactions", { count: otherTransactions.length }) : ""}
           </DialogDescription>
         </DialogHeader>
 
