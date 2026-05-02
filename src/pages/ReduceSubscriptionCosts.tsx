@@ -11,6 +11,8 @@ const ReduceSubscriptionCosts = () => {
       canonical="https://paythra.com/reduce-subscription-costs"
       h1={t("landingReduceH1")}
       intro={t("landingReduceIntro")}
+      problemHeading={t("whatIsTheProblemTitle")}
+      problemBody={t("landingReduceProblemBody")}
       sections={[
         {
           heading: t("landingReduceSection1Heading"),
