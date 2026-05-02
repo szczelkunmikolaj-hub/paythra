@@ -60,6 +60,25 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
       return;
     }
     if (plan === currentPlan) return;
+
+    if (plan === "premium") {
+      // Premium requires payment — redirect to Stripe Checkout
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data, error } = await supabase.functions.invoke("create-checkout");
+        if (error) throw error;
+        if (!data?.url) throw new Error("No checkout URL");
+        window.location.href = data.url;
+      } catch (err) {
+        toast({
+          title: t("error"),
+          description: (err as Error).message,
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
     try {
       await upgradePlan(plan);
       toast({ title: t("planUpdated"), description: t("planUpdatedDesc") });

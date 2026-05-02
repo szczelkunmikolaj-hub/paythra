@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserPlan, PlanType } from "@/hooks/useUserPlan";
+import { useUserPlan } from "@/hooks/useUserPlan";
+import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,8 @@ const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { plan: currentPlan, upgradePlan, isUpgrading } = useUserPlan();
+  const { plan: currentPlan } = useUserPlan();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [contactOpen, setContactOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -52,30 +54,19 @@ const Pricing = () => {
       navigate("/signup");
       return;
     }
+    setCheckoutLoading(true);
     try {
-      await upgradePlan("premium" as PlanType);
+      const { data, error } = await supabase.functions.invoke("create-checkout");
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL returned");
+      window.location.href = data.url;
+    } catch (err) {
       toast({
-        title: "Welcome to Premium",
-        description: "You now own Paythra Premium — forever.",
+        title: "Couldn't start checkout",
+        description: (err as Error).message,
+        variant: "destructive",
       });
-    } catch {
-      toast({ title: "Something went wrong", variant: "destructive" });
-    }
-  };
-
-  const handleTrial = async () => {
-    if (!user) {
-      navigate("/signup");
-      return;
-    }
-    try {
-      await upgradePlan("premium" as PlanType);
-      toast({
-        title: "30-day trial started",
-        description: "Full access unlocked. You won't be charged until day 30.",
-      });
-    } catch {
-      toast({ title: "Something went wrong", variant: "destructive" });
+      setCheckoutLoading(false);
     }
   };
 
@@ -248,20 +239,17 @@ const Pricing = () => {
                         <Button
                           className="w-full bg-gradient-primary hover:opacity-90 text-white font-semibold shadow-md"
                           size="lg"
-                          disabled={isUpgrading || isCurrent}
+                          disabled={checkoutLoading || isCurrent}
                           onClick={handleBuy}
                         >
-                          {isCurrent ? "You own Premium" : "Buy once, own forever"}
+                          {isCurrent
+                            ? "You own Premium"
+                            : checkoutLoading
+                              ? "Redirecting to checkout…"
+                              : "Choose Premium"}
                         </Button>
-                        <button
-                          onClick={handleTrial}
-                          disabled={isUpgrading}
-                          className="w-full text-xs text-primary hover:underline font-medium"
-                        >
-                          Try Premium free for 30 days
-                        </button>
                         <p className="text-[11px] text-center text-muted-foreground flex items-center justify-center gap-1 pt-1">
-                          <ShieldCheck className="h-3 w-3" /> No recurring charges. Ever.
+                          <ShieldCheck className="h-3 w-3" /> Secure checkout via Stripe. No recurring charges.
                         </p>
                       </>
                     ) : t.id === "business" ? (
