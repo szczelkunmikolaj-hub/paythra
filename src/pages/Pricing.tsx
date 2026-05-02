@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserPlan, PlanType } from "@/hooks/useUserPlan";
+import { useUserPlan } from "@/hooks/useUserPlan";
+import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,8 @@ const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { plan: currentPlan, upgradePlan, isUpgrading } = useUserPlan();
+  const { plan: currentPlan } = useUserPlan();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const [contactOpen, setContactOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -52,30 +54,19 @@ const Pricing = () => {
       navigate("/signup");
       return;
     }
+    setCheckoutLoading(true);
     try {
-      await upgradePlan("premium" as PlanType);
+      const { data, error } = await supabase.functions.invoke("create-checkout");
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL returned");
+      window.location.href = data.url;
+    } catch (err) {
       toast({
-        title: "Welcome to Premium",
-        description: "You now own Paythra Premium — forever.",
+        title: "Couldn't start checkout",
+        description: (err as Error).message,
+        variant: "destructive",
       });
-    } catch {
-      toast({ title: "Something went wrong", variant: "destructive" });
-    }
-  };
-
-  const handleTrial = async () => {
-    if (!user) {
-      navigate("/signup");
-      return;
-    }
-    try {
-      await upgradePlan("premium" as PlanType);
-      toast({
-        title: "30-day trial started",
-        description: "Full access unlocked. You won't be charged until day 30.",
-      });
-    } catch {
-      toast({ title: "Something went wrong", variant: "destructive" });
+      setCheckoutLoading(false);
     }
   };
 
