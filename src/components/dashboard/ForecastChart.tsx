@@ -41,7 +41,7 @@ const ForecastChart = ({ subscriptions }: ForecastChartProps) => {
 
   const chartConfig = {
     spending: { label: t("monthly"), color: "hsl(var(--primary))" },
-    cumulative: { label: "Cumulative", color: "hsl(252, 85%, 75%)" },
+    cumulative: { label: t("cumulative"), color: "hsl(252, 85%, 75%)" },
   };
 
   const symbol = formatCurrency(0, lang).replace(/[\d.,\s]/g, "").trim();
