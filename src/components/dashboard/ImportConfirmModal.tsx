@@ -123,7 +123,7 @@ const ImportConfirmModal = ({
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-yellow-500" />
                 <p className="text-xs font-semibold uppercase tracking-wide text-yellow-600">
-                  ⚠️ Uncertain — Confirm with toggle ({mediumConfidence.length})
+                  ⚠️ {t("uncertainConfirm")} ({mediumConfidence.length})
                 </p>
               </div>
               {mediumConfidence.map(renderSubItem)}
