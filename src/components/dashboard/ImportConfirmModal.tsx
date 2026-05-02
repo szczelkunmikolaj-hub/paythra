@@ -73,11 +73,11 @@ const ImportConfirmModal = ({
         onValueChange={(v) => onUpdateCycle(d.merchant, v as "monthly" | "yearly")}
       >
         <SelectTrigger className="w-24 h-8 text-xs">
-          <SelectValue placeholder={d.cycle === "unknown" ? "Cycle?" : d.cycle} />
+          <SelectValue placeholder={d.cycle === "unknown" ? t("cyclePlaceholder") : t(d.cycle === "monthly" ? "monthlyOption" : "yearlyOption")} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="monthly">Monthly</SelectItem>
-          <SelectItem value="yearly">Yearly</SelectItem>
+          <SelectItem value="monthly">{t("monthlyOption")}</SelectItem>
+          <SelectItem value="yearly">{t("yearlyOption")}</SelectItem>
         </SelectContent>
       </Select>
 
