@@ -660,7 +660,7 @@ const en = {
   familyPlanSavings: "Family Plan Savings",
   familyPlanSavingsMsg: "Join a {{name}} family plan (€{{price}}/mo shared) and save ~€{{savings}}/year per person.",
   cheaperPlanAvailable: "Cheaper Plan Available",
-  cheaperPlanAvailableMsg: "{{name}} offers a "{{plan}}" plan at €{{price}}/mo. You could save €{{savings}}/year.",
+  cheaperPlanAvailableMsg: "{{name}} offers a {{plan}} plan at €{{price}}/mo. You could save €{{savings}}/year.",
   unusedSubscriptionTitle: "Unused Subscription",
   unusedSubscriptionMsg: "{{name}} appears unused. Cancelling could save €{{savings}}/year.",
   categoryOverlap: "Category Overlap",

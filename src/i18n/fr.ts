@@ -623,7 +623,7 @@ const fr = {
   familyPlanSavings: "Économies avec la formule famille",
   familyPlanSavingsMsg: "Rejoignez une formule famille {{name}} (€{{price}}/mois partagé) et économisez environ €{{savings}}/an par personne.",
   cheaperPlanAvailable: "Une formule moins chère est disponible",
-  cheaperPlanAvailableMsg: "{{name}} propose une formule "{{plan}}" à €{{price}}/mois. Vous pourriez économiser €{{savings}}/an.",
+  cheaperPlanAvailableMsg: "{{name}} propose la formule {{plan}} à €{{price}}/mois. Vous pourriez économiser €{{savings}}/an.",
   unusedSubscriptionTitle: "Abonnement inutilisé",
   unusedSubscriptionMsg: "{{name}} semble inutilisé. Le résilier pourrait vous faire économiser €{{savings}}/an.",
   categoryOverlap: "Chevauchement de catégorie",

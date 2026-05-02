@@ -623,7 +623,7 @@ const es: Record<string, string> = {
   familyPlanSavings: "Ahorro con plan familiar",
   familyPlanSavingsMsg: "Únete a un plan familiar de {{name}} (€{{price}}/mes compartido) y ahorra aproximadamente €{{savings}}/año por persona.",
   cheaperPlanAvailable: "Hay un plan más barato disponible",
-  cheaperPlanAvailableMsg: "{{name}} ofrece un plan "{{plan}}" por €{{price}}/mes. Podrías ahorrar €{{savings}}/año.",
+  cheaperPlanAvailableMsg: "{{name}} ofrece el plan {{plan}} por €{{price}}/mes. Podrías ahorrar €{{savings}}/año.",
   unusedSubscriptionTitle: "Suscripción sin uso",
   unusedSubscriptionMsg: "Parece que no usas {{name}}. Cancelarla podría ahorrarte €{{savings}}/año.",
   categoryOverlap: "Solapamiento de categoría",
