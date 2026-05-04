@@ -157,6 +157,42 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_history: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          monthly_price: number
+          service_color: string | null
+          service_domain: string | null
+          service_name: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          monthly_price?: number
+          service_color?: string | null
+          service_domain?: string | null
+          service_name: string
+          started_at: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          monthly_price?: number
+          service_color?: string | null
+          service_domain?: string | null
+          service_name?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscription_price_history: {
         Row: {
           date_changed: string
