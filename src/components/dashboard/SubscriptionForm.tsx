@@ -117,6 +117,22 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     setIsCustomPrice(false);
   };
 
+  const selectDbEntry = (entry: SubscriptionDatabaseEntry) => {
+    const displayName = entry.names[0];
+    setName(displayName);
+    setSearchQuery(displayName);
+    setCategory(entry.category);
+    const monthlyPrice = getDatabasePriceEUR(entry, "monthly");
+    if (monthlyPrice != null) {
+      setPrice(monthlyPrice.toFixed(2));
+      setBillingCycle("monthly");
+    }
+    setIsCustomPrice(true);
+    setShowDropdown(false);
+    setSelectedCountry("");
+    setSelectedPlan("");
+  };
+
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
     try {
