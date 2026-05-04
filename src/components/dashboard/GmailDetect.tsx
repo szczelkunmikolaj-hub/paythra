@@ -178,7 +178,7 @@ const GmailDetect = () => {
                   className="gap-2 bg-gradient-primary hover:opacity-90"
                 >
                   {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                  {scanning ? t("scanning") : t("scanLast90Days")}
+                  {scanning ? t("scanning") : detected.length > 0 ? t("scanAgain") : t("scanLast90Days")}
                 </Button>
                 <Button
                   variant="outline"
@@ -198,7 +198,7 @@ const GmailDetect = () => {
           ) : (
             <>
               <div className="flex items-center gap-3 rounded-xl border border-border p-4">
-                <AlertCircle className="h-5 w-5 text-muted-foreground" />
+                <Mail className="h-5 w-5 text-primary" />
                 <div>
                   <p className="text-sm font-medium">{t("gmailNotConnectedTitle")}</p>
                   <p className="text-xs text-muted-foreground">
@@ -234,11 +234,20 @@ const GmailDetect = () => {
                     className="rounded-xl border border-border p-4 space-y-3"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold">{sub.merchant}</p>
-                        <p className="text-xs text-muted-foreground">{sub.domain}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={`https://logo.clearbit.com/${sub.domain}`}
+                          alt={`${sub.merchant} logo`}
+                          loading="lazy"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{sub.merchant}</p>
+                          <p className="text-xs text-muted-foreground truncate">{sub.domain}</p>
+                        </div>
                       </div>
-                      <Badge variant={confidenceVariant(sub.confidence)} className="text-[10px]">
+                      <Badge variant={confidenceVariant(sub.confidence)} className="text-[10px] shrink-0">
                         {t("percentMatch", { count: sub.confidence })}
                       </Badge>
                     </div>
@@ -272,6 +281,15 @@ const GmailDetect = () => {
                 ))}
               </div>
             </AnimatePresence>
+          </CardContent>
+        </Card>
+      )}
+
+      {connected && !scanning && detected.length === 0 && (
+        <Card className="shadow-card">
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+            <Mail className="h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">{t("noSubscriptionsDetectedInbox")}</p>
           </CardContent>
         </Card>
       )}
