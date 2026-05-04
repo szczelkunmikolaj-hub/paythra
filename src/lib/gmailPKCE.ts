@@ -77,13 +77,34 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   if (!verifier) throw new Error("Missing PKCE verifier — please retry the connection.");
 
   const redirect_uri = getRedirectUri();
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  console.log("[Gmail PKCE] Current app session before token exchange:", {
+    hasSession: !!session,
+    userId: session?.user?.id ?? null,
+    userEmail: session?.user?.email ?? null,
+    accessTokenPresent: !!session?.access_token,
+    sessionError: sessionError?.message ?? null,
+  });
+
+  if (!session?.access_token) {
+    throw new Error("You must be logged into Paythra before connecting Gmail.");
+  }
+
   console.log("[Gmail PKCE] Calling edge function gmail-token-exchange with:", {
     code: `${code.slice(0, 10)}…`,
     code_verifier: `${verifier.slice(0, 10)}… (${verifier.length} chars)`,
     redirect_uri,
+    authorizationUserId: session.user.id,
   });
 
   const { data, error } = await supabase.functions.invoke("gmail-token-exchange", {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+    },
     body: { code, code_verifier: verifier, redirect_uri },
   });
 
