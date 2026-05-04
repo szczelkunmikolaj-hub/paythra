@@ -93,7 +93,8 @@ export async function exchangeCodeForToken(code: string): Promise<string> {
   }
   if (!data?.access_token) {
     console.error("[Gmail PKCE] Edge function returned no access_token:", data);
-    throw new Error(data?.error || "Token exchange failed");
+    const reason = data?.error_description || data?.error || "Token exchange failed";
+    throw new Error(reason);
   }
 
   const accessToken: string = data.access_token;
