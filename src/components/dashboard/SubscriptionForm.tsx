@@ -45,6 +45,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
   const [isCustomPrice, setIsCustomPrice] = useState(false);
 
   const searchResults = useMemo(() => searchServices(searchQuery), [searchQuery]);
+  const dbResults = useMemo(() => searchSubscription(searchQuery), [searchQuery]);
 
   // Derived data for country/plan selection
   const availableCountries = useMemo(() => getCountriesForService(name), [name]);
