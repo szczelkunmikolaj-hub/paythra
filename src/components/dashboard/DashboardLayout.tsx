@@ -26,6 +26,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { to: "/subscriptions", icon: CreditCard, label: t("subscriptions") },
     { to: "/calendar", icon: CalendarDays, label: t("calendar") },
     { to: "/analytics", icon: BarChart3, label: t("analytics") },
+    { to: "/price-history", icon: LineChart, label: "Price History" },
     { to: "/suggestions", icon: Sparkles, label: t("suggestions") },
     { to: "/notifications", icon: Bell, label: t("notifications") },
     { to: "/settings", icon: Settings, label: t("settings") },
