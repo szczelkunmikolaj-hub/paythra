@@ -285,6 +285,15 @@ const GmailDetect = () => {
         </Card>
       )}
 
+      {connected && !scanning && detected.length === 0 && (
+        <Card className="shadow-card">
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+            <Mail className="h-10 w-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">{t("noSubscriptionsDetectedInbox")}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {connected && detected.length > 0 && visible.length === 0 && (
         <Card className="shadow-card">
           <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
@@ -293,6 +302,11 @@ const GmailDetect = () => {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+};
+
+export default GmailDetect;
     </div>
   );
 };
