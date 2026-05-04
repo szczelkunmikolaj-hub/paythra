@@ -12,6 +12,7 @@ import { SERVICE_REGISTRY, searchServices, findService } from "@/lib/serviceRegi
 import { getPlansForService, getCountriesForService, getPlansForCountry, getCurrencyForCountry, suggestPlanByPrice, type ServicePlan } from "@/lib/servicePlans";
 import { addMonths, addYears, format } from "date-fns";
 import { Plus, Search, Globe, Tag } from "lucide-react";
+import { searchSubscription, getDatabasePriceEUR, type SubscriptionDatabaseEntry } from "@/data/subscriptionDatabase";
 
 interface SubscriptionFormProps {
   open: boolean;
