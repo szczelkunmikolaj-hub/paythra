@@ -198,7 +198,7 @@ const GmailDetect = () => {
           ) : (
             <>
               <div className="flex items-center gap-3 rounded-xl border border-border p-4">
-                <AlertCircle className="h-5 w-5 text-muted-foreground" />
+                <Mail className="h-5 w-5 text-primary" />
                 <div>
                   <p className="text-sm font-medium">{t("gmailNotConnectedTitle")}</p>
                   <p className="text-xs text-muted-foreground">
