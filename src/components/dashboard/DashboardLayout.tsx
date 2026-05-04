@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun, Sparkles } from "lucide-react";
+import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun, Sparkles, LineChart } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import PremiumButton from "./PremiumButton";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
