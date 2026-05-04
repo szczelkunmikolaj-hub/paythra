@@ -155,7 +155,7 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="autodetect">
-              <GmailDetect />
+              <CSVImport />
             </TabsContent>
           </Tabs>
         )}
