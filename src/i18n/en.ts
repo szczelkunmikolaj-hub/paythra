@@ -531,7 +531,7 @@ const en = {
   confirmLabel: "Confirm",
   dismissLabel: "Dismiss",
   allDetectedSubscriptionsReviewed: "All detected subscriptions reviewed.",
-  noSubscriptionsDetected: "We couldn't detect any subscriptions in your inbox. You can add them manually.",
+  noSubscriptionsDetectedInbox: "We couldn't detect any subscriptions in your inbox. You can add them manually.",
   merchantAddedToSubscriptions: "{{merchant}} added to your subscriptions",
   importResultsTitle: "Import Results",
   detectedSubscriptionsTitle: "Detected Subscriptions ({{count}})",
