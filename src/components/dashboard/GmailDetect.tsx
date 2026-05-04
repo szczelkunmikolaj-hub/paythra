@@ -234,11 +234,20 @@ const GmailDetect = () => {
                     className="rounded-xl border border-border p-4 space-y-3"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-semibold">{sub.merchant}</p>
-                        <p className="text-xs text-muted-foreground">{sub.domain}</p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={`https://logo.clearbit.com/${sub.domain}`}
+                          alt={`${sub.merchant} logo`}
+                          loading="lazy"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{sub.merchant}</p>
+                          <p className="text-xs text-muted-foreground truncate">{sub.domain}</p>
+                        </div>
                       </div>
-                      <Badge variant={confidenceVariant(sub.confidence)} className="text-[10px]">
+                      <Badge variant={confidenceVariant(sub.confidence)} className="text-[10px] shrink-0">
                         {t("percentMatch", { count: sub.confidence })}
                       </Badge>
                     </div>
