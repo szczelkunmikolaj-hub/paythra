@@ -40,6 +40,7 @@ const Dashboard = () => {
   useTrialGuardian(subscriptions);
   useUnusedDetection(subscriptions, transactions);
   usePriceChangeDetection(subscriptions);
+  useDatabasePriceCheck(subscriptions);
   useUpcomingChargeNotifications(subscriptions);
 
   const active = subscriptions.filter((s) => s.status === "active");
