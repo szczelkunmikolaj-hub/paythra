@@ -177,6 +177,8 @@ const Analytics = () => {
             )}
           </>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
