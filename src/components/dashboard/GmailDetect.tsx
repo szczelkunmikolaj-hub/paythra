@@ -178,7 +178,7 @@ const GmailDetect = () => {
                   className="gap-2 bg-gradient-primary hover:opacity-90"
                 >
                   {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                  {scanning ? t("scanning") : t("scanLast90Days")}
+                  {scanning ? t("scanning") : detected.length > 0 ? t("scanAgain") : t("scanLast90Days")}
                 </Button>
                 <Button
                   variant="outline"
