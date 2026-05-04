@@ -12,6 +12,7 @@ import { SERVICE_REGISTRY, searchServices, findService } from "@/lib/serviceRegi
 import { getPlansForService, getCountriesForService, getPlansForCountry, getCurrencyForCountry, suggestPlanByPrice, type ServicePlan } from "@/lib/servicePlans";
 import { addMonths, addYears, format } from "date-fns";
 import { Plus, Search, Globe, Tag } from "lucide-react";
+import { searchSubscription, getDatabasePriceEUR, type SubscriptionDatabaseEntry } from "@/data/subscriptionDatabase";
 
 interface SubscriptionFormProps {
   open: boolean;
@@ -44,6 +45,7 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
   const [isCustomPrice, setIsCustomPrice] = useState(false);
 
   const searchResults = useMemo(() => searchServices(searchQuery), [searchQuery]);
+  const dbResults = useMemo(() => searchSubscription(searchQuery), [searchQuery]);
 
   // Derived data for country/plan selection
   const availableCountries = useMemo(() => getCountriesForService(name), [name]);
@@ -115,6 +117,22 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     setIsCustomPrice(false);
   };
 
+  const selectDbEntry = (entry: SubscriptionDatabaseEntry) => {
+    const displayName = entry.names[0];
+    setName(displayName);
+    setSearchQuery(displayName);
+    setCategory(entry.category);
+    const monthlyPrice = getDatabasePriceEUR(entry, "monthly");
+    if (monthlyPrice != null) {
+      setPrice(monthlyPrice.toFixed(2));
+      setBillingCycle("monthly");
+    }
+    setIsCustomPrice(true);
+    setShowDropdown(false);
+    setSelectedCountry("");
+    setSelectedPlan("");
+  };
+
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
     try {
@@ -135,7 +153,9 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     const nextBilling = billingCycle === "monthly" ? addMonths(start, 1) : addYears(start, 1);
 
     const match = findService(name);
-    const logoUrl = match ? match.logo : null;
+    const { getDatabaseEntryByName } = await import("@/data/subscriptionDatabase");
+    const dbEntry = getDatabaseEntryByName(name);
+    const logoUrl = match ? match.logo : (dbEntry ? `https://logo.clearbit.com/${dbEntry.domain}` : null);
 
     const data: SubscriptionInsert = {
       name,
@@ -191,13 +211,39 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                 autoComplete="off"
               />
             </div>
-            {showDropdown && searchResults.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-elevated max-h-48 overflow-y-auto">
+            {showDropdown && (searchResults.length > 0 || dbResults.length > 0) && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-elevated max-h-64 overflow-y-auto">
+                {dbResults.map((entry) => {
+                  const displayName = entry.names[0];
+                  const monthly = getDatabasePriceEUR(entry, "monthly");
+                  return (
+                    <button
+                      key={`db-${entry.id}`}
+                      type="button"
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
+                      onClick={() => selectDbEntry(entry)}
+                    >
+                      <img
+                        src={`https://logo.clearbit.com/${entry.domain}`}
+                        alt={displayName}
+                        className="h-6 w-6 rounded object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{entry.category.replace(/_/g, " ")}</p>
+                      </div>
+                      {monthly != null && (
+                        <span className="text-xs font-semibold text-foreground shrink-0">€{monthly.toFixed(2)}/mo</span>
+                      )}
+                    </button>
+                  );
+                })}
                 {searchResults.slice(0, 8).map((s) => (
                   <button
                     key={s.name}
                     type="button"
-                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50 first:rounded-t-lg last:rounded-b-lg"
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
                     onClick={() => selectService(s)}
                   >
                     <img
