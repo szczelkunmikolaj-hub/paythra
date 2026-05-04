@@ -307,8 +307,3 @@ const GmailDetect = () => {
 };
 
 export default GmailDetect;
-    </div>
-  );
-};
-
-export default GmailDetect;
