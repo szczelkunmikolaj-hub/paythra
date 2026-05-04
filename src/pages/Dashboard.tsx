@@ -11,6 +11,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
 import { useUnusedDetection } from "@/hooks/useUnusedDetection";
 import { usePriceChangeDetection } from "@/hooks/usePriceChangeDetection";
+import { useDatabasePriceCheck } from "@/hooks/useDatabasePriceCheck";
 import { useUpcomingChargeNotifications } from "@/hooks/useUpcomingChargeNotifications";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
