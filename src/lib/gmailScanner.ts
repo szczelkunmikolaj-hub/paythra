@@ -13,6 +13,7 @@ export const TARGET_DOMAINS = [
   "notion.so",
   "linkedin.com",
   "chatgpt.com",
+  "openai.com",
   "paypal.com",
   "microsoft.com",
   "slack.com",
@@ -21,6 +22,20 @@ export const TARGET_DOMAINS = [
   "github.com",
   "twitter.com",
   "icloud.com",
+  "disneyplus.com",
+  "disney.com",
+  "youtube.com",
+  "duolingo.com",
+  "grammarly.com",
+  "hbo.com",
+  "max.com",
+  "hulu.com",
+  "headspace.com",
+  "nordvpn.com",
+  "dashlane.com",
+  "squarespace.com",
+  "wix.com",
+  "shopify.com",
 ];
 
 export interface ParsedEmail {
