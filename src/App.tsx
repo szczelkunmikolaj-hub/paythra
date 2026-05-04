@@ -21,6 +21,7 @@ import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
 import Demo from "./pages/Demo";
 import Suggestions from "./pages/Suggestions";
+import PriceHistory from "./pages/PriceHistory";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AuthCallback from "./pages/AuthCallback";
