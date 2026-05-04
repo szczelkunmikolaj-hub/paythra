@@ -18,6 +18,9 @@ import { TrendingUp, Target, Lightbulb, CreditCard, AlertTriangle } from "lucide
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { formatCurrency, convertFromEUR } from "@/lib/currency";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import TimelineTab from "@/components/analytics/TimelineTab";
+import WasteCalendarTab from "@/components/analytics/WasteCalendarTab";
 
 const Analytics = () => {
   const { subscriptions, isLoading } = useSubscriptions();
