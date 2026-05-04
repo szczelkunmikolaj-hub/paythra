@@ -209,13 +209,39 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
                 autoComplete="off"
               />
             </div>
-            {showDropdown && searchResults.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-elevated max-h-48 overflow-y-auto">
+            {showDropdown && (searchResults.length > 0 || dbResults.length > 0) && (
+              <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-elevated max-h-64 overflow-y-auto">
+                {dbResults.map((entry) => {
+                  const displayName = entry.names[0];
+                  const monthly = getDatabasePriceEUR(entry, "monthly");
+                  return (
+                    <button
+                      key={`db-${entry.id}`}
+                      type="button"
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
+                      onClick={() => selectDbEntry(entry)}
+                    >
+                      <img
+                        src={`https://logo.clearbit.com/${entry.domain}`}
+                        alt={displayName}
+                        className="h-6 w-6 rounded object-contain"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{entry.category.replace(/_/g, " ")}</p>
+                      </div>
+                      {monthly != null && (
+                        <span className="text-xs font-semibold text-foreground shrink-0">€{monthly.toFixed(2)}/mo</span>
+                      )}
+                    </button>
+                  );
+                })}
                 {searchResults.slice(0, 8).map((s) => (
                   <button
                     key={s.name}
                     type="button"
-                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50 first:rounded-t-lg last:rounded-b-lg"
+                    className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-accent/50"
                     onClick={() => selectService(s)}
                   >
                     <img
