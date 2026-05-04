@@ -18,6 +18,9 @@ import { TrendingUp, Target, Lightbulb, CreditCard, AlertTriangle } from "lucide
 import { getCategoryIcon } from "@/lib/categoryIcons";
 import { formatCurrency, convertFromEUR } from "@/lib/currency";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import TimelineTab from "@/components/analytics/TimelineTab";
+import WasteCalendarTab from "@/components/analytics/WasteCalendarTab";
 
 const Analytics = () => {
   const { subscriptions, isLoading } = useSubscriptions();
@@ -54,6 +57,23 @@ const Analytics = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <h1 className="font-display text-2xl font-bold text-foreground">{t("insightsAnalytics")}</h1>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="timeline">My Timeline</TabsTrigger>
+            <TabsTrigger value="waste">Waste Calendar</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="timeline">
+            <TimelineTab />
+          </TabsContent>
+          <TabsContent value="waste">
+            <WasteCalendarTab />
+          </TabsContent>
+
+          <TabsContent value="overview" className="space-y-6">
+
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -157,6 +177,8 @@ const Analytics = () => {
             )}
           </>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
