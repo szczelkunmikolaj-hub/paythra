@@ -13,6 +13,11 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
+    console.log("[gmail-token-exchange] request received", {
+      hasAuthorizationHeader: !!authHeader,
+      authorizationScheme: authHeader?.split(" ")[0] ?? null,
+    });
+
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -26,6 +31,12 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: userData, error: userError } = await anonClient.auth.getUser();
+    console.log("[gmail-token-exchange] auth lookup result", {
+      userId: userData?.user?.id ?? null,
+      userEmail: userData?.user?.email ?? null,
+      authError: userError?.message ?? null,
+    });
+
     if (userError || !userData?.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -92,6 +103,12 @@ serve(async (req) => {
       }
     } catch (_) { /* ignore */ }
 
+    console.log("[gmail-token-exchange] google profile result", {
+      authenticatedUserId: userData.user.id,
+      authenticatedUserEmail: userData.user.email ?? null,
+      gmailEmail: email ?? null,
+    });
+
     // Persist the connection against the authenticated Supabase user (never by email).
     const expiresAt = new Date(Date.now() + ((data.expires_in ?? 3600) * 1000)).toISOString();
     await anonClient.from("gmail_connections").delete().eq("user_id", userData.user.id);
@@ -107,7 +124,14 @@ serve(async (req) => {
       });
 
     if (upsertError) {
-      console.error("[gmail-token-exchange] failed to save connection:", upsertError);
+      console.error("[gmail-token-exchange] failed to save connection:", {
+        message: upsertError.message,
+        code: upsertError.code ?? null,
+        details: upsertError.details ?? null,
+        hint: upsertError.hint ?? null,
+        userId: userData.user.id,
+        gmailEmail: email ?? null,
+      });
       return new Response(
         JSON.stringify({
           error: "save_failed",
@@ -116,6 +140,11 @@ serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+
+    console.log("[gmail-token-exchange] connection saved", {
+      userId: userData.user.id,
+      gmailEmail: email ?? null,
+    });
 
     return new Response(JSON.stringify({ ...data, email, success: true }), {
       status: 200,
