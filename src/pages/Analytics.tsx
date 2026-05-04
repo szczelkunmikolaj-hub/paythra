@@ -58,6 +58,23 @@ const Analytics = () => {
       <div className="space-y-6">
         <h1 className="font-display text-2xl font-bold text-foreground">{t("insightsAnalytics")}</h1>
 
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="timeline">My Timeline</TabsTrigger>
+            <TabsTrigger value="waste">Waste Calendar</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="timeline">
+            <TimelineTab />
+          </TabsContent>
+          <TabsContent value="waste">
+            <WasteCalendarTab />
+          </TabsContent>
+
+          <TabsContent value="overview" className="space-y-6">
+
+
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
