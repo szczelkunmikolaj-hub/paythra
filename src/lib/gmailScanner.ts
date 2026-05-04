@@ -322,6 +322,7 @@ function prettyMerchantName(domain: string, fallback: string): string {
     "notion.so": "Notion",
     "linkedin.com": "LinkedIn",
     "chatgpt.com": "ChatGPT",
+    "openai.com": "OpenAI",
     "paypal.com": "PayPal",
     "microsoft.com": "Microsoft",
     "slack.com": "Slack",
@@ -330,6 +331,20 @@ function prettyMerchantName(domain: string, fallback: string): string {
     "github.com": "GitHub",
     "twitter.com": "Twitter / X",
     "icloud.com": "iCloud",
+    "disneyplus.com": "Disney+",
+    "disney.com": "Disney+",
+    "youtube.com": "YouTube",
+    "duolingo.com": "Duolingo",
+    "grammarly.com": "Grammarly",
+    "hbo.com": "HBO",
+    "max.com": "Max",
+    "hulu.com": "Hulu",
+    "headspace.com": "Headspace",
+    "nordvpn.com": "NordVPN",
+    "dashlane.com": "Dashlane",
+    "squarespace.com": "Squarespace",
+    "wix.com": "Wix",
+    "shopify.com": "Shopify",
   };
   return map[domain] || fallback || domain;
 }
