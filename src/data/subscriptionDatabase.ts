@@ -262,7 +262,7 @@ export const SUBSCRIPTION_DATABASE: SubscriptionDatabaseEntry[] = [
 ];
 
 // ========== SEARCH FUNCTION ==========
-export function searchSubscription(query) {
+export function searchSubscription(query: string): SubscriptionDatabaseEntry[] {
   if (!query || query.length < 2) return [];
   const q = query.toLowerCase().trim();
   return SUBSCRIPTION_DATABASE.filter(sub =>
@@ -272,8 +272,25 @@ export function searchSubscription(query) {
   ).slice(0, 10);
 }
 
-// ========== PRICE TRACKING ==========
-// Structure for tracking price changes
+export function getDatabaseEntryByName(name: string): SubscriptionDatabaseEntry | undefined {
+  const n = name.toLowerCase().trim();
+  return SUBSCRIPTION_DATABASE.find(sub =>
+    sub.names.some(alias => alias.toLowerCase() === n)
+  );
+}
+
+export function getDatabasePriceEUR(entry: SubscriptionDatabaseEntry, billingCycle: "monthly" | "yearly"): number | null {
+  const cycleKey = billingCycle === "yearly" ? "annual" : "monthly";
+  const block = entry.pricing[cycleKey];
+  if (!block) return null;
+  // Demo FX rates per project memory: EUR base, PLN 4.3, GBP 0.85, USD 1.1
+  if (block.EUR != null) return block.EUR;
+  if (block.GBP != null) return block.GBP / 0.85;
+  if (block.USD != null) return block.USD / 1.1;
+  if (block.PLN != null) return block.PLN / 4.3;
+  return null;
+}
+
 export const PRICE_HISTORY_SCHEMA = {
   subscription_id: "string",
   previous_price: "number",
