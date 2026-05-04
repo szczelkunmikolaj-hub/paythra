@@ -92,7 +92,34 @@ serve(async (req) => {
       }
     } catch (_) { /* ignore */ }
 
-    return new Response(JSON.stringify({ ...data, email }), {
+    // Persist the connection against the authenticated Supabase user (never by email).
+    const expiresAt = new Date(Date.now() + ((data.expires_in ?? 3600) * 1000)).toISOString();
+    const { error: upsertError } = await anonClient
+      .from("gmail_connections")
+      .upsert(
+        {
+          user_id: userData.user.id,
+          email: email ?? null,
+          access_token: data.access_token,
+          refresh_token: data.refresh_token ?? "",
+          token_expires_at: expiresAt,
+          connected_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+
+    if (upsertError) {
+      console.error("[gmail-token-exchange] failed to save connection:", upsertError);
+      return new Response(
+        JSON.stringify({
+          error: "save_failed",
+          error_description: upsertError.message,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    return new Response(JSON.stringify({ ...data, email, success: true }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
