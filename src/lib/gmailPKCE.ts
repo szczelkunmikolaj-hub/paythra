@@ -4,7 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const GOOGLE_CLIENT_ID =
-  "240223060504-3vsrsk3i8plb86ih3oedh6jeg4t86d2r.apps.googleusercontent.com";
+  "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 
 const SS_VERIFIER = "gmail_pkce_verifier";
