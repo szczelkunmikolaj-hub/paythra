@@ -153,7 +153,9 @@ const SubscriptionForm = ({ open, onOpenChange, onSubmit, onUpdate, editing }: S
     const nextBilling = billingCycle === "monthly" ? addMonths(start, 1) : addYears(start, 1);
 
     const match = findService(name);
-    const logoUrl = match ? match.logo : null;
+    const { getDatabaseEntryByName } = await import("@/data/subscriptionDatabase");
+    const dbEntry = getDatabaseEntryByName(name);
+    const logoUrl = match ? match.logo : (dbEntry ? `https://logo.clearbit.com/${dbEntry.domain}` : null);
 
     const data: SubscriptionInsert = {
       name,
