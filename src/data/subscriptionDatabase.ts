@@ -1,8 +1,25 @@
 // PAYTHRA MASTER SUBSCRIPTION DATABASE
-// 500+ subscription services across EN, ES, PL, DE, FR markets
-// Each entry: id, names (searchable aliases), category, pricing, countries, domain, color
+// 197 subscription services across EN, ES, PL, DE, FR markets
 
-export const SUBSCRIPTION_DATABASE = [
+export type SubscriptionCurrency = "EUR" | "GBP" | "PLN" | "USD";
+
+export interface SubscriptionPricing {
+  monthly?: Partial<Record<SubscriptionCurrency, number>>;
+  annual?: Partial<Record<SubscriptionCurrency, number>> | null;
+}
+
+export interface SubscriptionDatabaseEntry {
+  id: string;
+  names: string[];
+  category: string;
+  domain: string;
+  color: string;
+  countries: string[];
+  pricing: SubscriptionPricing;
+  billingCycles?: string[];
+}
+
+export const SUBSCRIPTION_DATABASE: SubscriptionDatabaseEntry[] = [
 
   // ========== STREAMING — VIDEO ==========
   { id: "netflix", names: ["Netflix", "Netflix Premium", "Netflix Standard"], category: "streaming_video", domain: "netflix.com", color: "#E50914", countries: ["ALL"], pricing: { monthly: { EUR: 17.99, GBP: 17.99, PLN: 65, USD: 22.99 }, annual: null }, billingCycles: ["monthly", "annual"] },
