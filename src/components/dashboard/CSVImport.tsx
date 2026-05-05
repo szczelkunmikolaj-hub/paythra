@@ -117,13 +117,12 @@ const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif,.pdf";
 // Extract transactions from PDF bank statement text
 async function extractTransactionsFromPDF(file: File): Promise<ParsedTransaction[]> {
   // @ts-ignore
-  const pdfjs: any = await import("pdfjs-dist/build/pdf.mjs");
-  // @ts-ignore
-  const worker = await import("pdfjs-dist/build/pdf.worker.mjs?url");
-  pdfjs.GlobalWorkerOptions.workerSrc = worker.default;
+  const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const version = pdfjs.version || "5.7.284";
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
 
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: buf }).promise;
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(buf), useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true }).promise;
 
   const lines: string[] = [];
   for (let p = 1; p <= pdf.numPages; p++) {
