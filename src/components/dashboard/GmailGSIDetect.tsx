@@ -322,6 +322,25 @@ const fetchUserEmail = async (token: string): Promise<string> => {
   return j.email as string;
 };
 
+// Validate a stored token against the Gmail profile endpoint.
+// Returns true only if the token is still valid.
+const validateToken = async (token: string): Promise<boolean> => {
+  try {
+    const r = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (r.status === 401) {
+      console.warn("[Gmail] Stored token failed validation (401)");
+      return false;
+    }
+    return r.ok;
+  } catch (e) {
+    console.error("[Gmail] Token validation error:", e);
+    return false;
+  }
+};
+
 const scanOneAccount = async (
   token: StoredToken
 ): Promise<{ groups: Map<string, Detected>; emailsScanned: number; expired?: boolean }> => {
