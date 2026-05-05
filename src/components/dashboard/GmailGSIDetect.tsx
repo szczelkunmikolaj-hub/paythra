@@ -394,7 +394,31 @@ const GmailGSIDetect = () => {
     };
   };
 
+  const isPromoSubject = (s: string) => {
+    const lower = s.toLowerCase();
+    return PROMO_KEYWORDS.some((k) => lower.includes(k));
+  };
+
+  const isBillingSender = (sender?: string) => {
+    if (!sender) return false;
+    const local = sender.split("@")[0]?.toLowerCase() || "";
+    return BILLING_SENDER_PATTERNS.some((p) => local.includes(p));
+  };
+
+  type Bucket = "confirmed" | "possibly" | "unlikely";
+  const classify = (d: Detected): Bucket => {
+    const hasPaymentKw = d.subjects.some((s) => findKeyword(s));
+    const allPromo = d.subjects.length > 0 && d.subjects.every((s) => isPromoSubject(s));
+    if (hasPaymentKw && isBillingSender(d.matchedSender)) return "confirmed";
+    if (allPromo && !hasPaymentKw) return "unlikely";
+    if (!hasPaymentKw || d.count === 1) return "possibly";
+    return "possibly";
+  };
+
   const visible = detected.filter((d) => !dismissed.has(d.domain));
+  const confirmedList = visible.filter((d) => classify(d) === "confirmed");
+  const possiblyList = visible.filter((d) => classify(d) === "possibly");
+  const unlikelyList = visible.filter((d) => classify(d) === "unlikely");
   const hasAccounts = accounts.length > 0;
 
   return (
