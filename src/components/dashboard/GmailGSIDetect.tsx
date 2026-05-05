@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X } from "lucide-react";
+import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
@@ -17,23 +17,35 @@ interface GmailAccount {
   token: string;
 }
 
-const KNOWN_SERVICES: Record<string, { name: string; domain: string }> = {
-  "netflix.com": { name: "Netflix", domain: "netflix.com" },
-  "spotify.com": { name: "Spotify", domain: "spotify.com" },
-  "adobe.com": { name: "Adobe", domain: "adobe.com" },
-  "apple.com": { name: "Apple", domain: "apple.com" },
-  "amazon.com": { name: "Amazon", domain: "amazon.com" },
-  "openai.com": { name: "OpenAI", domain: "openai.com" },
-  "notion.so": { name: "Notion", domain: "notion.so" },
-  "dropbox.com": { name: "Dropbox", domain: "dropbox.com" },
-  "microsoft.com": { name: "Microsoft", domain: "microsoft.com" },
-  "google.com": { name: "Google", domain: "google.com" },
-  "disney.com": { name: "Disney+", domain: "disney.com" },
-  "linkedin.com": { name: "LinkedIn", domain: "linkedin.com" },
-  "canva.com": { name: "Canva", domain: "canva.com" },
-  "grammarly.com": { name: "Grammarly", domain: "grammarly.com" },
-  "duolingo.com": { name: "Duolingo", domain: "duolingo.com" },
+const KNOWN_SERVICES: Record<string, { name: string; domain: string; category: string }> = {
+  "netflix.com": { name: "Netflix", domain: "netflix.com", category: "streaming" },
+  "spotify.com": { name: "Spotify", domain: "spotify.com", category: "music" },
+  "adobe.com": { name: "Adobe", domain: "adobe.com", category: "design" },
+  "apple.com": { name: "Apple", domain: "apple.com", category: "other" },
+  "amazon.com": { name: "Amazon", domain: "amazon.com", category: "shopping" },
+  "openai.com": { name: "OpenAI", domain: "openai.com", category: "productivity" },
+  "notion.so": { name: "Notion", domain: "notion.so", category: "productivity" },
+  "dropbox.com": { name: "Dropbox", domain: "dropbox.com", category: "storage" },
+  "microsoft.com": { name: "Microsoft", domain: "microsoft.com", category: "productivity" },
+  "google.com": { name: "Google", domain: "google.com", category: "storage" },
+  "disney.com": { name: "Disney+", domain: "disney.com", category: "streaming" },
+  "linkedin.com": { name: "LinkedIn", domain: "linkedin.com", category: "productivity" },
+  "canva.com": { name: "Canva", domain: "canva.com", category: "design" },
+  "grammarly.com": { name: "Grammarly", domain: "grammarly.com", category: "productivity" },
+  "duolingo.com": { name: "Duolingo", domain: "duolingo.com", category: "education" },
 };
+
+const ALLOWED_CATEGORIES = new Set([
+  "streaming", "music", "productivity", "design", "storage", "fitness",
+  "education", "gaming", "news", "finance", "security", "shopping",
+  "food", "utilities", "other",
+]);
+
+const PAYMENT_KEYWORDS = [
+  "receipt", "invoice", "payment", "charge", "billing", "renewal",
+  "subscription", "order confirmation", "purchase", "plan", "amount due",
+  "thank you for your purchase", "your membership", "factura", "rechnung", "reçu",
+];
 
 const QUERY =
   "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal OR from:netflix.com OR from:spotify.com OR from:adobe.com OR from:apple.com OR from:amazon.com OR from:openai.com OR from:notion.so OR from:dropbox.com OR from:microsoft.com OR from:google.com OR from:disney.com OR from:linkedin.com OR from:canva.com OR from:grammarly.com OR from:duolingo.com";
@@ -41,8 +53,14 @@ const QUERY =
 interface Detected {
   domain: string;
   name: string;
+  category: string;
   count: number;
-  lastSubject?: string;
+  subjects: string[];
+  matchedKeyword?: string;
+  matchedSender?: string;
+  earliestDate?: number; // ms
+  latestDate?: number;
+  latestSubject?: string;
 }
 
 declare global {
@@ -71,12 +89,16 @@ const loadGsi = (): Promise<void> =>
     document.head.appendChild(s);
   });
 
-const extractDomain = (from: string): string | null => {
+const extractEmail = (from: string): string => {
   const m = from.match(/<([^>]+)>/);
-  const email = (m ? m[1] : from).trim();
+  return (m ? m[1] : from).trim().toLowerCase();
+};
+
+const extractDomain = (from: string): string | null => {
+  const email = extractEmail(from);
   const at = email.lastIndexOf("@");
   if (at === -1) return null;
-  const domain = email.slice(at + 1).toLowerCase().replace(/>$/, "");
+  const domain = email.slice(at + 1).replace(/>$/, "");
   for (const known of Object.keys(KNOWN_SERVICES)) {
     if (domain === known || domain.endsWith("." + known)) return known;
   }
@@ -91,7 +113,6 @@ const readAccounts = (): GmailAccount[] => {
       if (Array.isArray(parsed)) return parsed.filter((a) => a?.email && a?.token);
     }
   } catch {}
-  // Migrate legacy single-token storage
   const legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
   if (legacy) {
     localStorage.removeItem(LEGACY_TOKEN_KEY);
@@ -115,6 +136,16 @@ const fetchEmailForToken = async (token: string): Promise<string> => {
   return j.emailAddress as string;
 };
 
+const formatMonthYear = (ms: number) => {
+  const d = new Date(ms);
+  return d.toLocaleString("en-US", { month: "long", year: "numeric" });
+};
+
+const findKeyword = (subject: string): string | undefined => {
+  const lower = subject.toLowerCase();
+  return PAYMENT_KEYWORDS.find((k) => lower.includes(k));
+};
+
 const GmailGSIDetect = () => {
   const { addSubscription } = useSubscriptions();
   const [accounts, setAccounts] = useState<GmailAccount[]>(() => readAccounts());
@@ -122,6 +153,7 @@ const GmailGSIDetect = () => {
   const [progress, setProgress] = useState("");
   const [detected, setDetected] = useState<Detected[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadGsi().catch(() => {
@@ -176,14 +208,48 @@ const GmailGSIDetect = () => {
       const headers: Array<{ name: string; value: string }> = msg.payload?.headers || [];
       const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
       const subject = headers.find((h) => h.name.toLowerCase() === "subject")?.value || "";
+      const dateHeader = headers.find((h) => h.name.toLowerCase() === "date")?.value;
+      const internalMs = msg.internalDate ? Number(msg.internalDate) : undefined;
+      const dateMs = internalMs ?? (dateHeader ? Date.parse(dateHeader) : NaN);
       const domain = extractDomain(from);
       if (!domain) continue;
       const known = KNOWN_SERVICES[domain];
       const name =
         known?.name || domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
+      const rawCategory = known?.category || "other";
+      const category = ALLOWED_CATEGORIES.has(rawCategory) ? rawCategory : "other";
+      const sender = extractEmail(from);
+      const matchedKeyword = findKeyword(subject);
+
       const existing = groups.get(domain);
-      if (existing) existing.count++;
-      else groups.set(domain, { domain, name, count: 1, lastSubject: subject });
+      if (existing) {
+        existing.count++;
+        existing.subjects.push(subject);
+        if (matchedKeyword && !existing.matchedKeyword) {
+          existing.matchedKeyword = matchedKeyword;
+          existing.matchedSender = sender;
+        }
+        if (Number.isFinite(dateMs)) {
+          if (!existing.earliestDate || dateMs < existing.earliestDate) existing.earliestDate = dateMs;
+          if (!existing.latestDate || dateMs > existing.latestDate) {
+            existing.latestDate = dateMs;
+            existing.latestSubject = subject;
+          }
+        }
+      } else {
+        groups.set(domain, {
+          domain,
+          name,
+          category,
+          count: 1,
+          subjects: [subject],
+          matchedKeyword,
+          matchedSender: matchedKeyword ? sender : undefined,
+          earliestDate: Number.isFinite(dateMs) ? dateMs : undefined,
+          latestDate: Number.isFinite(dateMs) ? dateMs : undefined,
+          latestSubject: subject,
+        });
+      }
     }
     return true;
   };
@@ -207,10 +273,14 @@ const GmailGSIDetect = () => {
         });
         if (!ok) continue;
       }
-      setDetected(Array.from(groups.values()).sort((a, b) => b.count - a.count));
+      // Fix 4: stricter verification — require a payment keyword in at least one subject
+      const verified = Array.from(groups.values()).filter((g) =>
+        g.subjects.some((s) => findKeyword(s))
+      );
+      setDetected(verified.sort((a, b) => b.count - a.count));
       toast({
         title: "Scan complete",
-        description: `Detected ${groups.size} subscription${groups.size === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
+        description: `Detected ${verified.length} subscription${verified.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
       });
     } catch (e: any) {
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
@@ -263,13 +333,17 @@ const GmailGSIDetect = () => {
 
   const handleConfirm = async (d: Detected) => {
     try {
+      const startDate = d.earliestDate
+        ? new Date(d.earliestDate).toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0];
       const next = new Date();
       next.setMonth(next.getMonth() + 1);
       await addSubscription({
         name: d.name,
         price: 0,
         billing_cycle: "monthly",
-        category: "entertainment",
+        category: ALLOWED_CATEGORIES.has(d.category) ? d.category : "other",
+        start_date: startDate,
         next_billing_date: next.toISOString().split("T")[0],
         status: "active",
       });
@@ -278,6 +352,35 @@ const GmailGSIDetect = () => {
     } catch (e: any) {
       toast({ title: "Failed to add", description: e.message, variant: "destructive" });
     }
+  };
+
+  const toggleExpand = (domain: string) => {
+    setExpanded((s) => {
+      const n = new Set(s);
+      if (n.has(domain)) n.delete(domain);
+      else n.add(domain);
+      return n;
+    });
+  };
+
+  const confidenceFor = (d: Detected): { level: "High" | "Medium" | "Low"; reason: string } => {
+    const keywordCount = d.subjects.filter((s) => findKeyword(s)).length;
+    if (d.count >= 3 && keywordCount >= 2) {
+      return {
+        level: "High",
+        reason: `${d.count} emails found${d.matchedSender ? ` from ${d.matchedSender}` : ""}${d.matchedKeyword ? ` with subject containing "${d.matchedKeyword}"` : ""}`,
+      };
+    }
+    if (keywordCount >= 1) {
+      return {
+        level: "Medium",
+        reason: `${d.count} email${d.count === 1 ? "" : "s"}, ${keywordCount} matching payment keyword${keywordCount === 1 ? "" : "s"}${d.matchedKeyword ? ` ("${d.matchedKeyword}")` : ""}`,
+      };
+    }
+    return {
+      level: "Low",
+      reason: `${d.count} email${d.count === 1 ? "" : "s"}, no payment keywords matched`,
+    };
   };
 
   const visible = detected.filter((d) => !dismissed.has(d.domain));
@@ -372,52 +475,86 @@ const GmailGSIDetect = () => {
           <CardContent>
             <AnimatePresence>
               <div className="grid gap-3 sm:grid-cols-2">
-                {visible.map((sub) => (
-                  <motion.div
-                    key={sub.domain}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="rounded-xl border border-border p-4 space-y-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={`https://logo.clearbit.com/${sub.domain}`}
-                        alt={sub.name}
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                        className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate">{sub.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
-                        </p>
+                {visible.map((sub) => {
+                  const { level, reason } = confidenceFor(sub);
+                  const isOpen = expanded.has(sub.domain);
+                  return (
+                    <motion.div
+                      key={sub.domain}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="rounded-xl border border-border p-4 space-y-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img
+                          src={`https://logo.clearbit.com/${sub.domain}`}
+                          alt={sub.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{sub.name}</p>
+                          {sub.earliestDate && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              First seen: {formatMonthYear(sub.earliestDate)}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground truncate">
+                            {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleConfirm(sub)}
-                        className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+
+                      <button
+                        type="button"
+                        onClick={() => toggleExpand(sub.domain)}
+                        className="flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <Plus className="h-3.5 w-3.5" /> Add
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          setDismissed((s) => new Set(s).add(sub.domain))
-                        }
-                        className="gap-1"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
+                        <span>Why detected?</span>
+                        {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </button>
+                      {isOpen && (
+                        <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-xs">
+                          <p>
+                            <span className="font-medium">Emails found:</span> {sub.count}
+                          </p>
+                          <p>
+                            <span className="font-medium">Confidence:</span> {level} — {reason}
+                          </p>
+                          {sub.latestSubject && (
+                            <p className="truncate">
+                              <span className="font-medium">Most recent subject:</span> {sub.latestSubject}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleConfirm(sub)}
+                          className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Add
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            setDismissed((s) => new Set(s).add(sub.domain))
+                          }
+                          className="gap-1"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </AnimatePresence>
           </CardContent>
