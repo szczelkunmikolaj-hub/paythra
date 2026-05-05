@@ -44,8 +44,18 @@ const ALLOWED_CATEGORIES = new Set([
 
 const PAYMENT_KEYWORDS = [
   "receipt", "invoice", "payment", "charge", "billing", "renewal",
-  "subscription", "order confirmation", "purchase", "plan", "amount due",
-  "thank you for your purchase", "your membership", "factura", "rechnung", "reçu",
+  "subscription confirmed", "subscription", "order confirmation", "purchase",
+  "amount due", "your membership", "your plan",
+  "thank you for your purchase", "factura", "rechnung", "reçu",
+];
+
+const PROMO_KEYWORDS = [
+  "offer", "discount", "sale", "free", "try", "miss you", "come back",
+  "streak", "reminder", "limited time", "exclusive",
+];
+
+const BILLING_SENDER_PATTERNS = [
+  "billing", "noreply", "no-reply", "no_reply", "receipts", "invoice", "payments", "notify",
 ];
 
 const QUERY =
