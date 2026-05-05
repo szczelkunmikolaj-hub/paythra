@@ -138,6 +138,14 @@ const extractDomain = (from: string): string | null => {
   for (const known of Object.keys(KNOWN_SERVICES)) {
     if (domain === known || domain.endsWith("." + known)) return known;
   }
+  // Fuzzy brand matching: any domain CONTAINING a known brand maps to that brand
+  for (const brand of FUZZY_BRANDS) {
+    if (domain.includes(brand)) {
+      const canonical = `${brand}.com`;
+      // Prefer the canonical domain key if known, else just return canonical
+      return KNOWN_SERVICES[canonical] ? canonical : canonical;
+    }
+  }
   return domain;
 };
 
