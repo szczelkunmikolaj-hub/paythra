@@ -268,11 +268,13 @@ const GmailGSIDetect = () => {
   const scanAll = async (list: GmailAccount[]) => {
     if (list.length === 0) return;
     setScanning(true);
-    setProgress("Searching emails...");
+    setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}...`);
     const groups = new Map<string, Detected>();
     let current = [...list];
     try {
-      for (const acc of list) {
+      for (let i = 0; i < list.length; i++) {
+        const acc = list[i];
+        setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}... (${i + 1}/${list.length}) ${acc.email}`);
         const ok = await scanOne(acc.token, acc.email, groups, () => {
           current = current.filter((a) => a.email !== acc.email);
           persistAccounts(current);
@@ -284,14 +286,12 @@ const GmailGSIDetect = () => {
         });
         if (!ok) continue;
       }
-      // Fix 4: stricter verification — require a payment keyword in at least one subject
-      const verified = Array.from(groups.values()).filter((g) =>
-        g.subjects.some((s) => findKeyword(s))
-      );
-      setDetected(verified.sort((a, b) => b.count - a.count));
+      // Deduplicated by domain via Map; keep all groups so we can classify into 3 buckets
+      const all = Array.from(groups.values()).sort((a, b) => b.count - a.count);
+      setDetected(all);
       toast({
         title: "Scan complete",
-        description: `Detected ${verified.length} subscription${verified.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
+        description: `Detected ${all.length} service${all.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
       });
     } catch (e: any) {
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
