@@ -849,81 +849,127 @@ const GmailGSIDetect = () => {
       {/* Detected list */}
       {visible.length > 0 && (
         <Card className="shadow-card">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
             <CardTitle className="flex items-center gap-2 font-display text-lg">
               <Search className="h-5 w-5 text-primary" />
-              Detected subscriptions ({visible.length})
+              Detected subscriptions ({filtered.length})
             </CardTitle>
+            <div className="flex gap-1 rounded-lg border border-border p-1">
+              {(["confirmed", "review", "all"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                    filter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "confirmed" ? "Confirmed only" : f === "review" ? "Needs review" : "All"}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
-            <AnimatePresence>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {visible.map((sub) => {
-                  const conf = confidence(sub.count);
-                  const tracked = isTracked(sub);
-                  return (
-                    <motion.div
-                      key={sub.domain}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="rounded-xl border border-border p-4 space-y-3"
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <img
-                          src={`https://logo.clearbit.com/${sub.domain}`}
-                          alt={sub.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold truncate">{sub.name}</p>
-                            <Badge className={conf.className + " text-[10px]"}>
-                              {conf.label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
-                          </p>
-                          {sub.accounts.length > 1 && (
-                            <p className="text-[10px] text-muted-foreground truncate">
-                              from {sub.accounts.length} accounts
+            <TooltipProvider delayDuration={200}>
+              <AnimatePresence>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {filtered.map(({ d: sub, c: conf }) => {
+                    const tracked = isTracked(sub);
+                    const why = buildWhyText(sub);
+                    return (
+                      <motion.div
+                        key={sub.domain}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="rounded-xl border border-border p-4 space-y-3"
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          <img
+                            src={`https://logo.clearbit.com/${sub.domain}`}
+                            alt={sub.name}
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                            className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold truncate">{sub.name}</p>
+                              <Badge className={conf.className + " text-[10px]"}>
+                                {conf.label}
+                              </Badge>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label="Why was this detected?"
+                                    className="text-muted-foreground hover:text-foreground"
+                                  >
+                                    <HelpCircle className="h-3.5 w-3.5" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-xs">
+                                  <p className="font-medium mb-0.5">Why was this detected?</p>
+                                  <p>{why}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
                             </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {tracked ? (
-                          <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="h-4 w-4" /> Already tracking
+                            {conf.freeTier && (
+                              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                                Free tier detected — confirm if you pay for this
+                              </p>
+                            )}
+                            {sub.accounts.length > 1 && (
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                from {sub.accounts.length} accounts
+                              </p>
+                            )}
                           </div>
-                        ) : (
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {tracked ? (
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+                              <CheckCircle2 className="h-4 w-4" /> Already tracking
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => handleAdd(sub)}
+                              className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Add to Paythra
+                            </Button>
+                          )}
                           <Button
                             size="sm"
-                            onClick={() => handleAdd(sub)}
-                            className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                            variant="outline"
+                            onClick={() => handleNotSubscription(sub.domain)}
+                            className="gap-1 text-xs"
                           >
-                            <Plus className="h-3.5 w-3.5" /> Add to Paythra
+                            <Ban className="h-3.5 w-3.5" /> Not a subscription
                           </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
-                          className="gap-1"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </AnimatePresence>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
+                            className="gap-1"
+                            aria-label="Dismiss"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </AnimatePresence>
+            </TooltipProvider>
           </CardContent>
         </Card>
       )}
