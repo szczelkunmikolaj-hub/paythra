@@ -400,6 +400,8 @@ const GmailGSIDetect = () => {
   const [detected, setDetected] = useState<Detected[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [added, setAdded] = useState<Set<string>>(new Set());
+  const [ignored, setIgnored] = useState<Set<string>>(() => new Set(readIgnored()));
+  const [filter, setFilter] = useState<"all" | "confirmed" | "review">("confirmed");
   const [newServices, setNewServices] = useState<Detected[]>([]);
   const [summary, setSummary] = useState<{
     emails: number;
