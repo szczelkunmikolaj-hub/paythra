@@ -327,12 +327,30 @@ const CSVImport = () => {
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif)$/i)) {
+      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif|pdf)$/i)) {
         toast({ title: t("unsupportedFormat"), description: t("supportedFormatsList"), variant: "destructive" });
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
         toast({ title: t("fileTooLarge"), description: t("maxFileSize"), variant: "destructive" });
+        return;
+      }
+
+      if (/\.pdf$/i.test(file.name)) {
+        try {
+          const transactions = await extractTransactionsFromPDF(file);
+          if (transactions.length === 0) {
+            toast({ title: "No transactions found", description: "Could not extract transactions from this PDF. Try exporting as CSV.", variant: "destructive" });
+            return;
+          }
+          setParsed(transactions);
+          const { subs, other } = detectSubscriptions(transactions);
+          setDetected(subs);
+          setOtherTransactions(other);
+          setShowModal(true);
+        } catch (err: any) {
+          toast({ title: "PDF parse failed", description: err?.message || "Could not read PDF", variant: "destructive" });
+        }
         return;
       }
 
