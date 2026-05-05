@@ -112,82 +112,7 @@ function autoDetectColumns(headers: string[]): ColumnMapping | null {
   return null;
 }
 
-const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif,.pdf";
-
-// Extract transactions from PDF bank statement text
-async function extractTransactionsFromPDF(file: File): Promise<ParsedTransaction[]> {
-  // @ts-ignore
-  const pdfjs: any = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const version = pdfjs.version || "5.7.284";
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.mjs`;
-
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: new Uint8Array(buf), useWorkerFetch: false, isEvalSupported: false, useSystemFonts: true }).promise;
-
-  const lines: string[] = [];
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const content = await page.getTextContent();
-    // Group items by Y coordinate to reconstruct lines
-    const rows: Record<string, { x: number; str: string }[]> = {};
-    for (const it of content.items as any[]) {
-      const y = Math.round(it.transform[5]);
-      const x = it.transform[4];
-      const key = `${p}-${y}`;
-      if (!rows[key]) rows[key] = [];
-      rows[key].push({ x, str: it.str });
-    }
-    for (const k of Object.keys(rows)) {
-      const sorted = rows[k].sort((a, b) => a.x - b.x);
-      const line = sorted.map((s) => s.str).join(" ").replace(/\s+/g, " ").trim();
-      if (line) lines.push(line);
-    }
-  }
-
-  // Parse each line: look for date + amount, merchant = the rest
-  const dateRe = /\b(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\b/;
-  const amountRe = /(-?\(?\s?[€$£]?\s?\d{1,3}(?:[.,\s]\d{3})*[.,]\d{2}\)?\s?(?:EUR|USD|GBP|PLN|zł)?)/gi;
-
-  const txs: ParsedTransaction[] = [];
-  for (const line of lines) {
-    const dm = line.match(dateRe);
-    if (!dm) continue;
-    const amounts = [...line.matchAll(amountRe)];
-    if (amounts.length === 0) continue;
-
-    const lastAmt = amounts[amounts.length - 1][0];
-    const cleanedAmt = lastAmt.replace(/[€$£\s()EURUSDGBPPLNzł]/gi, "").replace(/\.(?=\d{3}(\D|$))/g, "").replace(",", ".");
-    const amount = Math.abs(parseFloat(cleanedAmt));
-    if (isNaN(amount) || amount === 0) continue;
-
-    let parsedDate: Date | null = null;
-    const dateStr = dm[0];
-    const iso = new Date(dateStr);
-    if (!isNaN(iso.getTime())) parsedDate = iso;
-    else {
-      const parts = dateStr.split(/[\/.\-]/);
-      if (parts.length === 3) {
-        let [d, m, y] = parts;
-        if (y.length === 2) y = "20" + y;
-        const dt = new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-        if (!isNaN(dt.getTime())) parsedDate = dt;
-      }
-    }
-    if (!parsedDate) continue;
-
-    let merchant = line.replace(dm[0], "");
-    for (const a of amounts) merchant = merchant.replace(a[0], "");
-    merchant = merchant.replace(/\s+/g, " ").replace(/^[\s\-|:]+|[\s\-|:]+$/g, "").trim();
-    if (merchant.length < 2) continue;
-
-    txs.push({
-      date: parsedDate.toISOString().split("T")[0],
-      merchant,
-      amount,
-    });
-  }
-  return txs;
-}
+const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
 
 const CSVImport = () => {
   const { t } = useTranslation();
@@ -326,30 +251,12 @@ const CSVImport = () => {
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif|pdf)$/i)) {
+      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif)$/i)) {
         toast({ title: t("unsupportedFormat"), description: t("supportedFormatsList"), variant: "destructive" });
         return;
       }
       if (file.size > 10 * 1024 * 1024) {
         toast({ title: t("fileTooLarge"), description: t("maxFileSize"), variant: "destructive" });
-        return;
-      }
-
-      if (/\.pdf$/i.test(file.name)) {
-        try {
-          const transactions = await extractTransactionsFromPDF(file);
-          if (transactions.length === 0) {
-            toast({ title: "No transactions found", description: "Could not extract transactions from this PDF. Try exporting as CSV.", variant: "destructive" });
-            return;
-          }
-          setParsed(transactions);
-          const { subs, other } = detectSubscriptions(transactions);
-          setDetected(subs);
-          setOtherTransactions(other);
-          setShowModal(true);
-        } catch (err: any) {
-          toast({ title: "PDF parse failed", description: err?.message || "Could not read PDF", variant: "destructive" });
-        }
         return;
       }
 
