@@ -298,6 +298,14 @@ const GmailGSIDetect = () => {
       const sender = extractEmail(from);
       const matchedKeyword = findKeyword(subject);
 
+      // Savings opportunity: subject matches a savings keyword AND sender is a known service
+      if (known && findSavingsKeyword(subject) && Number.isFinite(dateMs)) {
+        const id = `${domain}:${ids[i]}`;
+        if (!offers.find((o) => o.id === id)) {
+          offers.push({ id, domain, name, category, subject, dateMs });
+        }
+      }
+
       const existing = groups.get(domain);
       if (existing) {
         existing.count++;
