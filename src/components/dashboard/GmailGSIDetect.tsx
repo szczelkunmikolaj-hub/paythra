@@ -165,6 +165,7 @@ const GmailGSIDetect = () => {
   const [detected, setDetected] = useState<Detected[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [showUnlikely, setShowUnlikely] = useState(false);
 
   useEffect(() => {
     loadGsi().catch(() => {
