@@ -54,12 +54,29 @@ const PAYMENT_KEYWORDS = [
   "receipt", "invoice", "payment", "charge", "billing", "renewal",
   "subscription confirmed", "subscription", "order confirmation", "purchase",
   "amount due", "your membership", "your plan",
+  "your receipt", "your payment", "payment for", "thanks for your payment",
+  "payment successful", "subscription active", "premium receipt",
+  "your order", "order receipt", "monthly payment", "annual payment",
+  "auto-renewal", "autorenewal", "auto renewal",
+  "successfully renewed", "subscription renewed",
   "thank you for your purchase", "factura", "rechnung", "reçu",
 ];
 
 const PROMO_KEYWORDS = [
   "offer", "discount", "sale", "free", "try", "miss you", "come back",
   "streak", "reminder", "limited time", "exclusive",
+];
+
+const SAVINGS_KEYWORDS = [
+  "% off", "discount", "save", "deal", "offer", "limited time",
+  "special price", "upgrade for less", "reduced",
+  "promoción", "angebot", "promo",
+];
+
+const FUZZY_BRANDS = [
+  "spotify", "apple", "google", "microsoft", "amazon", "netflix", "adobe",
+  "paypal", "stripe", "notion", "dropbox", "slack", "zoom", "discord",
+  "linkedin", "canva", "grammarly", "duolingo", "github", "figma",
 ];
 
 const BILLING_SENDER_PATTERNS = [
