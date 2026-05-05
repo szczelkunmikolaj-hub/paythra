@@ -3,6 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Mail,
   Search,
   Unplug,
@@ -12,6 +18,8 @@ import {
   X,
   Sparkles,
   Clock,
+  HelpCircle,
+  Ban,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
@@ -107,6 +115,105 @@ const QUERY = [
   ...Object.keys(KNOWN_SERVICES).map((d) => `from:${d}`),
 ].join(" OR ");
 
+const IGNORED_DOMAINS_KEY = "gmail_ignored_domains";
+
+const FREE_TIER_DOMAINS = new Set([
+  "duolingo.com",
+  "twitter.com",
+  "instagram.com",
+  "facebook.com",
+  "tiktok.com",
+  "reddit.com",
+  "youtube.com",
+  "twitch.tv",
+  "pinterest.com",
+  "snapchat.com",
+]);
+
+const PAYMENT_SUBJECT_KEYWORDS = [
+  "receipt", "invoice", "payment confirmation", "order confirmation", "billing",
+  "charge", "renewal", "subscription confirmed", "thank you for your purchase",
+  "your plan", "payment received", "amount due", "statement",
+  "factura", "rechnung", "facture", "reçu", "płatność",
+];
+
+const PAYMENT_FROM_PREFIXES = [
+  "billing@", "invoice@", "receipt@", "noreply@", "payments@",
+  "no-reply@", "accounts@", "subscription@",
+];
+
+const PROMO_SUBJECT_KEYWORDS = [
+  "offer", "discount", "sale", " off", "deal", "try", "free", "upgrade",
+  "limited time", "exclusive", "unlock", "streak", "reminder to practice",
+  "miss you", "come back", "we miss you", "special offer",
+  "promoción", "angebot", "promotion",
+];
+
+const PROMO_FROM_PREFIXES = [
+  "marketing@", "promo@", "newsletter@", "hello@", "team@", "hi@",
+];
+
+const PROMO_SUBDOMAINS = [
+  "marketing.", "news.", "newsletter.", "promo.", "offers.", "deals.", "updates.",
+];
+
+const CURRENCY_AMOUNT_RE = /(€|\$|£|PLN)\s?\d+|\d+\s?(€|\$|£|PLN)/i;
+
+interface EmailScore {
+  score: number;
+  signals: string[];
+}
+
+const scoreEmail = (subject: string, fromRaw: string): EmailScore => {
+  const signals: string[] = [];
+  let score = 0;
+  const subj = subject.toLowerCase();
+  const from = fromRaw.toLowerCase();
+  const fromAddrMatch = fromRaw.match(/<([^>]+)>/);
+  const fromAddr = (fromAddrMatch ? fromAddrMatch[1] : fromRaw).toLowerCase().trim();
+  const fromDomain = fromAddr.includes("@") ? fromAddr.split("@")[1] : "";
+
+  // Payment signals
+  const matchedSubj = PAYMENT_SUBJECT_KEYWORDS.find((k) => subj.includes(k));
+  if (matchedSubj) {
+    score++;
+    signals.push(`subject contains "${matchedSubj.trim()}"`);
+  }
+  if (CURRENCY_AMOUNT_RE.test(subject)) {
+    score++;
+    const m = subject.match(CURRENCY_AMOUNT_RE);
+    signals.push(`amount ${m?.[0]} in subject`);
+  }
+  const matchedFrom = PAYMENT_FROM_PREFIXES.find((p) => fromAddr.startsWith(p));
+  if (matchedFrom) {
+    score++;
+    signals.push(`${matchedFrom} sender`);
+  }
+  const isPromoSubdomain = PROMO_SUBDOMAINS.some((s) => fromDomain.startsWith(s));
+  if (!isPromoSubdomain) {
+    score++;
+    signals.push("not a promo subdomain");
+  }
+
+  // Promotional negatives
+  const matchedPromo = PROMO_SUBJECT_KEYWORDS.find((k) => subj.includes(k));
+  if (matchedPromo) {
+    score--;
+    signals.push(`promo word "${matchedPromo.trim()}"`);
+  }
+  if (subject.includes("!")) {
+    score--;
+    signals.push("exclamation in subject");
+  }
+  const matchedPromoFrom = PROMO_FROM_PREFIXES.find((p) => fromAddr.startsWith(p));
+  if (matchedPromoFrom) {
+    score--;
+    signals.push(`${matchedPromoFrom} sender`);
+  }
+
+  return { score, signals };
+};
+
 interface StoredToken {
   email: string;
   access_token: string;
@@ -118,8 +225,15 @@ interface StoredToken {
 interface Detected {
   domain: string;
   name: string;
-  count: number;
-  accounts: string[]; // emails the hits came from
+  count: number;          // total emails seen
+  qualifyingCount: number; // emails with score >= 1
+  maxScore: number;
+  accounts: string[];
+  signals: string[];      // unique signals across emails
+  hasCurrency: boolean;
+  hasBillingSender: boolean;
+  hasPaymentSubject: boolean;
+  topAmount?: string;
 }
 
 declare global {
@@ -173,6 +287,17 @@ const readTokens = (): StoredToken[] => {
 const writeTokens = (t: StoredToken[]) =>
   localStorage.setItem(TOKENS_KEY, JSON.stringify(t));
 
+const readIgnored = (): string[] => {
+  try {
+    const raw = localStorage.getItem(IGNORED_DOMAINS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+const writeIgnored = (arr: string[]) =>
+  localStorage.setItem(IGNORED_DOMAINS_KEY, JSON.stringify(arr));
+
 const initialsFor = (email: string) =>
   email
     .split("@")[0]
@@ -197,6 +322,25 @@ const fetchUserEmail = async (token: string): Promise<string> => {
   return j.email as string;
 };
 
+// Validate a stored token against the Gmail profile endpoint.
+// Returns true only if the token is still valid.
+const validateToken = async (token: string): Promise<boolean> => {
+  try {
+    const r = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (r.status === 401) {
+      console.warn("[Gmail] Stored token failed validation (401)");
+      return false;
+    }
+    return r.ok;
+  } catch (e) {
+    console.error("[Gmail] Token validation error:", e);
+    return false;
+  }
+};
+
 const scanOneAccount = async (
   token: StoredToken
 ): Promise<{ groups: Map<string, Detected>; emailsScanned: number; expired?: boolean }> => {
@@ -207,14 +351,17 @@ const scanOneAccount = async (
   const listRes = await fetch(url, {
     headers: { Authorization: `Bearer ${token.access_token}` },
   });
-  if (listRes.status === 401) return { groups, emailsScanned: 0, expired: true };
+  if (listRes.status === 401) {
+    console.warn(`[Gmail] 401 for ${token.email} — token expired`);
+    return { groups, emailsScanned: 0, expired: true };
+  }
   if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
   const list = await listRes.json();
   const ids: string[] = (list.messages || []).map((m: any) => m.id);
 
   for (const id of ids) {
     const r = await fetch(
-      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From`,
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject`,
       { headers: { Authorization: `Bearer ${token.access_token}` } }
     );
     if (r.status === 401) return { groups, emailsScanned: 0, expired: true };
@@ -222,17 +369,46 @@ const scanOneAccount = async (
     const msg = await r.json();
     const headers: Array<{ name: string; value: string }> = msg.payload?.headers || [];
     const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
+    const subject = headers.find((h) => h.name.toLowerCase() === "subject")?.value || "";
     const domain = extractDomain(from);
     if (!domain) continue;
     const name =
       KNOWN_SERVICES[domain] ||
       domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
+
+    const { score, signals } = scoreEmail(subject, from);
+    const fromAddr = (from.match(/<([^>]+)>/)?.[1] || from).toLowerCase();
+    const hasBilling = PAYMENT_FROM_PREFIXES.some((p) => fromAddr.startsWith(p));
+    const hasPaySubj = PAYMENT_SUBJECT_KEYWORDS.some((k) => subject.toLowerCase().includes(k));
+    const amountMatch = subject.match(CURRENCY_AMOUNT_RE)?.[0];
+
     const existing = groups.get(domain);
     if (existing) {
       existing.count++;
+      if (score >= 1) existing.qualifyingCount++;
+      existing.maxScore = Math.max(existing.maxScore, score);
       if (!existing.accounts.includes(token.email)) existing.accounts.push(token.email);
+      signals.forEach((s) => {
+        if (!existing.signals.includes(s)) existing.signals.push(s);
+      });
+      existing.hasBillingSender = existing.hasBillingSender || hasBilling;
+      existing.hasPaymentSubject = existing.hasPaymentSubject || hasPaySubj;
+      existing.hasCurrency = existing.hasCurrency || !!amountMatch;
+      if (amountMatch && !existing.topAmount) existing.topAmount = amountMatch;
     } else {
-      groups.set(domain, { domain, name, count: 1, accounts: [token.email] });
+      groups.set(domain, {
+        domain,
+        name,
+        count: 1,
+        qualifyingCount: score >= 1 ? 1 : 0,
+        maxScore: score,
+        accounts: [token.email],
+        signals: [...signals],
+        hasBillingSender: hasBilling,
+        hasPaymentSubject: hasPaySubj,
+        hasCurrency: !!amountMatch,
+        topAmount: amountMatch,
+      });
     }
   }
   return { groups, emailsScanned: ids.length };
@@ -246,6 +422,8 @@ const GmailGSIDetect = () => {
   const [detected, setDetected] = useState<Detected[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [added, setAdded] = useState<Set<string>>(new Set());
+  const [ignored, setIgnored] = useState<Set<string>>(() => new Set(readIgnored()));
+  const [filter, setFilter] = useState<"all" | "confirmed" | "review">("confirmed");
   const [newServices, setNewServices] = useState<Detected[]>([]);
   const [summary, setSummary] = useState<{
     emails: number;
@@ -257,6 +435,7 @@ const GmailGSIDetect = () => {
     const v = localStorage.getItem(LAST_SCANNED_KEY);
     return v ? Number(v) : null;
   });
+  const [expiredEmails, setExpiredEmails] = useState<string[]>([]);
 
   const trackedDomains = useMemo(() => {
     const set = new Set<string>();
@@ -312,9 +491,18 @@ const GmailGSIDetect = () => {
               const existing = merged.get(domain);
               if (existing) {
                 existing.count += d.count;
+                existing.qualifyingCount += d.qualifyingCount;
+                existing.maxScore = Math.max(existing.maxScore, d.maxScore);
                 d.accounts.forEach((e) => {
                   if (!existing.accounts.includes(e)) existing.accounts.push(e);
                 });
+                d.signals.forEach((s) => {
+                  if (!existing.signals.includes(s)) existing.signals.push(s);
+                });
+                existing.hasBillingSender = existing.hasBillingSender || d.hasBillingSender;
+                existing.hasPaymentSubject = existing.hasPaymentSubject || d.hasPaymentSubject;
+                existing.hasCurrency = existing.hasCurrency || d.hasCurrency;
+                if (d.topAmount && !existing.topAmount) existing.topAmount = d.topAmount;
               } else {
                 merged.set(domain, { ...d });
               }
@@ -334,11 +522,20 @@ const GmailGSIDetect = () => {
           current.some((c) => c.email === a.email)
         );
         if (anyExpired) {
+          const scannedEmails = new Set(
+            updatedAccounts.filter((u) => u.last_scanned).map((u) => u.email)
+          );
+          const expiredList = current
+            .filter((c) => !scannedEmails.has(c.email))
+            .map((c) => c.email);
+          setExpiredEmails(expiredList);
           toast({
-            title: "Some Gmail sessions expired",
-            description: "Please reconnect those accounts",
+            title: "Gmail connection expired",
+            description: "Please reconnect your Gmail account.",
             variant: "destructive",
           });
+        } else {
+          setExpiredEmails([]);
         }
         persistAccounts(finalAccounts);
 
@@ -380,15 +577,39 @@ const GmailGSIDetect = () => {
     [persistAccounts]
   );
 
-  // Auto weekly scan
+  // Validate stored tokens on mount; trigger weekly scan only after validation
   useEffect(() => {
-    if (accounts.length === 0) return;
-    const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
-    const week = 7 * 24 * 60 * 60 * 1000;
-    if (!last || Date.now() - last > week) {
-      const t = setTimeout(() => runScan(true), 1500);
-      return () => clearTimeout(t);
-    }
+    let cancelled = false;
+    (async () => {
+      const stored = readTokens();
+      if (stored.length === 0) return;
+      const expired: string[] = [];
+      for (const acc of stored) {
+        const ok = await validateToken(acc.access_token);
+        if (!ok) expired.push(acc.email);
+      }
+      if (cancelled) return;
+      if (expired.length > 0) {
+        const remaining = stored.filter((a) => !expired.includes(a.email));
+        writeTokens(remaining);
+        setAccounts(remaining);
+        setExpiredEmails(expired);
+        toast({
+          title: "Gmail connection expired",
+          description: "Please reconnect your Gmail account.",
+          variant: "destructive",
+        });
+        if (remaining.length === 0) return;
+      }
+      const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
+      const week = 7 * 24 * 60 * 60 * 1000;
+      if (!last || Date.now() - last > week) {
+        setTimeout(() => runScan(true), 1500);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -399,7 +620,9 @@ const GmailGSIDetect = () => {
         client_id: CLIENT_ID,
         scope: SCOPE,
         callback: async (resp: any) => {
+          console.log("[Gmail] Token response:", resp);
           if (resp.error || !resp.access_token) {
+            console.error("[Gmail] No access_token in response", resp);
             toast({
               title: "Authorization failed",
               description: resp.error || "No token returned",
@@ -407,19 +630,23 @@ const GmailGSIDetect = () => {
             });
             return;
           }
+          const accessToken: string = resp.access_token;
+          console.log("[Gmail] access_token received (length):", accessToken.length);
           try {
-            const email = await fetchUserEmail(resp.access_token);
+            const email = await fetchUserEmail(accessToken);
             const current = readTokens();
             const idx = current.findIndex((a) => a.email === email);
             const entry: StoredToken = {
               email,
-              access_token: resp.access_token,
+              access_token: accessToken,
               connected_at: Date.now(),
             };
             if (idx >= 0) current[idx] = { ...current[idx], ...entry };
             else current.push(entry);
             persistAccounts(current);
+            setExpiredEmails((arr) => arr.filter((e) => e !== email));
             toast({ title: `${email} connected` });
+            // Only scan AFTER token is confirmed valid and stored
             runScan(false);
           } catch (e: any) {
             toast({
@@ -460,20 +687,66 @@ const GmailGSIDetect = () => {
     }
   };
 
-  const visible = detected.filter(
-    (d) => !dismissed.has(d.domain) && !added.has(d.domain)
+  // Classify each detected service: returns null to silently discard
+  type Classification = {
+    label: "Confirmed" | "Likely" | "Check";
+    className: string;
+    freeTier?: boolean;
+  };
+  const classify = (d: Detected): Classification | null => {
+    if (d.maxScore >= 2) {
+      return { label: "Confirmed", className: "bg-green-500 text-white hover:bg-green-500" };
+    }
+    if (d.maxScore === 1) {
+      if (FREE_TIER_DOMAINS.has(d.domain)) {
+        return {
+          label: "Check",
+          className: "bg-muted text-muted-foreground hover:bg-muted",
+          freeTier: true,
+        };
+      }
+      return { label: "Likely", className: "bg-amber-500 text-white hover:bg-amber-500" };
+    }
+    return null; // discard
+  };
+
+  const classified = detected
+    .filter((d) => !ignored.has(d.domain))
+    .map((d) => ({ d, c: classify(d) }))
+    .filter((x): x is { d: Detected; c: Classification } => x.c !== null);
+
+  const visible = classified.filter(
+    ({ d }) => !dismissed.has(d.domain) && !added.has(d.domain)
   );
+
+  const filtered =
+    filter === "all"
+      ? visible
+      : filter === "confirmed"
+      ? visible.filter((x) => x.c.label === "Confirmed")
+      : visible.filter((x) => x.c.label !== "Confirmed");
 
   const daysSince = lastScanned
     ? Math.floor((Date.now() - lastScanned) / (24 * 60 * 60 * 1000))
     : null;
 
-  const confidence = (count: number) => {
-    if (count >= 3)
-      return { label: "Confirmed", className: "bg-green-500 text-white hover:bg-green-500" };
-    if (count === 2)
-      return { label: "Likely", className: "bg-amber-500 text-white hover:bg-amber-500" };
-    return { label: "Check", className: "bg-muted text-muted-foreground hover:bg-muted" };
+  const handleNotSubscription = (domain: string) => {
+    const next = Array.from(new Set([...readIgnored(), domain]));
+    writeIgnored(next);
+    setIgnored(new Set(next));
+    toast({ title: "Marked as not a subscription" });
+  };
+
+  const buildWhyText = (d: Detected): string => {
+    const parts: string[] = [];
+    parts.push(`Found ${d.count} email${d.count === 1 ? "" : "s"}`);
+    if (d.hasBillingSender) parts.push("with billing@ sender");
+    if (d.hasPaymentSubject) parts.push("subject containing receipt/invoice");
+    if (d.topAmount) parts.push(`amount ${d.topAmount}`);
+    if (!d.hasBillingSender && !d.hasPaymentSubject && !d.topAmount && d.signals.length) {
+      parts.push(d.signals.slice(0, 3).join(", "));
+    }
+    return parts.join(" · ");
   };
 
   const isTracked = (d: Detected) => {
@@ -508,6 +781,22 @@ const GmailGSIDetect = () => {
 
   return (
     <div className="space-y-6">
+      {/* Expired token banner */}
+      {expiredEmails.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            <Unplug className="h-4 w-4" />
+            <span>
+              Gmail connection expired — please reconnect
+              {expiredEmails.length === 1 ? ` ${expiredEmails[0]}` : ` (${expiredEmails.length} accounts)`}
+            </span>
+          </div>
+          <Button size="sm" variant="destructive" onClick={connect} className="gap-2">
+            <Mail className="h-3.5 w-3.5" /> Reconnect
+          </Button>
+        </div>
+      )}
+
       {/* Last scanned banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -638,81 +927,127 @@ const GmailGSIDetect = () => {
       {/* Detected list */}
       {visible.length > 0 && (
         <Card className="shadow-card">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
             <CardTitle className="flex items-center gap-2 font-display text-lg">
               <Search className="h-5 w-5 text-primary" />
-              Detected subscriptions ({visible.length})
+              Detected subscriptions ({filtered.length})
             </CardTitle>
+            <div className="flex gap-1 rounded-lg border border-border p-1">
+              {(["confirmed", "review", "all"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                    filter === f
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {f === "confirmed" ? "Confirmed only" : f === "review" ? "Needs review" : "All"}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
-            <AnimatePresence>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {visible.map((sub) => {
-                  const conf = confidence(sub.count);
-                  const tracked = isTracked(sub);
-                  return (
-                    <motion.div
-                      key={sub.domain}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="rounded-xl border border-border p-4 space-y-3"
-                    >
-                      <div className="flex items-start gap-3 min-w-0">
-                        <img
-                          src={`https://logo.clearbit.com/${sub.domain}`}
-                          alt={sub.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold truncate">{sub.name}</p>
-                            <Badge className={conf.className + " text-[10px]"}>
-                              {conf.label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
-                          </p>
-                          {sub.accounts.length > 1 && (
-                            <p className="text-[10px] text-muted-foreground truncate">
-                              from {sub.accounts.length} accounts
+            <TooltipProvider delayDuration={200}>
+              <AnimatePresence>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {filtered.map(({ d: sub, c: conf }) => {
+                    const tracked = isTracked(sub);
+                    const why = buildWhyText(sub);
+                    return (
+                      <motion.div
+                        key={sub.domain}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="rounded-xl border border-border p-4 space-y-3"
+                      >
+                        <div className="flex items-start gap-3 min-w-0">
+                          <img
+                            src={`https://logo.clearbit.com/${sub.domain}`}
+                            alt={sub.name}
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                            className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold truncate">{sub.name}</p>
+                              <Badge className={conf.className + " text-[10px]"}>
+                                {conf.label}
+                              </Badge>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label="Why was this detected?"
+                                    className="text-muted-foreground hover:text-foreground"
+                                  >
+                                    <HelpCircle className="h-3.5 w-3.5" />
+                                  </button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-xs">
+                                  <p className="font-medium mb-0.5">Why was this detected?</p>
+                                  <p>{why}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
                             </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {tracked ? (
-                          <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="h-4 w-4" /> Already tracking
+                            {conf.freeTier && (
+                              <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-1">
+                                Free tier detected — confirm if you pay for this
+                              </p>
+                            )}
+                            {sub.accounts.length > 1 && (
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                from {sub.accounts.length} accounts
+                              </p>
+                            )}
                           </div>
-                        ) : (
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {tracked ? (
+                            <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+                              <CheckCircle2 className="h-4 w-4" /> Already tracking
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => handleAdd(sub)}
+                              className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Add to Paythra
+                            </Button>
+                          )}
                           <Button
                             size="sm"
-                            onClick={() => handleAdd(sub)}
-                            className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                            variant="outline"
+                            onClick={() => handleNotSubscription(sub.domain)}
+                            className="gap-1 text-xs"
                           >
-                            <Plus className="h-3.5 w-3.5" /> Add to Paythra
+                            <Ban className="h-3.5 w-3.5" /> Not a subscription
                           </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
-                          className="gap-1"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </AnimatePresence>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
+                            className="gap-1"
+                            aria-label="Dismiss"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </AnimatePresence>
+            </TooltipProvider>
           </CardContent>
         </Card>
       )}
