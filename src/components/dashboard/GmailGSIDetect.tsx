@@ -1,42 +1,125 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Mail,
+  Search,
+  Unplug,
+  CheckCircle2,
+  Loader2,
+  Plus,
+  X,
+  Sparkles,
+  Clock,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
+import {
+  getDatabaseEntryByName,
+  getDatabasePriceEUR,
+  SUBSCRIPTION_DATABASE,
+} from "@/data/subscriptionDatabase";
 
 const CLIENT_ID =
   "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
-const TOKEN_KEY = "gmail_access_token";
 
-const KNOWN_SERVICES: Record<string, { name: string; domain: string }> = {
-  "netflix.com": { name: "Netflix", domain: "netflix.com" },
-  "spotify.com": { name: "Spotify", domain: "spotify.com" },
-  "adobe.com": { name: "Adobe", domain: "adobe.com" },
-  "apple.com": { name: "Apple", domain: "apple.com" },
-  "amazon.com": { name: "Amazon", domain: "amazon.com" },
-  "openai.com": { name: "OpenAI", domain: "openai.com" },
-  "notion.so": { name: "Notion", domain: "notion.so" },
-  "dropbox.com": { name: "Dropbox", domain: "dropbox.com" },
-  "microsoft.com": { name: "Microsoft", domain: "microsoft.com" },
-  "google.com": { name: "Google", domain: "google.com" },
-  "disney.com": { name: "Disney+", domain: "disney.com" },
-  "linkedin.com": { name: "LinkedIn", domain: "linkedin.com" },
-  "canva.com": { name: "Canva", domain: "canva.com" },
-  "grammarly.com": { name: "Grammarly", domain: "grammarly.com" },
-  "duolingo.com": { name: "Duolingo", domain: "duolingo.com" },
+const TOKENS_KEY = "gmail_tokens";
+const LAST_SCANNED_KEY = "gmail_last_scanned";
+const DETECTED_SERVICES_KEY = "gmail_detected_services";
+
+// Domain → display name mapping (extended sender list)
+const KNOWN_SERVICES: Record<string, string> = {
+  "netflix.com": "Netflix",
+  "spotify.com": "Spotify",
+  "adobe.com": "Adobe",
+  "apple.com": "Apple",
+  "amazon.com": "Amazon",
+  "openai.com": "OpenAI",
+  "notion.so": "Notion",
+  "dropbox.com": "Dropbox",
+  "microsoft.com": "Microsoft",
+  "google.com": "Google",
+  "disney.com": "Disney+",
+  "linkedin.com": "LinkedIn",
+  "canva.com": "Canva",
+  "grammarly.com": "Grammarly",
+  "duolingo.com": "Duolingo",
+  "github.com": "GitHub",
+  "figma.com": "Figma",
+  "slack.com": "Slack",
+  "zoom.us": "Zoom",
+  "discord.com": "Discord",
+  "nordvpn.com": "NordVPN",
+  "expressvpn.com": "ExpressVPN",
+  "dashlane.com": "Dashlane",
+  "1password.com": "1Password",
+  "lastpass.com": "LastPass",
+  "headspace.com": "Headspace",
+  "calm.com": "Calm",
+  "strava.com": "Strava",
+  "myfitnesspal.com": "MyFitnessPal",
+  "peloton.com": "Peloton",
+  "skillshare.com": "Skillshare",
+  "masterclass.com": "MasterClass",
+  "coursera.org": "Coursera",
+  "udemy.com": "Udemy",
+  "medium.com": "Medium",
+  "substack.com": "Substack",
+  "audible.com": "Audible",
+  "kindle.com": "Kindle",
+  "hulu.com": "Hulu",
+  "hbomax.com": "HBO Max",
+  "paramountplus.com": "Paramount+",
+  "crunchyroll.com": "Crunchyroll",
+  "twitch.tv": "Twitch",
+  "xbox.com": "Xbox",
+  "playstation.com": "PlayStation",
+  "nintendo.com": "Nintendo",
+  "ea.com": "EA",
+  "ubisoft.com": "Ubisoft",
+  "shopify.com": "Shopify",
+  "squarespace.com": "Squarespace",
+  "wix.com": "Wix",
+  "webflow.io": "Webflow",
+  "mailchimp.com": "Mailchimp",
+  "hubspot.com": "HubSpot",
+  "zapier.com": "Zapier",
+  "airtable.com": "Airtable",
+  "monday.com": "Monday",
+  "asana.com": "Asana",
+  "clickup.com": "ClickUp",
+  "trello.com": "Trello",
+  "intercom.com": "Intercom",
+  "zendesk.com": "Zendesk",
+  "revolut.com": "Revolut",
+  "n26.com": "N26",
+  "wise.com": "Wise",
+  "allegro.pl": "Allegro",
+  "basic-fit.com": "Basic-Fit",
+  "freeletics.com": "Freeletics",
 };
 
-const QUERY =
-  "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal OR from:netflix.com OR from:spotify.com OR from:adobe.com OR from:apple.com OR from:amazon.com OR from:openai.com OR from:notion.so OR from:dropbox.com OR from:microsoft.com OR from:google.com OR from:disney.com OR from:linkedin.com OR from:canva.com OR from:grammarly.com OR from:duolingo.com";
+const QUERY = [
+  "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal",
+  ...Object.keys(KNOWN_SERVICES).map((d) => `from:${d}`),
+].join(" OR ");
+
+interface StoredToken {
+  email: string;
+  access_token: string;
+  connected_at: number;
+  last_scanned?: number;
+  found?: number;
+}
 
 interface Detected {
   domain: string;
   name: string;
   count: number;
-  lastSubject?: string;
+  accounts: string[]; // emails the hits came from
 }
 
 declare global {
@@ -77,13 +160,113 @@ const extractDomain = (from: string): string | null => {
   return domain;
 };
 
+const readTokens = (): StoredToken[] => {
+  try {
+    const raw = localStorage.getItem(TOKENS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+const writeTokens = (t: StoredToken[]) =>
+  localStorage.setItem(TOKENS_KEY, JSON.stringify(t));
+
+const initialsFor = (email: string) =>
+  email
+    .split("@")[0]
+    .split(/[._-]/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() || "")
+    .join("") || email[0]?.toUpperCase() || "?";
+
+const colorFor = (email: string) => {
+  let h = 0;
+  for (let i = 0; i < email.length; i++) h = (h * 31 + email.charCodeAt(i)) % 360;
+  return `hsl(${h}, 65%, 45%)`;
+};
+
+const fetchUserEmail = async (token: string): Promise<string> => {
+  const r = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!r.ok) throw new Error(`userinfo ${r.status}`);
+  const j = await r.json();
+  return j.email as string;
+};
+
+const scanOneAccount = async (
+  token: StoredToken
+): Promise<{ groups: Map<string, Detected>; emailsScanned: number; expired?: boolean }> => {
+  const groups = new Map<string, Detected>();
+  const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(
+    QUERY
+  )}`;
+  const listRes = await fetch(url, {
+    headers: { Authorization: `Bearer ${token.access_token}` },
+  });
+  if (listRes.status === 401) return { groups, emailsScanned: 0, expired: true };
+  if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
+  const list = await listRes.json();
+  const ids: string[] = (list.messages || []).map((m: any) => m.id);
+
+  for (const id of ids) {
+    const r = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From`,
+      { headers: { Authorization: `Bearer ${token.access_token}` } }
+    );
+    if (r.status === 401) return { groups, emailsScanned: 0, expired: true };
+    if (!r.ok) continue;
+    const msg = await r.json();
+    const headers: Array<{ name: string; value: string }> = msg.payload?.headers || [];
+    const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
+    const domain = extractDomain(from);
+    if (!domain) continue;
+    const name =
+      KNOWN_SERVICES[domain] ||
+      domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
+    const existing = groups.get(domain);
+    if (existing) {
+      existing.count++;
+      if (!existing.accounts.includes(token.email)) existing.accounts.push(token.email);
+    } else {
+      groups.set(domain, { domain, name, count: 1, accounts: [token.email] });
+    }
+  }
+  return { groups, emailsScanned: ids.length };
+};
+
 const GmailGSIDetect = () => {
-  const { addSubscription } = useSubscriptions();
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const { addSubscription, subscriptions } = useSubscriptions();
+  const [accounts, setAccounts] = useState<StoredToken[]>(() => readTokens());
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState("");
   const [detected, setDetected] = useState<Detected[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [added, setAdded] = useState<Set<string>>(new Set());
+  const [newServices, setNewServices] = useState<Detected[]>([]);
+  const [summary, setSummary] = useState<{
+    emails: number;
+    services: number;
+    newCount: number;
+    at: number;
+  } | null>(null);
+  const [lastScanned, setLastScanned] = useState<number | null>(() => {
+    const v = localStorage.getItem(LAST_SCANNED_KEY);
+    return v ? Number(v) : null;
+  });
+
+  const trackedDomains = useMemo(() => {
+    const set = new Set<string>();
+    subscriptions.forEach((s) => {
+      const entry = getDatabaseEntryByName(s.name);
+      if (entry) set.add(entry.domain);
+      set.add(s.name.toLowerCase());
+    });
+    return set;
+  }, [subscriptions]);
 
   useEffect(() => {
     loadGsi().catch(() => {
@@ -91,70 +274,123 @@ const GmailGSIDetect = () => {
     });
   }, []);
 
-  const disconnect = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
-    setDetected([]);
-    toast({ title: "Gmail disconnected" });
+  const persistAccounts = useCallback((next: StoredToken[]) => {
+    writeTokens(next);
+    setAccounts(next);
+  }, []);
+
+  const disconnectAccount = (email: string) => {
+    const next = accounts.filter((a) => a.email !== email);
+    persistAccounts(next);
+    toast({ title: `${email} disconnected` });
   };
 
-  const scan = async (accessToken: string) => {
-    setScanning(true);
-    setProgress("Searching emails...");
-    try {
-      const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(
-        QUERY
-      )}`;
-      const listRes = await fetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (listRes.status === 401) {
-        disconnect();
-        toast({ title: "Session expired, please reconnect", variant: "destructive" });
-        return;
+  const runScan = useCallback(
+    async (silent = false) => {
+      const current = readTokens();
+      if (current.length === 0) return;
+      if (!silent) {
+        setScanning(true);
+        setProgress("Scanning all connected Gmail accounts...");
       }
-      if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
-      const list = await listRes.json();
-      const ids: string[] = (list.messages || []).map((m: any) => m.id);
+      try {
+        const merged = new Map<string, Detected>();
+        let totalEmails = 0;
+        const updatedAccounts: StoredToken[] = [];
+        let anyExpired = false;
 
-      const groups = new Map<string, Detected>();
-      for (let i = 0; i < ids.length; i++) {
-        setProgress(`Reading email ${i + 1} / ${ids.length}`);
-        const r = await fetch(
-          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${ids[i]}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        if (r.status === 401) {
-          disconnect();
-          return;
+        for (const acc of current) {
+          if (!silent) setProgress(`Scanning ${acc.email}...`);
+          try {
+            const { groups, emailsScanned, expired } = await scanOneAccount(acc);
+            if (expired) {
+              anyExpired = true;
+              continue; // drop this token below
+            }
+            totalEmails += emailsScanned;
+            for (const [domain, d] of groups) {
+              const existing = merged.get(domain);
+              if (existing) {
+                existing.count += d.count;
+                d.accounts.forEach((e) => {
+                  if (!existing.accounts.includes(e)) existing.accounts.push(e);
+                });
+              } else {
+                merged.set(domain, { ...d });
+              }
+            }
+            updatedAccounts.push({
+              ...acc,
+              last_scanned: Date.now(),
+              found: groups.size,
+            });
+          } catch {
+            updatedAccounts.push(acc);
+          }
         }
-        if (!r.ok) continue;
-        const msg = await r.json();
-        const headers: Array<{ name: string; value: string }> =
-          msg.payload?.headers || [];
-        const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
-        const subject =
-          headers.find((h) => h.name.toLowerCase() === "subject")?.value || "";
-        const domain = extractDomain(from);
-        if (!domain) continue;
-        const known = KNOWN_SERVICES[domain];
-        const name = known?.name || domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
-        const existing = groups.get(domain);
-        if (existing) existing.count++;
-        else groups.set(domain, { domain, name, count: 1, lastSubject: subject });
+
+        // Drop expired accounts
+        const finalAccounts = updatedAccounts.filter((a) =>
+          current.some((c) => c.email === a.email)
+        );
+        if (anyExpired) {
+          toast({
+            title: "Some Gmail sessions expired",
+            description: "Please reconnect those accounts",
+            variant: "destructive",
+          });
+        }
+        persistAccounts(finalAccounts);
+
+        const list = Array.from(merged.values()).sort((a, b) => b.count - a.count);
+
+        // Compare against previous
+        const prevRaw = localStorage.getItem(DETECTED_SERVICES_KEY);
+        const prev: string[] = prevRaw ? JSON.parse(prevRaw) : [];
+        const fresh = list.filter((d) => !prev.includes(d.domain));
+        localStorage.setItem(
+          DETECTED_SERVICES_KEY,
+          JSON.stringify(list.map((d) => d.domain))
+        );
+
+        const now = Date.now();
+        localStorage.setItem(LAST_SCANNED_KEY, String(now));
+        setLastScanned(now);
+        setDetected(list);
+        setNewServices(fresh);
+        setSummary({
+          emails: totalEmails,
+          services: list.length,
+          newCount: fresh.length,
+          at: now,
+        });
+        if (!silent) {
+          toast({
+            title: "Scan complete",
+            description: `${list.length} services · ${fresh.length} new`,
+          });
+        }
+      } catch (e: any) {
+        if (!silent) toast({ title: "Scan failed", description: e.message, variant: "destructive" });
+      } finally {
+        setScanning(false);
+        setProgress("");
       }
-      setDetected(Array.from(groups.values()).sort((a, b) => b.count - a.count));
-      toast({
-        title: "Scan complete",
-        description: `Detected ${groups.size} subscription${groups.size === 1 ? "" : "s"}`,
-      });
-    } catch (e: any) {
-      toast({ title: "Scan failed", description: e.message, variant: "destructive" });
-    } finally {
-      setScanning(false);
-      setProgress("");
+    },
+    [persistAccounts]
+  );
+
+  // Auto weekly scan
+  useEffect(() => {
+    if (accounts.length === 0) return;
+    const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
+    const week = 7 * 24 * 60 * 60 * 1000;
+    if (!last || Date.now() - last > week) {
+      const t = setTimeout(() => runScan(true), 1500);
+      return () => clearTimeout(t);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const connect = async () => {
     try {
@@ -162,7 +398,7 @@ const GmailGSIDetect = () => {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPE,
-        callback: (resp: any) => {
+        callback: async (resp: any) => {
           if (resp.error || !resp.access_token) {
             toast({
               title: "Authorization failed",
@@ -171,9 +407,27 @@ const GmailGSIDetect = () => {
             });
             return;
           }
-          localStorage.setItem(TOKEN_KEY, resp.access_token);
-          setToken(resp.access_token);
-          scan(resp.access_token);
+          try {
+            const email = await fetchUserEmail(resp.access_token);
+            const current = readTokens();
+            const idx = current.findIndex((a) => a.email === email);
+            const entry: StoredToken = {
+              email,
+              access_token: resp.access_token,
+              connected_at: Date.now(),
+            };
+            if (idx >= 0) current[idx] = { ...current[idx], ...entry };
+            else current.push(entry);
+            persistAccounts(current);
+            toast({ title: `${email} connected` });
+            runScan(false);
+          } catch (e: any) {
+            toast({
+              title: "Could not read account",
+              description: e.message,
+              variant: "destructive",
+            });
+          }
         },
       });
       tokenClient.requestAccessToken();
@@ -182,149 +436,281 @@ const GmailGSIDetect = () => {
     }
   };
 
-  const handleConfirm = async (d: Detected) => {
+  const handleAdd = async (d: Detected) => {
     try {
+      // Try to find by domain in database
+      const entry =
+        SUBSCRIPTION_DATABASE.find((e) => e.domain === d.domain) ||
+        getDatabaseEntryByName(d.name);
+      const price = entry ? getDatabasePriceEUR(entry, "monthly") || 0 : 0;
       const next = new Date();
       next.setMonth(next.getMonth() + 1);
       await addSubscription({
-        name: d.name,
-        price: 0,
+        name: entry?.names[0] || d.name,
+        price,
         billing_cycle: "monthly",
-        category: "entertainment",
+        category: entry?.category || "other",
         next_billing_date: next.toISOString().split("T")[0],
         status: "active",
       });
-      setDismissed((s) => new Set(s).add(d.domain));
-      toast({ title: `${d.name} added` });
+      setAdded((s) => new Set(s).add(d.domain));
+      toast({ title: `${entry?.names[0] || d.name} added to Paythra` });
     } catch (e: any) {
       toast({ title: "Failed to add", description: e.message, variant: "destructive" });
     }
   };
 
-  const visible = detected.filter((d) => !dismissed.has(d.domain));
+  const visible = detected.filter(
+    (d) => !dismissed.has(d.domain) && !added.has(d.domain)
+  );
+
+  const daysSince = lastScanned
+    ? Math.floor((Date.now() - lastScanned) / (24 * 60 * 60 * 1000))
+    : null;
+
+  const confidence = (count: number) => {
+    if (count >= 3)
+      return { label: "Confirmed", className: "bg-green-500 text-white hover:bg-green-500" };
+    if (count === 2)
+      return { label: "Likely", className: "bg-amber-500 text-white hover:bg-amber-500" };
+    return { label: "Check", className: "bg-muted text-muted-foreground hover:bg-muted" };
+  };
+
+  const isTracked = (d: Detected) => {
+    if (trackedDomains.has(d.domain)) return true;
+    if (trackedDomains.has(d.name.toLowerCase())) return true;
+    return false;
+  };
+
+  // ---------- Empty state ----------
+  if (accounts.length === 0) {
+    return (
+      <Card className="shadow-card">
+        <CardContent className="flex flex-col items-center gap-4 p-10 text-center">
+          <div className="rounded-2xl bg-primary/10 p-4">
+            <Mail className="h-10 w-10 text-primary" />
+          </div>
+          <div className="space-y-1 max-w-md">
+            <h3 className="font-display text-lg font-semibold">
+              Connect your Gmail to automatically detect subscriptions
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              We scan your receipts and invoices, never your personal emails.
+            </p>
+          </div>
+          <Button onClick={connect} className="gap-2 bg-gradient-primary hover:opacity-90">
+            <Mail className="h-4 w-4" /> Connect Gmail
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Last scanned banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4" />
+          {lastScanned
+            ? daysSince === 0
+              ? "Last scanned: today"
+              : `Last scanned: ${daysSince} day${daysSince === 1 ? "" : "s"} ago`
+            : "Not scanned yet"}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => runScan(false)}
+          disabled={scanning}
+          className="gap-2"
+        >
+          {scanning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+          {scanning ? "Scanning..." : "Scan now"}
+        </Button>
+      </div>
+
+      {/* New subscription alerts */}
+      <AnimatePresence>
+        {newServices.map((n) => (
+          <motion.div
+            key={n.domain}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4"
+          >
+            <Sparkles className="h-5 w-5 text-primary shrink-0" />
+            <img
+              src={`https://logo.clearbit.com/${n.domain}`}
+              alt=""
+              onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")}
+              className="h-7 w-7 rounded-md object-contain bg-background p-1"
+            />
+            <p className="text-sm flex-1">
+              <span className="font-semibold">New subscription detected: {n.name}</span>
+              <span className="text-muted-foreground"> — review below</span>
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setNewServices((arr) => arr.filter((x) => x.domain !== n.domain))}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Connected accounts */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Mail className="h-5 w-5 text-primary" />
-            Gmail Subscription Detection
+            Connected Gmail accounts ({accounts.length})
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {token ? (
-            <>
-              <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/30">
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                  Gmail connected
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={() => scan(token)}
-                  disabled={scanning}
-                  className="gap-2 bg-gradient-primary hover:opacity-90"
+        <CardContent className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            {accounts.map((a) => (
+              <div
+                key={a.email}
+                className="flex items-center gap-3 rounded-xl border border-border p-3"
+              >
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
+                  style={{ backgroundColor: colorFor(a.email) }}
                 >
-                  {scanning ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                  {scanning ? "Scanning..." : detected.length ? "Scan again" : "Scan inbox"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={disconnect}
-                  className="gap-2 text-destructive hover:text-destructive"
-                >
-                  <Unplug className="h-4 w-4" /> Disconnect Gmail
-                </Button>
-              </div>
-              {scanning && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>{progress}</span>
+                  {initialsFor(a.email)}
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 rounded-xl border border-border p-4">
-                <Mail className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm font-medium">Connect Gmail to auto-detect</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{a.email}</p>
                   <p className="text-xs text-muted-foreground">
-                    We scan recent receipts, invoices and subscription emails.
+                    {a.last_scanned
+                      ? `Scanned ${new Date(a.last_scanned).toLocaleDateString()} · ${a.found ?? 0} found`
+                      : "Not scanned yet"}
                   </p>
                 </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => disconnectAccount(a.email)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Unplug className="h-4 w-4" />
+                </Button>
               </div>
-              <Button onClick={connect} className="gap-2 bg-gradient-primary hover:opacity-90">
-                <Mail className="h-4 w-4" /> Connect Gmail
-              </Button>
-            </>
+            ))}
+          </div>
+          <Button onClick={connect} variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" /> Connect another account
+          </Button>
+          {scanning && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>{progress}</span>
+            </div>
           )}
         </CardContent>
       </Card>
 
+      {/* Scan summary */}
+      {summary && (
+        <Card className="shadow-card border-primary/30">
+          <CardContent className="flex flex-wrap items-center gap-4 p-4">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <div className="flex-1 text-sm">
+              <span className="font-semibold">{summary.emails}</span> emails scanned ·{" "}
+              <span className="font-semibold">{summary.services}</span> services ·{" "}
+              <span className="font-semibold">{summary.newCount}</span> new
+              <span className="text-muted-foreground">
+                {" "}
+                · {new Date(summary.at).toLocaleTimeString()}
+              </span>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setSummary(null)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detected list */}
       {visible.length > 0 && (
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-display text-lg">
               <Search className="h-5 w-5 text-primary" />
-              Detected ({visible.length})
+              Detected subscriptions ({visible.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <AnimatePresence>
               <div className="grid gap-3 sm:grid-cols-2">
-                {visible.map((sub) => (
-                  <motion.div
-                    key={sub.domain}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="rounded-xl border border-border p-4 space-y-3"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <img
-                        src={`https://logo.clearbit.com/${sub.domain}`}
-                        alt={sub.name}
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
-                        }}
-                        className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="font-semibold truncate">{sub.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
-                        </p>
+                {visible.map((sub) => {
+                  const conf = confidence(sub.count);
+                  const tracked = isTracked(sub);
+                  return (
+                    <motion.div
+                      key={sub.domain}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="rounded-xl border border-border p-4 space-y-3"
+                    >
+                      <div className="flex items-start gap-3 min-w-0">
+                        <img
+                          src={`https://logo.clearbit.com/${sub.domain}`}
+                          alt={sub.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold truncate">{sub.name}</p>
+                            <Badge className={conf.className + " text-[10px]"}>
+                              {conf.label}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
+                          </p>
+                          {sub.accounts.length > 1 && (
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              from {sub.accounts.length} accounts
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => handleConfirm(sub)}
-                        className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Add
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          setDismissed((s) => new Set(s).add(sub.domain))
-                        }
-                        className="gap-1"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="flex gap-2">
+                        {tracked ? (
+                          <div className="flex items-center gap-1.5 text-sm font-medium text-green-600 dark:text-green-400">
+                            <CheckCircle2 className="h-4 w-4" /> Already tracking
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            onClick={() => handleAdd(sub)}
+                            className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                          >
+                            <Plus className="h-3.5 w-3.5" /> Add to Paythra
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
+                          className="gap-1"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </AnimatePresence>
           </CardContent>
