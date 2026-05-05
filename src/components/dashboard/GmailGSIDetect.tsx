@@ -1,11 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle } from "lucide-react";
+import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle, Sparkles, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { useServicePricing } from "@/hooks/useServicePricing";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { getActiveCurrencyCode, convertFromEUR, CURRENCIES, convertToEUR } from "@/lib/currency";
 
 const CLIENT_ID =
   "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
