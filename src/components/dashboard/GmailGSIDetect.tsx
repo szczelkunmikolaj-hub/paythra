@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle } from "lucide-react";
+import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle, Sparkles, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { useServicePricing } from "@/hooks/useServicePricing";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { getActiveCurrencyCode, convertFromEUR, CURRENCIES, convertToEUR } from "@/lib/currency";
 
 const CLIENT_ID =
   "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
@@ -46,6 +54,11 @@ const PAYMENT_KEYWORDS = [
   "receipt", "invoice", "payment", "charge", "billing", "renewal",
   "subscription confirmed", "subscription", "order confirmation", "purchase",
   "amount due", "your membership", "your plan",
+  "your receipt", "your payment", "payment for", "thanks for your payment",
+  "payment successful", "subscription active", "premium receipt",
+  "your order", "order receipt", "monthly payment", "annual payment",
+  "auto-renewal", "autorenewal", "auto renewal",
+  "successfully renewed", "subscription renewed",
   "thank you for your purchase", "factura", "rechnung", "reçu",
 ];
 
@@ -54,12 +67,24 @@ const PROMO_KEYWORDS = [
   "streak", "reminder", "limited time", "exclusive",
 ];
 
+const SAVINGS_KEYWORDS = [
+  "% off", "discount", "save", "deal", "offer", "limited time",
+  "special price", "upgrade for less", "reduced",
+  "promoción", "angebot", "promo",
+];
+
+const FUZZY_BRANDS = [
+  "spotify", "apple", "google", "microsoft", "amazon", "netflix", "adobe",
+  "paypal", "stripe", "notion", "dropbox", "slack", "zoom", "discord",
+  "linkedin", "canva", "grammarly", "duolingo", "github", "figma",
+];
+
 const BILLING_SENDER_PATTERNS = [
   "billing", "noreply", "no-reply", "no_reply", "receipts", "invoice", "payments", "notify",
 ];
 
 const QUERY =
-  "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal OR from:netflix.com OR from:spotify.com OR from:adobe.com OR from:apple.com OR from:amazon.com OR from:openai.com OR from:notion.so OR from:dropbox.com OR from:microsoft.com OR from:google.com OR from:disney.com OR from:linkedin.com OR from:canva.com OR from:grammarly.com OR from:duolingo.com";
+  "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal OR subject:offer OR subject:discount OR subject:save OR subject:deal OR from:netflix.com OR from:spotify.com OR from:adobe.com OR from:apple.com OR from:amazon.com OR from:openai.com OR from:notion.so OR from:dropbox.com OR from:microsoft.com OR from:google.com OR from:disney.com OR from:linkedin.com OR from:canva.com OR from:grammarly.com OR from:duolingo.com OR from:github.com OR from:figma.com OR from:slack.com OR from:zoom.us OR from:discord.com OR from:paypal.com";
 
 interface Detected {
   domain: string;
@@ -72,6 +97,15 @@ interface Detected {
   earliestDate?: number; // ms
   latestDate?: number;
   latestSubject?: string;
+}
+
+interface SavingsOffer {
+  id: string;
+  domain: string;
+  name: string;
+  category: string;
+  subject: string;
+  dateMs: number;
 }
 
 declare global {
@@ -112,6 +146,14 @@ const extractDomain = (from: string): string | null => {
   const domain = email.slice(at + 1).replace(/>$/, "");
   for (const known of Object.keys(KNOWN_SERVICES)) {
     if (domain === known || domain.endsWith("." + known)) return known;
+  }
+  // Fuzzy brand matching: any domain CONTAINING a known brand maps to that brand
+  for (const brand of FUZZY_BRANDS) {
+    if (domain.includes(brand)) {
+      const canonical = `${brand}.com`;
+      // Prefer the canonical domain key if known, else just return canonical
+      return KNOWN_SERVICES[canonical] ? canonical : canonical;
+    }
   }
   return domain;
 };
@@ -157,15 +199,36 @@ const findKeyword = (subject: string): string | undefined => {
   return PAYMENT_KEYWORDS.find((k) => lower.includes(k));
 };
 
+const findSavingsKeyword = (subject: string): string | undefined => {
+  const lower = subject.toLowerCase();
+  return SAVINGS_KEYWORDS.find((k) => lower.includes(k));
+};
+
 const GmailGSIDetect = () => {
-  const { addSubscription } = useSubscriptions();
+  const { i18n } = useTranslation();
+  const lang = i18n.language || "en";
+  const currencyCode = getActiveCurrencyCode(lang);
+  const currencySymbol = CURRENCIES[currencyCode]?.symbol || "€";
+  const { addSubscription, subscriptions: existingSubs } = useSubscriptions();
+  const { services: priceServices } = useServicePricing();
   const [accounts, setAccounts] = useState<GmailAccount[]>(() => readAccounts());
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState("");
   const [detected, setDetected] = useState<Detected[]>([]);
+  const [savings, setSavings] = useState<SavingsOffer[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [openOffer, setOpenOffer] = useState<string | null>(null);
   const [showUnlikely, setShowUnlikely] = useState(false);
+  const [addModal, setAddModal] = useState<null | {
+    domain: string;
+    name: string;
+    category: string;
+    price: string;
+    billing_cycle: "monthly" | "yearly";
+    start_date: string;
+    notes: string;
+  }>(null);
 
   useEffect(() => {
     loadGsi().catch(() => {
@@ -189,6 +252,7 @@ const GmailGSIDetect = () => {
     accessToken: string,
     email: string,
     groups: Map<string, Detected>,
+    offers: SavingsOffer[],
     onExpire: () => void
   ): Promise<boolean> => {
     const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(
@@ -233,6 +297,14 @@ const GmailGSIDetect = () => {
       const sender = extractEmail(from);
       const matchedKeyword = findKeyword(subject);
 
+      // Savings opportunity: subject matches a savings keyword AND sender is a known service
+      if (known && findSavingsKeyword(subject) && Number.isFinite(dateMs)) {
+        const id = `${domain}:${ids[i]}`;
+        if (!offers.find((o) => o.id === id)) {
+          offers.push({ id, domain, name, category, subject, dateMs });
+        }
+      }
+
       const existing = groups.get(domain);
       if (existing) {
         existing.count++;
@@ -271,12 +343,13 @@ const GmailGSIDetect = () => {
     setScanning(true);
     setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}...`);
     const groups = new Map<string, Detected>();
+    const offers: SavingsOffer[] = [];
     let current = [...list];
     try {
       for (let i = 0; i < list.length; i++) {
         const acc = list[i];
         setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}... (${i + 1}/${list.length}) ${acc.email}`);
-        const ok = await scanOne(acc.token, acc.email, groups, () => {
+        const ok = await scanOne(acc.token, acc.email, groups, offers, () => {
           current = current.filter((a) => a.email !== acc.email);
           persistAccounts(current);
           toast({
@@ -287,9 +360,14 @@ const GmailGSIDetect = () => {
         });
         if (!ok) continue;
       }
-      // Deduplicated by domain via Map; keep all groups so we can classify into 3 buckets
       const all = Array.from(groups.values()).sort((a, b) => b.count - a.count);
       setDetected(all);
+      // dedupe offers per domain (keep latest)
+      const byDomain = new Map<string, SavingsOffer>();
+      for (const o of offers.sort((a, b) => b.dateMs - a.dateMs)) {
+        if (!byDomain.has(o.domain)) byDomain.set(o.domain, o);
+      }
+      setSavings(Array.from(byDomain.values()));
       toast({
         title: "Scan complete",
         description: `Detected ${all.length} service${all.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
@@ -343,24 +421,77 @@ const GmailGSIDetect = () => {
     }
   };
 
-  const handleConfirm = async (d: Detected) => {
+  // Map a detected domain to a service_pricing row (fuzzy)
+  const findServicePrice = (domain: string, name: string) => {
+    const lc = (s: string) => s.toLowerCase();
+    return priceServices.find((s) => {
+      const sd = lc(s.service_domain || "");
+      const sn = lc(s.service_name || "");
+      const d = lc(domain);
+      const n = lc(name);
+      return (
+        sd === d ||
+        d.includes(sd.replace(/\.com$/, "")) ||
+        sd.includes(d.replace(/\.com$/, "")) ||
+        sn === n ||
+        sn.includes(n) ||
+        n.includes(sn)
+      );
+    });
+  };
+
+  const findExistingSub = (domain: string, name: string) => {
+    const n = name.toLowerCase();
+    return existingSubs.find((s) => s.name.toLowerCase().includes(n) || n.includes(s.name.toLowerCase()));
+  };
+
+  const openSmartAdd = (d: Detected) => {
+    const startDate = d.earliestDate
+      ? new Date(d.earliestDate).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+    const sp = findServicePrice(d.domain, d.name);
+    const dbCategory = sp?.category && ALLOWED_CATEGORIES.has(sp.category)
+      ? sp.category
+      : ALLOWED_CATEGORIES.has(d.category) ? d.category : "other";
+    let priceStr = "";
+    if (sp?.standard_price) {
+      const converted = convertFromEUR(Number(sp.standard_price), lang);
+      priceStr = converted.toFixed(2);
+    }
+    const earliestStr = d.earliestDate
+      ? new Date(d.earliestDate).toLocaleDateString()
+      : "unknown";
+    setAddModal({
+      domain: d.domain,
+      name: d.name,
+      category: dbCategory,
+      price: priceStr,
+      billing_cycle: "monthly",
+      start_date: startDate,
+      notes: `Detected from Gmail — first email: ${earliestStr}, ${d.count} email${d.count === 1 ? "" : "s"} found`,
+    });
+  };
+
+  const confirmAdd = async () => {
+    if (!addModal) return;
     try {
-      const startDate = d.earliestDate
-        ? new Date(d.earliestDate).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0];
-      const next = new Date();
-      next.setMonth(next.getMonth() + 1);
+      const userPrice = parseFloat(addModal.price || "0") || 0;
+      const priceEUR = convertToEUR(userPrice, lang);
+      const next = new Date(addModal.start_date);
+      if (addModal.billing_cycle === "yearly") next.setFullYear(next.getFullYear() + 1);
+      else next.setMonth(next.getMonth() + 1);
       await addSubscription({
-        name: d.name,
-        price: 0,
-        billing_cycle: "monthly",
-        category: ALLOWED_CATEGORIES.has(d.category) ? d.category : "other",
-        start_date: startDate,
+        name: addModal.name,
+        price: priceEUR,
+        billing_cycle: addModal.billing_cycle,
+        category: ALLOWED_CATEGORIES.has(addModal.category) ? addModal.category : "other",
+        start_date: addModal.start_date,
         next_billing_date: next.toISOString().split("T")[0],
         status: "active",
       });
-      setDismissed((s) => new Set(s).add(d.domain));
-      toast({ title: `${d.name} added` });
+      setDismissed((s) => new Set(s).add(addModal.domain));
+      toast({ title: `${addModal.name} added` });
+      setAddModal(null);
     } catch (e: any) {
       toast({ title: "Failed to add", description: e.message, variant: "destructive" });
     }
@@ -540,6 +671,175 @@ const GmailGSIDetect = () => {
           )}
         </div>
       )}
+
+      {savings.length > 0 && (
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-display text-lg">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Savings opportunities ({savings.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {savings.map((offer) => {
+                const sp = findServicePrice(offer.domain, offer.name);
+                const tracked = findExistingSub(offer.domain, offer.name);
+                const currentEUR = tracked?.price ?? (sp?.standard_price ? Number(sp.standard_price) : null);
+                const cheapestEUR = sp?.cheapest_plan_price ? Number(sp.cheapest_plan_price) : null;
+                const savingEUR =
+                  currentEUR != null && cheapestEUR != null && cheapestEUR < currentEUR
+                    ? currentEUR - cheapestEUR
+                    : null;
+                const fmt = (eur: number) => `${currencySymbol}${convertFromEUR(eur, lang).toFixed(2)}`;
+                const isOpen = openOffer === offer.id;
+                return (
+                  <div
+                    key={offer.id}
+                    className="rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 p-4 space-y-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={`https://logo.clearbit.com/${offer.domain}`}
+                        alt={offer.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                        className="h-9 w-9 rounded-lg object-contain bg-background p-1 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate">{offer.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{offer.subject}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(offer.dateMs).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0 gap-1">
+                        <Tag className="h-3 w-3" /> Offer
+                      </Badge>
+                    </div>
+                    <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                      Potential saving detected — this offer may reduce your current cost
+                    </p>
+                    {tracked && savingEUR != null && (
+                      <p className="text-xs text-muted-foreground">
+                        You currently pay <span className="font-semibold text-foreground">{fmt(currentEUR!)}</span> — this offer could save you{" "}
+                        <span className="font-semibold text-green-600 dark:text-green-400">{fmt(savingEUR)}/month</span>
+                      </p>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setOpenOffer(isOpen ? null : offer.id)}
+                      className="w-full"
+                    >
+                      {isOpen ? "Hide offer details" : "View offer details"}
+                    </Button>
+                    {isOpen && (
+                      <div className="rounded-lg bg-background/60 p-3 text-xs space-y-1">
+                        <p><span className="font-medium">Subject:</span> {offer.subject}</p>
+                        <p><span className="font-medium">Received:</span> {new Date(offer.dateMs).toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={!!addModal} onOpenChange={(o) => !o && setAddModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add detected subscription</DialogTitle>
+            <DialogDescription>
+              Review and edit the details before adding to Paythra.
+            </DialogDescription>
+          </DialogHeader>
+          {addModal && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="sa-name">Service name</Label>
+                <Input
+                  id="sa-name"
+                  value={addModal.name}
+                  onChange={(e) => setAddModal({ ...addModal, name: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="sa-price">Price ({currencyCode})</Label>
+                  <Input
+                    id="sa-price"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter amount"
+                    value={addModal.price}
+                    onChange={(e) => setAddModal({ ...addModal, price: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Billing cycle</Label>
+                  <Select
+                    value={addModal.billing_cycle}
+                    onValueChange={(v: "monthly" | "yearly") =>
+                      setAddModal({ ...addModal, billing_cycle: v })
+                    }
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Category</Label>
+                  <Select
+                    value={addModal.category}
+                    onValueChange={(v) => setAddModal({ ...addModal, category: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from(ALLOWED_CATEGORIES).map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sa-start">Start date</Label>
+                  <Input
+                    id="sa-start"
+                    type="date"
+                    value={addModal.start_date}
+                    onChange={(e) => setAddModal({ ...addModal, start_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sa-notes">Notes</Label>
+                <Textarea
+                  id="sa-notes"
+                  rows={2}
+                  value={addModal.notes}
+                  onChange={(e) => setAddModal({ ...addModal, notes: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddModal(null)}>Cancel</Button>
+            <Button onClick={confirmAdd} className="bg-gradient-primary hover:opacity-90">
+              Confirm and add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
@@ -640,7 +940,7 @@ const GmailGSIDetect = () => {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => handleConfirm(sub)}
+                    onClick={() => openSmartAdd(sub)}
                     className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add
