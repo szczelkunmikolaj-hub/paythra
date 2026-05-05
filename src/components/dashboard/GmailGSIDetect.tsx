@@ -209,9 +209,8 @@ const GmailGSIDetect = () => {
   const lang = i18n.language || "en";
   const currencyCode = getActiveCurrencyCode(lang);
   const currencySymbol = CURRENCIES[currencyCode]?.symbol || "€";
-  const { addSubscription } = useSubscriptions();
+  const { addSubscription, subscriptions: existingSubs } = useSubscriptions();
   const { services: priceServices } = useServicePricing();
-  const { subscriptions: existingSubs } = useSubscriptions();
   const [accounts, setAccounts] = useState<GmailAccount[]>(() => readAccounts());
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState("");
