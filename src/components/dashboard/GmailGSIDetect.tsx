@@ -625,20 +625,66 @@ const GmailGSIDetect = () => {
     }
   };
 
-  const visible = detected.filter(
-    (d) => !dismissed.has(d.domain) && !added.has(d.domain)
+  // Classify each detected service: returns null to silently discard
+  type Classification = {
+    label: "Confirmed" | "Likely" | "Check";
+    className: string;
+    freeTier?: boolean;
+  };
+  const classify = (d: Detected): Classification | null => {
+    if (d.maxScore >= 2) {
+      return { label: "Confirmed", className: "bg-green-500 text-white hover:bg-green-500" };
+    }
+    if (d.maxScore === 1) {
+      if (FREE_TIER_DOMAINS.has(d.domain)) {
+        return {
+          label: "Check",
+          className: "bg-muted text-muted-foreground hover:bg-muted",
+          freeTier: true,
+        };
+      }
+      return { label: "Likely", className: "bg-amber-500 text-white hover:bg-amber-500" };
+    }
+    return null; // discard
+  };
+
+  const classified = detected
+    .filter((d) => !ignored.has(d.domain))
+    .map((d) => ({ d, c: classify(d) }))
+    .filter((x): x is { d: Detected; c: Classification } => x.c !== null);
+
+  const visible = classified.filter(
+    ({ d }) => !dismissed.has(d.domain) && !added.has(d.domain)
   );
+
+  const filtered =
+    filter === "all"
+      ? visible
+      : filter === "confirmed"
+      ? visible.filter((x) => x.c.label === "Confirmed")
+      : visible.filter((x) => x.c.label !== "Confirmed");
 
   const daysSince = lastScanned
     ? Math.floor((Date.now() - lastScanned) / (24 * 60 * 60 * 1000))
     : null;
 
-  const confidence = (count: number) => {
-    if (count >= 3)
-      return { label: "Confirmed", className: "bg-green-500 text-white hover:bg-green-500" };
-    if (count === 2)
-      return { label: "Likely", className: "bg-amber-500 text-white hover:bg-amber-500" };
-    return { label: "Check", className: "bg-muted text-muted-foreground hover:bg-muted" };
+  const handleNotSubscription = (domain: string) => {
+    const next = Array.from(new Set([...readIgnored(), domain]));
+    writeIgnored(next);
+    setIgnored(new Set(next));
+    toast({ title: "Marked as not a subscription" });
+  };
+
+  const buildWhyText = (d: Detected): string => {
+    const parts: string[] = [];
+    parts.push(`Found ${d.count} email${d.count === 1 ? "" : "s"}`);
+    if (d.hasBillingSender) parts.push("with billing@ sender");
+    if (d.hasPaymentSubject) parts.push("subject containing receipt/invoice");
+    if (d.topAmount) parts.push(`amount ${d.topAmount}`);
+    if (!d.hasBillingSender && !d.hasPaymentSubject && !d.topAmount && d.signals.length) {
+      parts.push(d.signals.slice(0, 3).join(", "));
+    }
+    return parts.join(" · ");
   };
 
   const isTracked = (d: Detected) => {
