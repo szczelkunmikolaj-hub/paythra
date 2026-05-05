@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
