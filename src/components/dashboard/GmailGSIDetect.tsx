@@ -107,6 +107,105 @@ const QUERY = [
   ...Object.keys(KNOWN_SERVICES).map((d) => `from:${d}`),
 ].join(" OR ");
 
+const IGNORED_DOMAINS_KEY = "gmail_ignored_domains";
+
+const FREE_TIER_DOMAINS = new Set([
+  "duolingo.com",
+  "twitter.com",
+  "instagram.com",
+  "facebook.com",
+  "tiktok.com",
+  "reddit.com",
+  "youtube.com",
+  "twitch.tv",
+  "pinterest.com",
+  "snapchat.com",
+]);
+
+const PAYMENT_SUBJECT_KEYWORDS = [
+  "receipt", "invoice", "payment confirmation", "order confirmation", "billing",
+  "charge", "renewal", "subscription confirmed", "thank you for your purchase",
+  "your plan", "payment received", "amount due", "statement",
+  "factura", "rechnung", "facture", "reçu", "płatność",
+];
+
+const PAYMENT_FROM_PREFIXES = [
+  "billing@", "invoice@", "receipt@", "noreply@", "payments@",
+  "no-reply@", "accounts@", "subscription@",
+];
+
+const PROMO_SUBJECT_KEYWORDS = [
+  "offer", "discount", "sale", " off", "deal", "try", "free", "upgrade",
+  "limited time", "exclusive", "unlock", "streak", "reminder to practice",
+  "miss you", "come back", "we miss you", "special offer",
+  "promoción", "angebot", "promotion",
+];
+
+const PROMO_FROM_PREFIXES = [
+  "marketing@", "promo@", "newsletter@", "hello@", "team@", "hi@",
+];
+
+const PROMO_SUBDOMAINS = [
+  "marketing.", "news.", "newsletter.", "promo.", "offers.", "deals.", "updates.",
+];
+
+const CURRENCY_AMOUNT_RE = /(€|\$|£|PLN)\s?\d+|\d+\s?(€|\$|£|PLN)/i;
+
+interface EmailScore {
+  score: number;
+  signals: string[];
+}
+
+const scoreEmail = (subject: string, fromRaw: string): EmailScore => {
+  const signals: string[] = [];
+  let score = 0;
+  const subj = subject.toLowerCase();
+  const from = fromRaw.toLowerCase();
+  const fromAddrMatch = fromRaw.match(/<([^>]+)>/);
+  const fromAddr = (fromAddrMatch ? fromAddrMatch[1] : fromRaw).toLowerCase().trim();
+  const fromDomain = fromAddr.includes("@") ? fromAddr.split("@")[1] : "";
+
+  // Payment signals
+  const matchedSubj = PAYMENT_SUBJECT_KEYWORDS.find((k) => subj.includes(k));
+  if (matchedSubj) {
+    score++;
+    signals.push(`subject contains "${matchedSubj.trim()}"`);
+  }
+  if (CURRENCY_AMOUNT_RE.test(subject)) {
+    score++;
+    const m = subject.match(CURRENCY_AMOUNT_RE);
+    signals.push(`amount ${m?.[0]} in subject`);
+  }
+  const matchedFrom = PAYMENT_FROM_PREFIXES.find((p) => fromAddr.startsWith(p));
+  if (matchedFrom) {
+    score++;
+    signals.push(`${matchedFrom} sender`);
+  }
+  const isPromoSubdomain = PROMO_SUBDOMAINS.some((s) => fromDomain.startsWith(s));
+  if (!isPromoSubdomain) {
+    score++;
+    signals.push("not a promo subdomain");
+  }
+
+  // Promotional negatives
+  const matchedPromo = PROMO_SUBJECT_KEYWORDS.find((k) => subj.includes(k));
+  if (matchedPromo) {
+    score--;
+    signals.push(`promo word "${matchedPromo.trim()}"`);
+  }
+  if (subject.includes("!")) {
+    score--;
+    signals.push("exclamation in subject");
+  }
+  const matchedPromoFrom = PROMO_FROM_PREFIXES.find((p) => fromAddr.startsWith(p));
+  if (matchedPromoFrom) {
+    score--;
+    signals.push(`${matchedPromoFrom} sender`);
+  }
+
+  return { score, signals };
+};
+
 interface StoredToken {
   email: string;
   access_token: string;
@@ -118,8 +217,15 @@ interface StoredToken {
 interface Detected {
   domain: string;
   name: string;
-  count: number;
-  accounts: string[]; // emails the hits came from
+  count: number;          // total emails seen
+  qualifyingCount: number; // emails with score >= 1
+  maxScore: number;
+  accounts: string[];
+  signals: string[];      // unique signals across emails
+  hasCurrency: boolean;
+  hasBillingSender: boolean;
+  hasPaymentSubject: boolean;
+  topAmount?: string;
 }
 
 declare global {
@@ -173,6 +279,17 @@ const readTokens = (): StoredToken[] => {
 const writeTokens = (t: StoredToken[]) =>
   localStorage.setItem(TOKENS_KEY, JSON.stringify(t));
 
+const readIgnored = (): string[] => {
+  try {
+    const raw = localStorage.getItem(IGNORED_DOMAINS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+const writeIgnored = (arr: string[]) =>
+  localStorage.setItem(IGNORED_DOMAINS_KEY, JSON.stringify(arr));
+
 const initialsFor = (email: string) =>
   email
     .split("@")[0]
@@ -214,7 +331,7 @@ const scanOneAccount = async (
 
   for (const id of ids) {
     const r = await fetch(
-      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From`,
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject`,
       { headers: { Authorization: `Bearer ${token.access_token}` } }
     );
     if (r.status === 401) return { groups, emailsScanned: 0, expired: true };
@@ -222,17 +339,46 @@ const scanOneAccount = async (
     const msg = await r.json();
     const headers: Array<{ name: string; value: string }> = msg.payload?.headers || [];
     const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
+    const subject = headers.find((h) => h.name.toLowerCase() === "subject")?.value || "";
     const domain = extractDomain(from);
     if (!domain) continue;
     const name =
       KNOWN_SERVICES[domain] ||
       domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
+
+    const { score, signals } = scoreEmail(subject, from);
+    const fromAddr = (from.match(/<([^>]+)>/)?.[1] || from).toLowerCase();
+    const hasBilling = PAYMENT_FROM_PREFIXES.some((p) => fromAddr.startsWith(p));
+    const hasPaySubj = PAYMENT_SUBJECT_KEYWORDS.some((k) => subject.toLowerCase().includes(k));
+    const amountMatch = subject.match(CURRENCY_AMOUNT_RE)?.[0];
+
     const existing = groups.get(domain);
     if (existing) {
       existing.count++;
+      if (score >= 1) existing.qualifyingCount++;
+      existing.maxScore = Math.max(existing.maxScore, score);
       if (!existing.accounts.includes(token.email)) existing.accounts.push(token.email);
+      signals.forEach((s) => {
+        if (!existing.signals.includes(s)) existing.signals.push(s);
+      });
+      existing.hasBillingSender = existing.hasBillingSender || hasBilling;
+      existing.hasPaymentSubject = existing.hasPaymentSubject || hasPaySubj;
+      existing.hasCurrency = existing.hasCurrency || !!amountMatch;
+      if (amountMatch && !existing.topAmount) existing.topAmount = amountMatch;
     } else {
-      groups.set(domain, { domain, name, count: 1, accounts: [token.email] });
+      groups.set(domain, {
+        domain,
+        name,
+        count: 1,
+        qualifyingCount: score >= 1 ? 1 : 0,
+        maxScore: score,
+        accounts: [token.email],
+        signals: [...signals],
+        hasBillingSender: hasBilling,
+        hasPaymentSubject: hasPaySubj,
+        hasCurrency: !!amountMatch,
+        topAmount: amountMatch,
+      });
     }
   }
   return { groups, emailsScanned: ids.length };
