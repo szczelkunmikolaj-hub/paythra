@@ -253,6 +253,7 @@ const GmailGSIDetect = () => {
     accessToken: string,
     email: string,
     groups: Map<string, Detected>,
+    offers: SavingsOffer[],
     onExpire: () => void
   ): Promise<boolean> => {
     const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(
