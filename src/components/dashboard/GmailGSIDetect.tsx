@@ -422,24 +422,77 @@ const GmailGSIDetect = () => {
     }
   };
 
-  const handleConfirm = async (d: Detected) => {
+  // Map a detected domain to a service_pricing row (fuzzy)
+  const findServicePrice = (domain: string, name: string) => {
+    const lc = (s: string) => s.toLowerCase();
+    return priceServices.find((s) => {
+      const sd = lc(s.service_domain || "");
+      const sn = lc(s.service_name || "");
+      const d = lc(domain);
+      const n = lc(name);
+      return (
+        sd === d ||
+        d.includes(sd.replace(/\.com$/, "")) ||
+        sd.includes(d.replace(/\.com$/, "")) ||
+        sn === n ||
+        sn.includes(n) ||
+        n.includes(sn)
+      );
+    });
+  };
+
+  const findExistingSub = (domain: string, name: string) => {
+    const n = name.toLowerCase();
+    return existingSubs.find((s) => s.name.toLowerCase().includes(n) || n.includes(s.name.toLowerCase()));
+  };
+
+  const openSmartAdd = (d: Detected) => {
+    const startDate = d.earliestDate
+      ? new Date(d.earliestDate).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+    const sp = findServicePrice(d.domain, d.name);
+    const dbCategory = sp?.category && ALLOWED_CATEGORIES.has(sp.category)
+      ? sp.category
+      : ALLOWED_CATEGORIES.has(d.category) ? d.category : "other";
+    let priceStr = "";
+    if (sp?.standard_price) {
+      const converted = convertFromEUR(Number(sp.standard_price), lang);
+      priceStr = converted.toFixed(2);
+    }
+    const earliestStr = d.earliestDate
+      ? new Date(d.earliestDate).toLocaleDateString()
+      : "unknown";
+    setAddModal({
+      domain: d.domain,
+      name: d.name,
+      category: dbCategory,
+      price: priceStr,
+      billing_cycle: "monthly",
+      start_date: startDate,
+      notes: `Detected from Gmail — first email: ${earliestStr}, ${d.count} email${d.count === 1 ? "" : "s"} found`,
+    });
+  };
+
+  const confirmAdd = async () => {
+    if (!addModal) return;
     try {
-      const startDate = d.earliestDate
-        ? new Date(d.earliestDate).toISOString().split("T")[0]
-        : new Date().toISOString().split("T")[0];
-      const next = new Date();
-      next.setMonth(next.getMonth() + 1);
+      const userPrice = parseFloat(addModal.price || "0") || 0;
+      const priceEUR = convertToEUR(userPrice, lang);
+      const next = new Date(addModal.start_date);
+      if (addModal.billing_cycle === "yearly") next.setFullYear(next.getFullYear() + 1);
+      else next.setMonth(next.getMonth() + 1);
       await addSubscription({
-        name: d.name,
-        price: 0,
-        billing_cycle: "monthly",
-        category: ALLOWED_CATEGORIES.has(d.category) ? d.category : "other",
-        start_date: startDate,
+        name: addModal.name,
+        price: priceEUR,
+        billing_cycle: addModal.billing_cycle,
+        category: ALLOWED_CATEGORIES.has(addModal.category) ? addModal.category : "other",
+        start_date: addModal.start_date,
         next_billing_date: next.toISOString().split("T")[0],
         status: "active",
       });
-      setDismissed((s) => new Set(s).add(d.domain));
-      toast({ title: `${d.name} added` });
+      setDismissed((s) => new Set(s).add(addModal.domain));
+      toast({ title: `${addModal.name} added` });
+      setAddModal(null);
     } catch (e: any) {
       toast({ title: "Failed to add", description: e.message, variant: "destructive" });
     }
