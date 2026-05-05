@@ -344,12 +344,13 @@ const GmailGSIDetect = () => {
     setScanning(true);
     setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}...`);
     const groups = new Map<string, Detected>();
+    const offers: SavingsOffer[] = [];
     let current = [...list];
     try {
       for (let i = 0; i < list.length; i++) {
         const acc = list[i];
         setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}... (${i + 1}/${list.length}) ${acc.email}`);
-        const ok = await scanOne(acc.token, acc.email, groups, () => {
+        const ok = await scanOne(acc.token, acc.email, groups, offers, () => {
           current = current.filter((a) => a.email !== acc.email);
           persistAccounts(current);
           toast({
@@ -360,9 +361,14 @@ const GmailGSIDetect = () => {
         });
         if (!ok) continue;
       }
-      // Deduplicated by domain via Map; keep all groups so we can classify into 3 buckets
       const all = Array.from(groups.values()).sort((a, b) => b.count - a.count);
       setDetected(all);
+      // dedupe offers per domain (keep latest)
+      const byDomain = new Map<string, SavingsOffer>();
+      for (const o of offers.sort((a, b) => b.dateMs - a.dateMs)) {
+        if (!byDomain.has(o.domain)) byDomain.set(o.domain, o);
+      }
+      setSavings(Array.from(byDomain.values()));
       toast({
         title: "Scan complete",
         description: `Detected ${all.length} service${all.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
