@@ -199,15 +199,37 @@ const findKeyword = (subject: string): string | undefined => {
   return PAYMENT_KEYWORDS.find((k) => lower.includes(k));
 };
 
+const findSavingsKeyword = (subject: string): string | undefined => {
+  const lower = subject.toLowerCase();
+  return SAVINGS_KEYWORDS.find((k) => lower.includes(k));
+};
+
 const GmailGSIDetect = () => {
+  const { i18n } = useTranslation();
+  const lang = i18n.language || "en";
+  const currencyCode = getActiveCurrencyCode(lang);
+  const currencySymbol = CURRENCIES[currencyCode]?.symbol || "€";
   const { addSubscription } = useSubscriptions();
+  const { services: priceServices } = useServicePricing();
+  const { subscriptions: existingSubs } = useSubscriptions();
   const [accounts, setAccounts] = useState<GmailAccount[]>(() => readAccounts());
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState("");
   const [detected, setDetected] = useState<Detected[]>([]);
+  const [savings, setSavings] = useState<SavingsOffer[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [openOffer, setOpenOffer] = useState<string | null>(null);
   const [showUnlikely, setShowUnlikely] = useState(false);
+  const [addModal, setAddModal] = useState<null | {
+    domain: string;
+    name: string;
+    category: string;
+    price: string;
+    billing_cycle: "monthly" | "yearly";
+    start_date: string;
+    notes: string;
+  }>(null);
 
   useEffect(() => {
     loadGsi().catch(() => {
