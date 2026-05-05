@@ -584,7 +584,9 @@ const GmailGSIDetect = () => {
         client_id: CLIENT_ID,
         scope: SCOPE,
         callback: async (resp: any) => {
+          console.log("[Gmail] Token response:", resp);
           if (resp.error || !resp.access_token) {
+            console.error("[Gmail] No access_token in response", resp);
             toast({
               title: "Authorization failed",
               description: resp.error || "No token returned",
@@ -592,19 +594,23 @@ const GmailGSIDetect = () => {
             });
             return;
           }
+          const accessToken: string = resp.access_token;
+          console.log("[Gmail] access_token received (length):", accessToken.length);
           try {
-            const email = await fetchUserEmail(resp.access_token);
+            const email = await fetchUserEmail(accessToken);
             const current = readTokens();
             const idx = current.findIndex((a) => a.email === email);
             const entry: StoredToken = {
               email,
-              access_token: resp.access_token,
+              access_token: accessToken,
               connected_at: Date.now(),
             };
             if (idx >= 0) current[idx] = { ...current[idx], ...entry };
             else current.push(entry);
             persistAccounts(current);
+            setExpiredEmails((arr) => arr.filter((e) => e !== email));
             toast({ title: `${email} connected` });
+            // Only scan AFTER token is confirmed valid and stored
             runScan(false);
           } catch (e: any) {
             toast({
