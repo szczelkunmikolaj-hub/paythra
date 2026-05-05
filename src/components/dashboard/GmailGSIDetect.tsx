@@ -9,7 +9,13 @@ import { useSubscriptions } from "@/hooks/useSubscriptions";
 const CLIENT_ID =
   "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
 const SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
-const TOKEN_KEY = "gmail_access_token";
+const ACCOUNTS_KEY = "gmail_accounts";
+const LEGACY_TOKEN_KEY = "gmail_access_token";
+
+interface GmailAccount {
+  email: string;
+  token: string;
+}
 
 const KNOWN_SERVICES: Record<string, { name: string; domain: string }> = {
   "netflix.com": { name: "Netflix", domain: "netflix.com" },
@@ -77,9 +83,41 @@ const extractDomain = (from: string): string | null => {
   return domain;
 };
 
+const readAccounts = (): GmailAccount[] => {
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed.filter((a) => a?.email && a?.token);
+    }
+  } catch {}
+  // Migrate legacy single-token storage
+  const legacy = localStorage.getItem(LEGACY_TOKEN_KEY);
+  if (legacy) {
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
+    const migrated: GmailAccount[] = [{ email: "Connected account", token: legacy }];
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(migrated));
+    return migrated;
+  }
+  return [];
+};
+
+const writeAccounts = (accounts: GmailAccount[]) => {
+  localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
+};
+
+const fetchEmailForToken = async (token: string): Promise<string> => {
+  const r = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!r.ok) throw new Error(`Profile fetch failed (${r.status})`);
+  const j = await r.json();
+  return j.emailAddress as string;
+};
+
 const GmailGSIDetect = () => {
   const { addSubscription } = useSubscriptions();
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_KEY));
+  const [accounts, setAccounts] = useState<GmailAccount[]>(() => readAccounts());
   const [scanning, setScanning] = useState(false);
   const [progress, setProgress] = useState("");
   const [detected, setDetected] = useState<Detected[]>([]);
@@ -91,62 +129,88 @@ const GmailGSIDetect = () => {
     });
   }, []);
 
-  const disconnect = () => {
-    localStorage.removeItem(TOKEN_KEY);
-    setToken(null);
-    setDetected([]);
-    toast({ title: "Gmail disconnected" });
+  const persistAccounts = (next: GmailAccount[]) => {
+    writeAccounts(next);
+    setAccounts(next);
   };
 
-  const scan = async (accessToken: string) => {
+  const disconnect = (email: string) => {
+    const next = accounts.filter((a) => a.email !== email);
+    persistAccounts(next);
+    if (next.length === 0) setDetected([]);
+    toast({ title: `${email} disconnected` });
+  };
+
+  const scanOne = async (
+    accessToken: string,
+    email: string,
+    groups: Map<string, Detected>,
+    onExpire: () => void
+  ): Promise<boolean> => {
+    const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(
+      QUERY
+    )}`;
+    const listRes = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (listRes.status === 401) {
+      onExpire();
+      return false;
+    }
+    if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
+    const list = await listRes.json();
+    const ids: string[] = (list.messages || []).map((m: any) => m.id);
+
+    for (let i = 0; i < ids.length; i++) {
+      setProgress(`${email}: reading ${i + 1} / ${ids.length}`);
+      const r = await fetch(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${ids[i]}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      if (r.status === 401) {
+        onExpire();
+        return false;
+      }
+      if (!r.ok) continue;
+      const msg = await r.json();
+      const headers: Array<{ name: string; value: string }> = msg.payload?.headers || [];
+      const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
+      const subject = headers.find((h) => h.name.toLowerCase() === "subject")?.value || "";
+      const domain = extractDomain(from);
+      if (!domain) continue;
+      const known = KNOWN_SERVICES[domain];
+      const name =
+        known?.name || domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
+      const existing = groups.get(domain);
+      if (existing) existing.count++;
+      else groups.set(domain, { domain, name, count: 1, lastSubject: subject });
+    }
+    return true;
+  };
+
+  const scanAll = async (list: GmailAccount[]) => {
+    if (list.length === 0) return;
     setScanning(true);
     setProgress("Searching emails...");
+    const groups = new Map<string, Detected>();
+    let current = [...list];
     try {
-      const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${encodeURIComponent(
-        QUERY
-      )}`;
-      const listRes = await fetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      if (listRes.status === 401) {
-        disconnect();
-        toast({ title: "Session expired, please reconnect", variant: "destructive" });
-        return;
-      }
-      if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
-      const list = await listRes.json();
-      const ids: string[] = (list.messages || []).map((m: any) => m.id);
-
-      const groups = new Map<string, Detected>();
-      for (let i = 0; i < ids.length; i++) {
-        setProgress(`Reading email ${i + 1} / ${ids.length}`);
-        const r = await fetch(
-          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${ids[i]}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date`,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        if (r.status === 401) {
-          disconnect();
-          return;
-        }
-        if (!r.ok) continue;
-        const msg = await r.json();
-        const headers: Array<{ name: string; value: string }> =
-          msg.payload?.headers || [];
-        const from = headers.find((h) => h.name.toLowerCase() === "from")?.value || "";
-        const subject =
-          headers.find((h) => h.name.toLowerCase() === "subject")?.value || "";
-        const domain = extractDomain(from);
-        if (!domain) continue;
-        const known = KNOWN_SERVICES[domain];
-        const name = known?.name || domain.split(".")[0].replace(/^\w/, (c) => c.toUpperCase());
-        const existing = groups.get(domain);
-        if (existing) existing.count++;
-        else groups.set(domain, { domain, name, count: 1, lastSubject: subject });
+      for (const acc of list) {
+        const ok = await scanOne(acc.token, acc.email, groups, () => {
+          current = current.filter((a) => a.email !== acc.email);
+          persistAccounts(current);
+          toast({
+            title: `${acc.email} session expired`,
+            description: "Please reconnect this account",
+            variant: "destructive",
+          });
+        });
+        if (!ok) continue;
       }
       setDetected(Array.from(groups.values()).sort((a, b) => b.count - a.count));
       toast({
         title: "Scan complete",
-        description: `Detected ${groups.size} subscription${groups.size === 1 ? "" : "s"}`,
+        description: `Detected ${groups.size} subscription${groups.size === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
       });
     } catch (e: any) {
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
@@ -162,7 +226,7 @@ const GmailGSIDetect = () => {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
         scope: SCOPE,
-        callback: (resp: any) => {
+        callback: async (resp: any) => {
           if (resp.error || !resp.access_token) {
             toast({
               title: "Authorization failed",
@@ -171,9 +235,24 @@ const GmailGSIDetect = () => {
             });
             return;
           }
-          localStorage.setItem(TOKEN_KEY, resp.access_token);
-          setToken(resp.access_token);
-          scan(resp.access_token);
+          try {
+            const email = await fetchEmailForToken(resp.access_token);
+            const existing = accounts.find((a) => a.email === email);
+            const next = existing
+              ? accounts.map((a) =>
+                  a.email === email ? { ...a, token: resp.access_token } : a
+                )
+              : [...accounts, { email, token: resp.access_token }];
+            persistAccounts(next);
+            toast({ title: existing ? `${email} reconnected` : `${email} connected` });
+            scanAll(next);
+          } catch (e: any) {
+            toast({
+              title: "Failed to read account email",
+              description: e.message,
+              variant: "destructive",
+            });
+          }
         },
       });
       tokenClient.requestAccessToken();
@@ -202,6 +281,7 @@ const GmailGSIDetect = () => {
   };
 
   const visible = detected.filter((d) => !dismissed.has(d.domain));
+  const hasAccounts = accounts.length > 0;
 
   return (
     <div className="space-y-6">
@@ -213,17 +293,34 @@ const GmailGSIDetect = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {token ? (
+          {hasAccounts ? (
             <>
-              <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/30">
-                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                  Gmail connected
-                </p>
+              <div className="space-y-2">
+                {accounts.map((acc) => (
+                  <div
+                    key={acc.email}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-950/30"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+                      <p className="text-sm font-medium text-green-800 dark:text-green-300 truncate">
+                        {acc.email}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => disconnect(acc.email)}
+                      className="gap-1 text-destructive hover:text-destructive shrink-0"
+                    >
+                      <Unplug className="h-3.5 w-3.5" /> Disconnect
+                    </Button>
+                  </div>
+                ))}
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
-                  onClick={() => scan(token)}
+                  onClick={() => scanAll(accounts)}
                   disabled={scanning}
                   className="gap-2 bg-gradient-primary hover:opacity-90"
                 >
@@ -234,12 +331,8 @@ const GmailGSIDetect = () => {
                   )}
                   {scanning ? "Scanning..." : detected.length ? "Scan again" : "Scan inbox"}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={disconnect}
-                  className="gap-2 text-destructive hover:text-destructive"
-                >
-                  <Unplug className="h-4 w-4" /> Disconnect Gmail
+                <Button onClick={connect} variant="outline" className="gap-2">
+                  <Plus className="h-4 w-4" /> Connect another account
                 </Button>
               </div>
               {scanning && (
@@ -256,7 +349,7 @@ const GmailGSIDetect = () => {
                 <div>
                   <p className="text-sm font-medium">Connect Gmail to auto-detect</p>
                   <p className="text-xs text-muted-foreground">
-                    We scan recent receipts, invoices and subscription emails.
+                    Connect one or more Gmail accounts. We scan recent receipts, invoices and subscription emails.
                   </p>
                 </div>
               </div>
