@@ -351,7 +351,10 @@ const scanOneAccount = async (
   const listRes = await fetch(url, {
     headers: { Authorization: `Bearer ${token.access_token}` },
   });
-  if (listRes.status === 401) return { groups, emailsScanned: 0, expired: true };
+  if (listRes.status === 401) {
+    console.warn(`[Gmail] 401 for ${token.email} — token expired`);
+    return { groups, emailsScanned: 0, expired: true };
+  }
   if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
   const list = await listRes.json();
   const ids: string[] = (list.messages || []).map((m: any) => m.id);
