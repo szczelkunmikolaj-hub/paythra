@@ -432,6 +432,7 @@ const GmailGSIDetect = () => {
     const v = localStorage.getItem(LAST_SCANNED_KEY);
     return v ? Number(v) : null;
   });
+  const [expiredEmails, setExpiredEmails] = useState<string[]>([]);
 
   const trackedDomains = useMemo(() => {
     const set = new Set<string>();
