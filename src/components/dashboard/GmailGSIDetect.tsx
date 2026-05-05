@@ -671,6 +671,175 @@ const GmailGSIDetect = () => {
           )}
         </div>
       )}
+
+      {savings.length > 0 && (
+        <Card className="shadow-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-display text-lg">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Savings opportunities ({savings.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {savings.map((offer) => {
+                const sp = findServicePrice(offer.domain, offer.name);
+                const tracked = findExistingSub(offer.domain, offer.name);
+                const currentEUR = tracked?.price ?? (sp?.standard_price ? Number(sp.standard_price) : null);
+                const cheapestEUR = sp?.cheapest_plan_price ? Number(sp.cheapest_plan_price) : null;
+                const savingEUR =
+                  currentEUR != null && cheapestEUR != null && cheapestEUR < currentEUR
+                    ? currentEUR - cheapestEUR
+                    : null;
+                const fmt = (eur: number) => `${currencySymbol}${convertFromEUR(eur, lang).toFixed(2)}`;
+                const isOpen = openOffer === offer.id;
+                return (
+                  <div
+                    key={offer.id}
+                    className="rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/50 dark:bg-amber-950/20 p-4 space-y-3"
+                  >
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={`https://logo.clearbit.com/${offer.domain}`}
+                        alt={offer.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                        className="h-9 w-9 rounded-lg object-contain bg-background p-1 shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate">{offer.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{offer.subject}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(offer.dateMs).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0 gap-1">
+                        <Tag className="h-3 w-3" /> Offer
+                      </Badge>
+                    </div>
+                    <p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                      Potential saving detected — this offer may reduce your current cost
+                    </p>
+                    {tracked && savingEUR != null && (
+                      <p className="text-xs text-muted-foreground">
+                        You currently pay <span className="font-semibold text-foreground">{fmt(currentEUR!)}</span> — this offer could save you{" "}
+                        <span className="font-semibold text-green-600 dark:text-green-400">{fmt(savingEUR)}/month</span>
+                      </p>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setOpenOffer(isOpen ? null : offer.id)}
+                      className="w-full"
+                    >
+                      {isOpen ? "Hide offer details" : "View offer details"}
+                    </Button>
+                    {isOpen && (
+                      <div className="rounded-lg bg-background/60 p-3 text-xs space-y-1">
+                        <p><span className="font-medium">Subject:</span> {offer.subject}</p>
+                        <p><span className="font-medium">Received:</span> {new Date(offer.dateMs).toLocaleString()}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Dialog open={!!addModal} onOpenChange={(o) => !o && setAddModal(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add detected subscription</DialogTitle>
+            <DialogDescription>
+              Review and edit the details before adding to Paythra.
+            </DialogDescription>
+          </DialogHeader>
+          {addModal && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="sa-name">Service name</Label>
+                <Input
+                  id="sa-name"
+                  value={addModal.name}
+                  onChange={(e) => setAddModal({ ...addModal, name: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="sa-price">Price ({currencyCode})</Label>
+                  <Input
+                    id="sa-price"
+                    type="number"
+                    step="0.01"
+                    placeholder="Enter amount"
+                    value={addModal.price}
+                    onChange={(e) => setAddModal({ ...addModal, price: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Billing cycle</Label>
+                  <Select
+                    value={addModal.billing_cycle}
+                    onValueChange={(v: "monthly" | "yearly") =>
+                      setAddModal({ ...addModal, billing_cycle: v })
+                    }
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Category</Label>
+                  <Select
+                    value={addModal.category}
+                    onValueChange={(v) => setAddModal({ ...addModal, category: v })}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Array.from(ALLOWED_CATEGORIES).map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sa-start">Start date</Label>
+                  <Input
+                    id="sa-start"
+                    type="date"
+                    value={addModal.start_date}
+                    onChange={(e) => setAddModal({ ...addModal, start_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sa-notes">Notes</Label>
+                <Textarea
+                  id="sa-notes"
+                  rows={2}
+                  value={addModal.notes}
+                  onChange={(e) => setAddModal({ ...addModal, notes: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddModal(null)}>Cancel</Button>
+            <Button onClick={confirmAdd} className="bg-gradient-primary hover:opacity-90">
+              Confirm and add
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 
