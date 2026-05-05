@@ -99,6 +99,15 @@ interface Detected {
   latestSubject?: string;
 }
 
+interface SavingsOffer {
+  id: string;
+  domain: string;
+  name: string;
+  category: string;
+  subject: string;
+  dateMs: number;
+}
+
 declare global {
   interface Window {
     google?: any;
