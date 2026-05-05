@@ -84,7 +84,7 @@ const BILLING_SENDER_PATTERNS = [
 ];
 
 const QUERY =
-  "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal OR from:netflix.com OR from:spotify.com OR from:adobe.com OR from:apple.com OR from:amazon.com OR from:openai.com OR from:notion.so OR from:dropbox.com OR from:microsoft.com OR from:google.com OR from:disney.com OR from:linkedin.com OR from:canva.com OR from:grammarly.com OR from:duolingo.com";
+  "subject:receipt OR subject:invoice OR subject:subscription OR subject:renewal OR subject:offer OR subject:discount OR subject:save OR subject:deal OR from:netflix.com OR from:spotify.com OR from:adobe.com OR from:apple.com OR from:amazon.com OR from:openai.com OR from:notion.so OR from:dropbox.com OR from:microsoft.com OR from:google.com OR from:disney.com OR from:linkedin.com OR from:canva.com OR from:grammarly.com OR from:duolingo.com OR from:github.com OR from:figma.com OR from:slack.com OR from:zoom.us OR from:discord.com OR from:paypal.com";
 
 interface Detected {
   domain: string;
