@@ -778,6 +778,22 @@ const GmailGSIDetect = () => {
 
   return (
     <div className="space-y-6">
+      {/* Expired token banner */}
+      {expiredEmails.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            <Unplug className="h-4 w-4" />
+            <span>
+              Gmail connection expired — please reconnect
+              {expiredEmails.length === 1 ? ` ${expiredEmails[0]}` : ` (${expiredEmails.length} accounts)`}
+            </span>
+          </div>
+          <Button size="sm" variant="destructive" onClick={connect} className="gap-2">
+            <Mail className="h-3.5 w-3.5" /> Reconnect
+          </Button>
+        </div>
+      )}
+
       {/* Last scanned banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
