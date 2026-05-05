@@ -458,9 +458,18 @@ const GmailGSIDetect = () => {
               const existing = merged.get(domain);
               if (existing) {
                 existing.count += d.count;
+                existing.qualifyingCount += d.qualifyingCount;
+                existing.maxScore = Math.max(existing.maxScore, d.maxScore);
                 d.accounts.forEach((e) => {
                   if (!existing.accounts.includes(e)) existing.accounts.push(e);
                 });
+                d.signals.forEach((s) => {
+                  if (!existing.signals.includes(s)) existing.signals.push(s);
+                });
+                existing.hasBillingSender = existing.hasBillingSender || d.hasBillingSender;
+                existing.hasPaymentSubject = existing.hasPaymentSubject || d.hasPaymentSubject;
+                existing.hasCurrency = existing.hasCurrency || d.hasCurrency;
+                if (d.topAmount && !existing.topAmount) existing.topAmount = d.topAmount;
               } else {
                 merged.set(domain, { ...d });
               }
