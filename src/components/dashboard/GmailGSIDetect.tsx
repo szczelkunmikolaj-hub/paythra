@@ -772,7 +772,7 @@ const GmailGSIDetect = () => {
                 <div className="flex gap-2">
                   <Button
                     size="sm"
-                    onClick={() => handleConfirm(sub)}
+                    onClick={() => openSmartAdd(sub)}
                     className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add
