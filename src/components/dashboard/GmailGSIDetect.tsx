@@ -501,103 +501,166 @@ const GmailGSIDetect = () => {
       </Card>
 
       {visible.length > 0 && (
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display text-lg">
-              <Search className="h-5 w-5 text-primary" />
-              Detected ({visible.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AnimatePresence>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {visible.map((sub) => {
-                  const { level, reason } = confidenceFor(sub);
-                  const isOpen = expanded.has(sub.domain);
-                  return (
-                    <motion.div
-                      key={sub.domain}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="rounded-xl border border-border p-4 space-y-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={`https://logo.clearbit.com/${sub.domain}`}
-                          alt={sub.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate">{sub.name}</p>
-                          {sub.earliestDate && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              First seen: {formatMonthYear(sub.earliestDate)}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground truncate">
-                            {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
-                          </p>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => toggleExpand(sub.domain)}
-                        className="flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <span>Why detected?</span>
-                        {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                      </button>
-                      {isOpen && (
-                        <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-xs">
-                          <p>
-                            <span className="font-medium">Emails found:</span> {sub.count}
-                          </p>
-                          <p>
-                            <span className="font-medium">Confidence:</span> {level} — {reason}
-                          </p>
-                          {sub.latestSubject && (
-                            <p className="truncate">
-                              <span className="font-medium">Most recent subject:</span> {sub.latestSubject}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleConfirm(sub)}
-                          className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
-                        >
-                          <Plus className="h-3.5 w-3.5" /> Add
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setDismissed((s) => new Set(s).add(sub.domain))
-                          }
-                          className="gap-1"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </AnimatePresence>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          {renderSection({
+            title: "Confirmed subscriptions",
+            items: confirmedList,
+            badgeLabel: "Confirmed",
+            badgeClass: "bg-green-100 text-green-800 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800",
+            icon: <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />,
+          })}
+          {renderSection({
+            title: "Possibly subscriptions",
+            items: possiblyList,
+            badgeLabel: "Possibly",
+            badgeClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+            icon: <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
+          })}
+          {unlikelyList.length > 0 && (
+            <Card className="shadow-card">
+              <CardHeader className="pb-3">
+                <button
+                  type="button"
+                  onClick={() => setShowUnlikely((v) => !v)}
+                  className="flex w-full items-center justify-between"
+                >
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
+                    <MinusCircle className="h-5 w-5 text-muted-foreground" />
+                    {showUnlikely ? `Probably not a subscription (${unlikelyList.length})` : `Show unlikely (${unlikelyList.length})`}
+                  </CardTitle>
+                  {showUnlikely ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                </button>
+              </CardHeader>
+              {showUnlikely && (
+                <CardContent>
+                  {renderCardGrid(unlikelyList, "Unlikely", "bg-muted text-muted-foreground border-border")}
+                </CardContent>
+              )}
+            </Card>
+          )}
+        </div>
       )}
     </div>
   );
+
+  function renderSection({
+    title,
+    items,
+    badgeLabel,
+    badgeClass,
+    icon,
+  }: {
+    title: string;
+    items: Detected[];
+    badgeLabel: string;
+    badgeClass: string;
+    icon: React.ReactNode;
+  }) {
+    if (items.length === 0) return null;
+    return (
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
+            {icon}
+            {title} ({items.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>{renderCardGrid(items, badgeLabel, badgeClass)}</CardContent>
+      </Card>
+    );
+  }
+
+  function renderCardGrid(items: Detected[], badgeLabel: string, badgeClass: string) {
+    return (
+      <AnimatePresence>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {items.map((sub) => {
+            const { level, reason } = confidenceFor(sub);
+            const isOpen = expanded.has(sub.domain);
+            return (
+              <motion.div
+                key={sub.domain}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="rounded-xl border border-border p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={`https://logo.clearbit.com/${sub.domain}`}
+                      alt={sub.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                      className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{sub.name}</p>
+                      {sub.earliestDate && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          First seen: {formatMonthYear(sub.earliestDate)}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground truncate">
+                        {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className={`text-[10px] shrink-0 ${badgeClass}`}>
+                    {badgeLabel}
+                  </Badge>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(sub.domain)}
+                  className="flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <span>Why detected?</span>
+                  {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+                {isOpen && (
+                  <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-xs">
+                    <p>
+                      <span className="font-medium">Emails found:</span> {sub.count}
+                    </p>
+                    <p>
+                      <span className="font-medium">Confidence:</span> {level} — {reason}
+                    </p>
+                    {sub.latestSubject && (
+                      <p className="truncate">
+                        <span className="font-medium">Most recent subject:</span> {sub.latestSubject}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleConfirm(sub)}
+                    className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
+                    className="gap-1"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </AnimatePresence>
+    );
+  }
 };
 
 export default GmailGSIDetect;
