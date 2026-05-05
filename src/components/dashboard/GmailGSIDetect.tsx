@@ -322,6 +322,25 @@ const fetchUserEmail = async (token: string): Promise<string> => {
   return j.email as string;
 };
 
+// Validate a stored token against the Gmail profile endpoint.
+// Returns true only if the token is still valid.
+const validateToken = async (token: string): Promise<boolean> => {
+  try {
+    const r = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (r.status === 401) {
+      console.warn("[Gmail] Stored token failed validation (401)");
+      return false;
+    }
+    return r.ok;
+  } catch (e) {
+    console.error("[Gmail] Token validation error:", e);
+    return false;
+  }
+};
+
 const scanOneAccount = async (
   token: StoredToken
 ): Promise<{ groups: Map<string, Detected>; emailsScanned: number; expired?: boolean }> => {
@@ -332,7 +351,10 @@ const scanOneAccount = async (
   const listRes = await fetch(url, {
     headers: { Authorization: `Bearer ${token.access_token}` },
   });
-  if (listRes.status === 401) return { groups, emailsScanned: 0, expired: true };
+  if (listRes.status === 401) {
+    console.warn(`[Gmail] 401 for ${token.email} — token expired`);
+    return { groups, emailsScanned: 0, expired: true };
+  }
   if (!listRes.ok) throw new Error(`Gmail API ${listRes.status}`);
   const list = await listRes.json();
   const ids: string[] = (list.messages || []).map((m: any) => m.id);
@@ -413,6 +435,7 @@ const GmailGSIDetect = () => {
     const v = localStorage.getItem(LAST_SCANNED_KEY);
     return v ? Number(v) : null;
   });
+  const [expiredEmails, setExpiredEmails] = useState<string[]>([]);
 
   const trackedDomains = useMemo(() => {
     const set = new Set<string>();
@@ -499,11 +522,20 @@ const GmailGSIDetect = () => {
           current.some((c) => c.email === a.email)
         );
         if (anyExpired) {
+          const scannedEmails = new Set(
+            updatedAccounts.filter((u) => u.last_scanned).map((u) => u.email)
+          );
+          const expiredList = current
+            .filter((c) => !scannedEmails.has(c.email))
+            .map((c) => c.email);
+          setExpiredEmails(expiredList);
           toast({
-            title: "Some Gmail sessions expired",
-            description: "Please reconnect those accounts",
+            title: "Gmail connection expired",
+            description: "Please reconnect your Gmail account.",
             variant: "destructive",
           });
+        } else {
+          setExpiredEmails([]);
         }
         persistAccounts(finalAccounts);
 
@@ -545,15 +577,39 @@ const GmailGSIDetect = () => {
     [persistAccounts]
   );
 
-  // Auto weekly scan
+  // Validate stored tokens on mount; trigger weekly scan only after validation
   useEffect(() => {
-    if (accounts.length === 0) return;
-    const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
-    const week = 7 * 24 * 60 * 60 * 1000;
-    if (!last || Date.now() - last > week) {
-      const t = setTimeout(() => runScan(true), 1500);
-      return () => clearTimeout(t);
-    }
+    let cancelled = false;
+    (async () => {
+      const stored = readTokens();
+      if (stored.length === 0) return;
+      const expired: string[] = [];
+      for (const acc of stored) {
+        const ok = await validateToken(acc.access_token);
+        if (!ok) expired.push(acc.email);
+      }
+      if (cancelled) return;
+      if (expired.length > 0) {
+        const remaining = stored.filter((a) => !expired.includes(a.email));
+        writeTokens(remaining);
+        setAccounts(remaining);
+        setExpiredEmails(expired);
+        toast({
+          title: "Gmail connection expired",
+          description: "Please reconnect your Gmail account.",
+          variant: "destructive",
+        });
+        if (remaining.length === 0) return;
+      }
+      const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
+      const week = 7 * 24 * 60 * 60 * 1000;
+      if (!last || Date.now() - last > week) {
+        setTimeout(() => runScan(true), 1500);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -564,7 +620,9 @@ const GmailGSIDetect = () => {
         client_id: CLIENT_ID,
         scope: SCOPE,
         callback: async (resp: any) => {
+          console.log("[Gmail] Token response:", resp);
           if (resp.error || !resp.access_token) {
+            console.error("[Gmail] No access_token in response", resp);
             toast({
               title: "Authorization failed",
               description: resp.error || "No token returned",
@@ -572,19 +630,23 @@ const GmailGSIDetect = () => {
             });
             return;
           }
+          const accessToken: string = resp.access_token;
+          console.log("[Gmail] access_token received (length):", accessToken.length);
           try {
-            const email = await fetchUserEmail(resp.access_token);
+            const email = await fetchUserEmail(accessToken);
             const current = readTokens();
             const idx = current.findIndex((a) => a.email === email);
             const entry: StoredToken = {
               email,
-              access_token: resp.access_token,
+              access_token: accessToken,
               connected_at: Date.now(),
             };
             if (idx >= 0) current[idx] = { ...current[idx], ...entry };
             else current.push(entry);
             persistAccounts(current);
+            setExpiredEmails((arr) => arr.filter((e) => e !== email));
             toast({ title: `${email} connected` });
+            // Only scan AFTER token is confirmed valid and stored
             runScan(false);
           } catch (e: any) {
             toast({
@@ -719,6 +781,22 @@ const GmailGSIDetect = () => {
 
   return (
     <div className="space-y-6">
+      {/* Expired token banner */}
+      {expiredEmails.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            <Unplug className="h-4 w-4" />
+            <span>
+              Gmail connection expired — please reconnect
+              {expiredEmails.length === 1 ? ` ${expiredEmails[0]}` : ` (${expiredEmails.length} accounts)`}
+            </span>
+          </div>
+          <Button size="sm" variant="destructive" onClick={connect} className="gap-2">
+            <Mail className="h-3.5 w-3.5" /> Reconnect
+          </Button>
+        </div>
+      )}
+
       {/* Last scanned banner */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-4 py-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
