@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
 import CSVImport from "@/components/dashboard/CSVImport";
+import GmailGSIDetect from "@/components/dashboard/GmailGSIDetect";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
@@ -156,7 +157,8 @@ const Dashboard = () => {
               <ConnectAccounts />
             </TabsContent>
 
-            <TabsContent value="autodetect">
+            <TabsContent value="autodetect" className="space-y-6">
+              <GmailGSIDetect />
               <CSVImport />
             </TabsContent>
           </Tabs>
