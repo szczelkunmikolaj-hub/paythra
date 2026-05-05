@@ -519,11 +519,20 @@ const GmailGSIDetect = () => {
           current.some((c) => c.email === a.email)
         );
         if (anyExpired) {
+          const expired = current
+            .filter((c) => !updatedAccounts.find((u) => u.email === c.email && (u.last_scanned ?? 0) >= now0))
+            .map((c) => c.email);
+          // Compute expired set: those that returned 401 (not in updatedAccounts as scanned)
+          const scannedEmails = new Set(updatedAccounts.filter(u => u.last_scanned).map(u => u.email));
+          const expiredList = current.filter(c => !scannedEmails.has(c.email)).map(c => c.email);
+          setExpiredEmails(expiredList);
           toast({
-            title: "Some Gmail sessions expired",
-            description: "Please reconnect those accounts",
+            title: "Gmail connection expired",
+            description: "Please reconnect your Gmail account.",
             variant: "destructive",
           });
+        } else {
+          setExpiredEmails([]);
         }
         persistAccounts(finalAccounts);
 
