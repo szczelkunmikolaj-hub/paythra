@@ -574,15 +574,39 @@ const GmailGSIDetect = () => {
     [persistAccounts]
   );
 
-  // Auto weekly scan
+  // Validate stored tokens on mount; trigger weekly scan only after validation
   useEffect(() => {
-    if (accounts.length === 0) return;
-    const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
-    const week = 7 * 24 * 60 * 60 * 1000;
-    if (!last || Date.now() - last > week) {
-      const t = setTimeout(() => runScan(true), 1500);
-      return () => clearTimeout(t);
-    }
+    let cancelled = false;
+    (async () => {
+      const stored = readTokens();
+      if (stored.length === 0) return;
+      const expired: string[] = [];
+      for (const acc of stored) {
+        const ok = await validateToken(acc.access_token);
+        if (!ok) expired.push(acc.email);
+      }
+      if (cancelled) return;
+      if (expired.length > 0) {
+        const remaining = stored.filter((a) => !expired.includes(a.email));
+        writeTokens(remaining);
+        setAccounts(remaining);
+        setExpiredEmails(expired);
+        toast({
+          title: "Gmail connection expired",
+          description: "Please reconnect your Gmail account.",
+          variant: "destructive",
+        });
+        if (remaining.length === 0) return;
+      }
+      const last = Number(localStorage.getItem(LAST_SCANNED_KEY) || 0);
+      const week = 7 * 24 * 60 * 60 * 1000;
+      if (!last || Date.now() - last > week) {
+        setTimeout(() => runScan(true), 1500);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
