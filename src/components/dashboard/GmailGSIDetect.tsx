@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
@@ -43,8 +44,18 @@ const ALLOWED_CATEGORIES = new Set([
 
 const PAYMENT_KEYWORDS = [
   "receipt", "invoice", "payment", "charge", "billing", "renewal",
-  "subscription", "order confirmation", "purchase", "plan", "amount due",
-  "thank you for your purchase", "your membership", "factura", "rechnung", "reçu",
+  "subscription confirmed", "subscription", "order confirmation", "purchase",
+  "amount due", "your membership", "your plan",
+  "thank you for your purchase", "factura", "rechnung", "reçu",
+];
+
+const PROMO_KEYWORDS = [
+  "offer", "discount", "sale", "free", "try", "miss you", "come back",
+  "streak", "reminder", "limited time", "exclusive",
+];
+
+const BILLING_SENDER_PATTERNS = [
+  "billing", "noreply", "no-reply", "no_reply", "receipts", "invoice", "payments", "notify",
 ];
 
 const QUERY =
@@ -154,6 +165,7 @@ const GmailGSIDetect = () => {
   const [detected, setDetected] = useState<Detected[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [showUnlikely, setShowUnlikely] = useState(false);
 
   useEffect(() => {
     loadGsi().catch(() => {
@@ -257,11 +269,13 @@ const GmailGSIDetect = () => {
   const scanAll = async (list: GmailAccount[]) => {
     if (list.length === 0) return;
     setScanning(true);
-    setProgress("Searching emails...");
+    setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}...`);
     const groups = new Map<string, Detected>();
     let current = [...list];
     try {
-      for (const acc of list) {
+      for (let i = 0; i < list.length; i++) {
+        const acc = list[i];
+        setProgress(`Scanning ${list.length} account${list.length === 1 ? "" : "s"}... (${i + 1}/${list.length}) ${acc.email}`);
         const ok = await scanOne(acc.token, acc.email, groups, () => {
           current = current.filter((a) => a.email !== acc.email);
           persistAccounts(current);
@@ -273,14 +287,12 @@ const GmailGSIDetect = () => {
         });
         if (!ok) continue;
       }
-      // Fix 4: stricter verification — require a payment keyword in at least one subject
-      const verified = Array.from(groups.values()).filter((g) =>
-        g.subjects.some((s) => findKeyword(s))
-      );
-      setDetected(verified.sort((a, b) => b.count - a.count));
+      // Deduplicated by domain via Map; keep all groups so we can classify into 3 buckets
+      const all = Array.from(groups.values()).sort((a, b) => b.count - a.count);
+      setDetected(all);
       toast({
         title: "Scan complete",
-        description: `Detected ${verified.length} subscription${verified.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
+        description: `Detected ${all.length} service${all.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
       });
     } catch (e: any) {
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
@@ -383,7 +395,31 @@ const GmailGSIDetect = () => {
     };
   };
 
+  const isPromoSubject = (s: string) => {
+    const lower = s.toLowerCase();
+    return PROMO_KEYWORDS.some((k) => lower.includes(k));
+  };
+
+  const isBillingSender = (sender?: string) => {
+    if (!sender) return false;
+    const local = sender.split("@")[0]?.toLowerCase() || "";
+    return BILLING_SENDER_PATTERNS.some((p) => local.includes(p));
+  };
+
+  type Bucket = "confirmed" | "possibly" | "unlikely";
+  const classify = (d: Detected): Bucket => {
+    const hasPaymentKw = d.subjects.some((s) => findKeyword(s));
+    const allPromo = d.subjects.length > 0 && d.subjects.every((s) => isPromoSubject(s));
+    if (hasPaymentKw && isBillingSender(d.matchedSender)) return "confirmed";
+    if (allPromo && !hasPaymentKw) return "unlikely";
+    if (!hasPaymentKw || d.count === 1) return "possibly";
+    return "possibly";
+  };
+
   const visible = detected.filter((d) => !dismissed.has(d.domain));
+  const confirmedList = visible.filter((d) => classify(d) === "confirmed");
+  const possiblyList = visible.filter((d) => classify(d) === "possibly");
+  const unlikelyList = visible.filter((d) => classify(d) === "unlikely");
   const hasAccounts = accounts.length > 0;
 
   return (
@@ -465,103 +501,166 @@ const GmailGSIDetect = () => {
       </Card>
 
       {visible.length > 0 && (
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display text-lg">
-              <Search className="h-5 w-5 text-primary" />
-              Detected ({visible.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AnimatePresence>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {visible.map((sub) => {
-                  const { level, reason } = confidenceFor(sub);
-                  const isOpen = expanded.has(sub.domain);
-                  return (
-                    <motion.div
-                      key={sub.domain}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="rounded-xl border border-border p-4 space-y-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <img
-                          src={`https://logo.clearbit.com/${sub.domain}`}
-                          alt={sub.name}
-                          loading="lazy"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                          className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate">{sub.name}</p>
-                          {sub.earliestDate && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              First seen: {formatMonthYear(sub.earliestDate)}
-                            </p>
-                          )}
-                          <p className="text-xs text-muted-foreground truncate">
-                            {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
-                          </p>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => toggleExpand(sub.domain)}
-                        className="flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <span>Why detected?</span>
-                        {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                      </button>
-                      {isOpen && (
-                        <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-xs">
-                          <p>
-                            <span className="font-medium">Emails found:</span> {sub.count}
-                          </p>
-                          <p>
-                            <span className="font-medium">Confidence:</span> {level} — {reason}
-                          </p>
-                          {sub.latestSubject && (
-                            <p className="truncate">
-                              <span className="font-medium">Most recent subject:</span> {sub.latestSubject}
-                            </p>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleConfirm(sub)}
-                          className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
-                        >
-                          <Plus className="h-3.5 w-3.5" /> Add
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setDismissed((s) => new Set(s).add(sub.domain))
-                          }
-                          className="gap-1"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </AnimatePresence>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          {renderSection({
+            title: "Confirmed subscriptions",
+            items: confirmedList,
+            badgeLabel: "Confirmed",
+            badgeClass: "bg-green-100 text-green-800 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800",
+            icon: <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />,
+          })}
+          {renderSection({
+            title: "Possibly subscriptions",
+            items: possiblyList,
+            badgeLabel: "Possibly",
+            badgeClass: "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+            icon: <HelpCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />,
+          })}
+          {unlikelyList.length > 0 && (
+            <Card className="shadow-card">
+              <CardHeader className="pb-3">
+                <button
+                  type="button"
+                  onClick={() => setShowUnlikely((v) => !v)}
+                  className="flex w-full items-center justify-between"
+                >
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
+                    <MinusCircle className="h-5 w-5 text-muted-foreground" />
+                    {showUnlikely ? `Probably not a subscription (${unlikelyList.length})` : `Show unlikely (${unlikelyList.length})`}
+                  </CardTitle>
+                  {showUnlikely ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                </button>
+              </CardHeader>
+              {showUnlikely && (
+                <CardContent>
+                  {renderCardGrid(unlikelyList, "Unlikely", "bg-muted text-muted-foreground border-border")}
+                </CardContent>
+              )}
+            </Card>
+          )}
+        </div>
       )}
     </div>
   );
+
+  function renderSection({
+    title,
+    items,
+    badgeLabel,
+    badgeClass,
+    icon,
+  }: {
+    title: string;
+    items: Detected[];
+    badgeLabel: string;
+    badgeClass: string;
+    icon: React.ReactNode;
+  }) {
+    if (items.length === 0) return null;
+    return (
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
+            {icon}
+            {title} ({items.length})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>{renderCardGrid(items, badgeLabel, badgeClass)}</CardContent>
+      </Card>
+    );
+  }
+
+  function renderCardGrid(items: Detected[], badgeLabel: string, badgeClass: string) {
+    return (
+      <AnimatePresence>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {items.map((sub) => {
+            const { level, reason } = confidenceFor(sub);
+            const isOpen = expanded.has(sub.domain);
+            return (
+              <motion.div
+                key={sub.domain}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="rounded-xl border border-border p-4 space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <img
+                      src={`https://logo.clearbit.com/${sub.domain}`}
+                      alt={sub.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                      className="h-9 w-9 rounded-lg object-contain bg-muted p-1 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{sub.name}</p>
+                      {sub.earliestDate && (
+                        <p className="text-xs text-muted-foreground truncate">
+                          First seen: {formatMonthYear(sub.earliestDate)}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground truncate">
+                        {sub.count} email{sub.count === 1 ? "" : "s"} · {sub.domain}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className={`text-[10px] shrink-0 ${badgeClass}`}>
+                    {badgeLabel}
+                  </Badge>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(sub.domain)}
+                  className="flex w-full items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <span>Why detected?</span>
+                  {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+                {isOpen && (
+                  <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-xs">
+                    <p>
+                      <span className="font-medium">Emails found:</span> {sub.count}
+                    </p>
+                    <p>
+                      <span className="font-medium">Confidence:</span> {level} — {reason}
+                    </p>
+                    {sub.latestSubject && (
+                      <p className="truncate">
+                        <span className="font-medium">Most recent subject:</span> {sub.latestSubject}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleConfirm(sub)}
+                    className="flex-1 gap-1 bg-gradient-primary hover:opacity-90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDismissed((s) => new Set(s).add(sub.domain))}
+                    className="gap-1"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </AnimatePresence>
+    );
+  }
 };
 
 export default GmailGSIDetect;
