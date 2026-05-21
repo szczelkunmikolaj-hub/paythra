@@ -3,13 +3,14 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, AlertCircle, Check, X, Columns } from "lucide-react";
+import { Upload, FileText, AlertCircle, Check, X, Columns, Loader2 } from "lucide-react";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
 import { findService } from "@/lib/serviceRegistry";
 import { detectCategory } from "@/lib/categoryIcons";
 import { toast } from "@/hooks/use-toast";
 import Papa from "papaparse";
+import { parsePdfBankStatement } from "@/lib/pdfParser";
 import ImportConfirmModal from "./ImportConfirmModal";
 
 interface ParsedTransaction {
@@ -112,13 +113,14 @@ function autoDetectColumns(headers: string[]): ColumnMapping | null {
   return null;
 }
 
-const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif";
+const ACCEPTED_TYPES = ".csv,.txt,.xlsx,.ofx,.qif,.pdf";
 
 const CSVImport = () => {
   const { t } = useTranslation();
   const { addTransaction } = useTransactions();
   const { addSubscription } = useSubscriptions();
   const [importing, setImporting] = useState(false);
+  const [pdfParsing, setPdfParsing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState<ParsedTransaction[]>([]);
   const [detected, setDetected] = useState<DetectedFromCSV[]>([]);
@@ -251,15 +253,39 @@ const CSVImport = () => {
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif)$/i)) {
-        toast({ title: t("unsupportedFormat"), description: t("supportedFormatsList"), variant: "destructive" });
+      if (!file.name.match(/\.(csv|txt|xlsx|ofx|qif|pdf)$/i)) {
+        toast({ title: t("unsupportedFormat"), description: t("supportedFormatsListPdf"), variant: "destructive" });
         return;
       }
-      if (file.size > 10 * 1024 * 1024) {
-        toast({ title: t("fileTooLarge"), description: t("maxFileSize"), variant: "destructive" });
+      if (file.size > 20 * 1024 * 1024) {
+        toast({ title: t("fileTooLarge"), description: t("maxFileSizePdf"), variant: "destructive" });
         return;
       }
 
+      // ── PDF path ────────────────────────────────────────────────────────────
+      if (file.name.toLowerCase().endsWith(".pdf")) {
+        setPdfParsing(true);
+        try {
+          const { transactions: pdfTxs, bankId } = await parsePdfBankStatement(file);
+          if (pdfTxs.length === 0) {
+            toast({ title: t("pdfNoTransactions"), description: t("pdfNoTransactionsDesc"), variant: "destructive" });
+            return;
+          }
+          toast({ title: t("pdfParsed", { bank: bankId === "generic" ? t("pdfGenericBank") : bankId.toUpperCase(), count: pdfTxs.length }) });
+          setParsed(pdfTxs);
+          const { subs, other } = detectSubscriptions(pdfTxs);
+          setDetected(subs);
+          setOtherTransactions(other);
+          setShowModal(true);
+        } catch (err: any) {
+          toast({ title: t("pdfParseFailed"), description: err.message ?? t("pdfParseFailedDesc"), variant: "destructive" });
+        } finally {
+          setPdfParsing(false);
+        }
+        return;
+      }
+
+      // ── CSV / spreadsheet path ───────────────────────────────────────────────
       const text = await file.text();
       // Try semicolon delimiter first (common in EU), then comma
       let result = Papa.parse(text, { header: true, skipEmptyLines: true, transformHeader: (h: string) => h.trim(), delimiter: ";" });
@@ -383,7 +409,7 @@ const CSVImport = () => {
   };
 
   const resetAll = () => {
-    setShowModal(false); setShowColumnMapper(false);
+    setShowModal(false); setShowColumnMapper(false); setPdfParsing(false);
     setParsed([]); setDetected([]); setOtherTransactions([]); setRawRows([]); setRawHeaders([]);
   };
 
@@ -451,20 +477,34 @@ const CSVImport = () => {
           {!showColumnMapper && (
             <>
               <div
-                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors cursor-pointer ${
-                  dragOver ? "border-primary bg-accent/50" : "border-border hover:border-primary/40"
+                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 transition-colors ${
+                  pdfParsing
+                    ? "border-primary/40 bg-accent/30 cursor-not-allowed"
+                    : dragOver
+                    ? "border-primary bg-accent/50 cursor-pointer"
+                    : "border-border hover:border-primary/40 cursor-pointer"
                 }`}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragOver={(e) => { if (!pdfParsing) { e.preventDefault(); setDragOver(true); } }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                onClick={openFilePicker}
+                onDrop={pdfParsing ? undefined : handleDrop}
+                onClick={pdfParsing ? undefined : openFilePicker}
               >
-                <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
-                <p className="text-sm font-medium text-foreground">{t("dropBankStatement")}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{t("supportedFormats")}</p>
-                <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
-                  {t("chooseFile")}
-                </Button>
+                {pdfParsing ? (
+                  <>
+                    <Loader2 className="mb-3 h-10 w-10 text-primary animate-spin" />
+                    <p className="text-sm font-medium text-foreground">{t("pdfParsing")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{t("pdfParsingDesc")}</p>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="mb-3 h-10 w-10 text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">{t("dropBankStatement")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{t("supportedFormatsPdf")}</p>
+                    <Button variant="outline" size="sm" className="mt-3" type="button" onClick={(e) => { e.stopPropagation(); openFilePicker(); }}>
+                      {t("chooseFile")}
+                    </Button>
+                  </>
+                )}
               </div>
               <div className="flex items-start gap-2 rounded-xl bg-muted/50 p-3">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
