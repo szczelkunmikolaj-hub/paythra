@@ -111,3 +111,50 @@ export const getServiceColor = (name: string): string | null => {
   const service = findService(name);
   return service?.color ?? null;
 };
+
+export const CANCEL_URLS: Record<string, string> = {
+  "netflix": "https://www.netflix.com/cancelplan",
+  "spotify": "https://www.spotify.com/account/subscription/",
+  "apple music": "https://support.apple.com/en-us/HT202039",
+  "apple tv+": "https://support.apple.com/en-us/HT202039",
+  "icloud+": "https://support.apple.com/en-us/HT202039",
+  "disney+": "https://www.disneyplus.com/account",
+  "amazon prime": "https://www.amazon.com/gp/primecentral",
+  "youtube premium": "https://myaccount.google.com/payments-and-subscriptions",
+  "google one": "https://myaccount.google.com/payments-and-subscriptions",
+  "hbo max": "https://www.max.com/account",
+  "hulu": "https://secure.hulu.com/account/cancel",
+  "paramount+": "https://www.paramountplus.com/account/",
+  "adobe creative cloud": "https://account.adobe.com/plans",
+  "canva": "https://www.canva.com/settings/billing",
+  "figma": "https://www.figma.com/settings",
+  "github": "https://github.com/settings/billing",
+  "notion": "https://www.notion.so/my-account",
+  "dropbox": "https://www.dropbox.com/account/plan",
+  "microsoft 365": "https://account.microsoft.com/services/",
+  "slack": "https://slack.com/intl/en/help/articles/203023664",
+  "linkedin premium": "https://www.linkedin.com/premium/cancel-subscription/",
+  "zoom": "https://zoom.us/account/billing",
+  "chatgpt plus": "https://chat.openai.com/#pricing",
+  "claude pro": "https://claude.ai/settings/billing",
+  "nordvpn": "https://my.nordaccount.com/dashboard/",
+  "expressvpn": "https://www.expressvpn.com/subscriptions",
+  "xbox game pass": "https://account.microsoft.com/services/",
+  "playstation plus": "https://www.playstation.com/en-us/playstation-plus/",
+  "nintendo switch online": "https://accounts.nintendo.com/profile/delete",
+  "headspace": "https://www.headspace.com/cancel",
+  "calm": "https://www.calm.com/app/manage-subscription",
+  "peloton": "https://www.onepeloton.com/profile/subscription",
+  "duolingo": "https://www.duolingo.com/settings",
+  "grammarly": "https://account.grammarly.com/subscription",
+  "1password": "https://my.1password.com/profile",
+  "strava": "https://www.strava.com/settings/subscription",
+  "dazn": "https://www.dazn.com/en-ES/account",
+  "twitch": "https://www.twitch.tv/subscriptions",
+  "ea play": "https://www.ea.com/ea-app",
+};
+
+export function getCancelUrl(name: string): string | null {
+  const key = name.toLowerCase().trim();
+  return CANCEL_URLS[key] ?? null;
+}
