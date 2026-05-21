@@ -13,15 +13,84 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
-  PiggyBank, Lightbulb, Clock, TrendingDown, ChevronDown, ChevronUp,
-  CheckCircle2, AlertTriangle, Eye, GraduationCap, Users, Info, Sparkles,
+  PiggyBank, Clock, TrendingDown, ChevronDown, ChevronUp,
+  CheckCircle2, AlertTriangle, Eye, GraduationCap, Users, Info, Sparkles, ExternalLink,
 } from "lucide-react";
-
 import type { Easing } from "framer-motion";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4, ease: "easeOut" as Easing } }),
+};
+
+const FREE_ALTERNATIVES: Record<string, { name: string; url: string; description: string }[]> = {
+  "adobe creative cloud": [
+    { name: "GIMP", url: "https://www.gimp.org", description: "Free Photoshop alternative" },
+    { name: "Inkscape", url: "https://inkscape.org", description: "Free Illustrator alternative" },
+    { name: "Canva Free", url: "https://www.canva.com", description: "Free design tool" },
+  ],
+  "canva": [
+    { name: "Canva Free", url: "https://www.canva.com", description: "Free tier with plenty of features" },
+  ],
+  "figma": [
+    { name: "Figma Free", url: "https://www.figma.com", description: "Free tier for 3 projects" },
+    { name: "Penpot", url: "https://penpot.app", description: "100% free & open-source design tool" },
+  ],
+  "notion": [
+    { name: "Notion Free", url: "https://www.notion.so", description: "Free for personal use" },
+    { name: "Obsidian", url: "https://obsidian.md", description: "Free local-first notes" },
+    { name: "Anytype", url: "https://anytype.io", description: "Free & private alternative" },
+  ],
+  "dropbox": [
+    { name: "Google Drive", url: "https://drive.google.com", description: "15GB free" },
+    { name: "MEGA", url: "https://mega.io", description: "20GB free" },
+    { name: "Proton Drive", url: "https://proton.me/drive", description: "Free & private" },
+  ],
+  "grammarly": [
+    { name: "LanguageTool", url: "https://languagetool.org", description: "Free grammar checker" },
+    { name: "Hemingway Editor", url: "https://hemingwayapp.com", description: "Free writing clarity tool" },
+  ],
+  "chatgpt plus": [
+    { name: "Claude Free", url: "https://claude.ai", description: "Free AI assistant" },
+    { name: "Gemini Free", url: "https://gemini.google.com", description: "Free AI by Google" },
+    { name: "Perplexity", url: "https://www.perplexity.ai", description: "Free AI search" },
+  ],
+  "nordvpn": [
+    { name: "Proton VPN Free", url: "https://protonvpn.com", description: "Free VPN, no logs" },
+  ],
+  "expressvpn": [
+    { name: "Proton VPN Free", url: "https://protonvpn.com", description: "Free VPN, no logs" },
+  ],
+  "netflix": [
+    { name: "Tubi", url: "https://tubitv.com", description: "Free streaming with ads" },
+    { name: "Pluto TV", url: "https://pluto.tv", description: "Free live & on-demand TV" },
+    { name: "Crackle", url: "https://www.crackle.com", description: "Free movies & shows" },
+  ],
+  "spotify": [
+    { name: "Spotify Free", url: "https://spotify.com", description: "Free with ads" },
+    { name: "YouTube Music Free", url: "https://music.youtube.com", description: "Free with ads" },
+    { name: "SoundCloud", url: "https://soundcloud.com", description: "Free music streaming" },
+  ],
+  "headspace": [
+    { name: "Insight Timer", url: "https://insighttimer.com", description: "Free meditation app" },
+    { name: "Smiling Mind", url: "https://www.smilingmind.com.au", description: "100% free mindfulness" },
+  ],
+  "calm": [
+    { name: "Insight Timer", url: "https://insighttimer.com", description: "Free meditation app" },
+  ],
+  "microsoft 365": [
+    { name: "LibreOffice", url: "https://www.libreoffice.org", description: "Free Office suite" },
+    { name: "Google Docs", url: "https://docs.google.com", description: "Free online Office alternative" },
+    { name: "Onlyoffice Free", url: "https://www.onlyoffice.com", description: "Free for personal use" },
+  ],
+  "zoom": [
+    { name: "Google Meet", url: "https://meet.google.com", description: "Free video calls" },
+    { name: "Jitsi Meet", url: "https://meet.jit.si", description: "Free & open-source video calls" },
+  ],
+  "slack": [
+    { name: "Discord", url: "https://discord.com", description: "Free team communication" },
+    { name: "Zulip", url: "https://zulip.com", description: "Free open-source chat" },
+  ],
 };
 
 const Suggestions = () => {
@@ -40,91 +109,33 @@ const Suggestions = () => {
 
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [savingsOpen, setSavingsOpen] = useState(true);
-  const [aiOpen, setAiOpen] = useState(true);
+  const [alternativesOpen, setAlternativesOpen] = useState(true);
   const [timeOpen, setTimeOpen] = useState(true);
 
   const active = useMemo(() => subscriptions.filter((s) => s.status === "active"), [subscriptions]);
 
-  // ─── Possible Savings (green) ───
   const savingsInsights = useMemo(
     () => insights.filter((i) => i.savingsPerYear > 0 && !dismissedIds.has(i.id)),
     [insights, dismissedIds]
   );
 
-  // ─── AI Suggestions (blue/orange) ───
-  const aiSuggestions = useMemo(() => {
-    const suggestions: { id: string; title: string; message: string; icon: "lightbulb" | "alert" | "pause"; value?: number }[] = [];
+  const freeAlternatives = useMemo(() => {
+    return active
+      .map((sub) => {
+        const key = sub.name.toLowerCase();
+        const alts = FREE_ALTERNATIVES[key];
+        if (!alts) return null;
+        return { subscription: sub, alternatives: alts };
+      })
+      .filter(Boolean)
+      .filter((item) => !dismissedIds.has(`alt-${item!.subscription.id}`)) as {
+        subscription: typeof active[0];
+        alternatives: { name: string; url: string; description: string }[];
+      }[];
+  }, [active, dismissedIds]);
 
-    // Streaming bundle suggestion
-    const streamingSubs = active.filter((s) => s.category.toLowerCase() === "streaming");
-    if (streamingSubs.length >= 2) {
-      const totalMonthly = streamingSubs.reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12), 0);
-      suggestions.push({
-        id: "ai-streaming-bundle",
-        title: t("suggestionsAIStreamingTitle"),
-        message: t("suggestionsAIStreamingMsg", {
-          count: streamingSubs.length,
-          total: formatCurrency(totalMonthly, lang),
-        }),
-        icon: "alert",
-        value: totalMonthly,
-      });
-    }
-
-    // Pause suggestion for most expensive
-    if (active.length > 0) {
-      const sorted = [...active].sort((a, b) => {
-        const am = a.billing_cycle === "monthly" ? a.price : a.price / 12;
-        const bm = b.billing_cycle === "monthly" ? b.price : b.price / 12;
-        return bm - am;
-      });
-      const top = sorted[0];
-      const topMonthly = top.billing_cycle === "monthly" ? top.price : top.price / 12;
-      suggestions.push({
-        id: "ai-pause-top",
-        title: t("suggestionsAIPauseTitle"),
-        message: t("suggestionsAIPauseMsg", { name: top.name, amount: formatCurrency(topMonthly, lang) }),
-        icon: "pause",
-        value: topMonthly,
-      });
-    }
-
-    // Unused subscription prompts
-    active
-      .filter((s) => s.is_unused)
-      .forEach((s) => {
-        suggestions.push({
-          id: `ai-unused-${s.id}`,
-          title: t("suggestionsAIUnusedTitle"),
-          message: t("suggestionsAIUnusedMsg", { name: s.name }),
-          icon: "lightbulb",
-        });
-      });
-
-    // Category consolidation
-    const catMap = new Map<string, number>();
-    active.forEach((s) => {
-      catMap.set(s.category, (catMap.get(s.category) || 0) + 1);
-    });
-    catMap.forEach((count, cat) => {
-      if (count >= 3) {
-        suggestions.push({
-          id: `ai-consolidate-${cat}`,
-          title: t("suggestionsAIConsolidateTitle"),
-          message: t("suggestionsAIConsolidateMsg", { count, category: t(cat.toLowerCase()) || cat }),
-          icon: "alert",
-        });
-      }
-    });
-
-    return suggestions.filter((s) => !dismissedIds.has(s.id));
-  }, [active, dismissedIds, t, lang]);
-
-  // ─── Time Machine ───
   const timeMachine = useMemo(() => {
     const items: { id: string; title: string; message: string; amount: number }[] = [];
-
-    // Past: unused subs – if canceled 6 months ago
     active
       .filter((s) => s.is_unused)
       .forEach((s) => {
@@ -137,8 +148,6 @@ const Suggestions = () => {
           amount: saved6mo,
         });
       });
-
-    // Future: projected 12-month savings from all insights
     if (totalSavings > 0) {
       items.push({
         id: "tm-future-total",
@@ -147,32 +156,10 @@ const Suggestions = () => {
         amount: totalSavings,
       });
     }
-
-    // Overlapping streaming projected
-    const streamingSubs = active.filter((s) => s.category.toLowerCase() === "streaming");
-    if (streamingSubs.length >= 2) {
-      const cheapest = Math.min(...streamingSubs.map((s) => (s.billing_cycle === "monthly" ? s.price : s.price / 12)));
-      const projectedSave = streamingSubs
-        .filter((s) => {
-          const m = s.billing_cycle === "monthly" ? s.price : s.price / 12;
-          return m !== cheapest;
-        })
-        .reduce((sum, s) => sum + (s.billing_cycle === "monthly" ? s.price : s.price / 12) * 12, 0);
-      if (projectedSave > 0) {
-        items.push({
-          id: "tm-streaming-overlap",
-          title: t("suggestionsTimeOverlapTitle"),
-          message: t("suggestionsTimeOverlapMsg", { amount: formatCurrency(projectedSave, lang) }),
-          amount: projectedSave,
-        });
-      }
-    }
-
     return items.filter((i) => !dismissedIds.has(i.id));
   }, [active, totalSavings, dismissedIds, t, lang]);
 
-  const totalActionable = savingsInsights.length + aiSuggestions.length + timeMachine.length;
-
+  const totalActionable = savingsInsights.length + freeAlternatives.length + timeMachine.length;
   const dismiss = (id: string) => setDismissedIds((prev) => new Set(prev).add(id));
 
   const iconForInsight = (icon: string) => {
@@ -184,8 +171,6 @@ const Suggestions = () => {
       default: return PiggyBank;
     }
   };
-
-  const aiIconMap = { lightbulb: Lightbulb, alert: AlertTriangle, pause: Clock };
 
   if (isLoading) {
     return (
@@ -200,7 +185,6 @@ const Suggestions = () => {
   return (
     <DashboardLayout>
       <div className="space-y-8 max-w-4xl mx-auto">
-        {/* Hero summary */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -227,7 +211,7 @@ const Suggestions = () => {
           </div>
         </motion.div>
 
-        {/* ═══ Possible Savings ═══ */}
+        {/* Possible Savings */}
         <Collapsible open={savingsOpen} onOpenChange={setSavingsOpen}>
           <CollapsibleTrigger asChild>
             <button className="flex w-full items-center justify-between rounded-lg bg-green-50 dark:bg-green-950/30 px-4 py-3 text-left">
@@ -293,70 +277,71 @@ const Suggestions = () => {
           </CollapsibleContent>
         </Collapsible>
 
-        {/* ═══ AI Suggestions ═══ */}
-        <Collapsible open={aiOpen} onOpenChange={setAiOpen}>
+        {/* Free Alternatives */}
+        <Collapsible open={alternativesOpen} onOpenChange={setAlternativesOpen}>
           <CollapsibleTrigger asChild>
             <button className="flex w-full items-center justify-between rounded-lg bg-blue-50 dark:bg-blue-950/30 px-4 py-3 text-left">
               <span className="flex items-center gap-2 font-display text-lg font-semibold text-blue-700 dark:text-blue-400">
-                <Lightbulb className="h-5 w-5" /> {t("suggestionsAISection")}
+                <Sparkles className="h-5 w-5" /> Free & cheaper alternatives
                 <Badge variant="secondary" className="ml-1 bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">
-                  {aiSuggestions.length}
+                  {freeAlternatives.length}
                 </Badge>
               </span>
-              {aiOpen ? <ChevronUp className="h-4 w-4 text-blue-600" /> : <ChevronDown className="h-4 w-4 text-blue-600" />}
+              {alternativesOpen ? <ChevronUp className="h-4 w-4 text-blue-600" /> : <ChevronDown className="h-4 w-4 text-blue-600" />}
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-3">
-            {aiSuggestions.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-2">{t("suggestionsNoAI")}</p>
+            {freeAlternatives.length === 0 ? (
+              <p className="text-sm text-muted-foreground px-2">No free alternatives found for your current subscriptions — you're already optimized!</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 <AnimatePresence>
-                  {aiSuggestions.map((s, i) => {
-                    const Icon = aiIconMap[s.icon];
-                    return (
-                      <motion.div key={s.id} custom={i} variants={cardVariants} initial="hidden" animate="visible" exit="hidden" layout>
-                        <Card className="border-blue-200 dark:border-blue-800/40 shadow-sm hover:shadow-md transition-shadow group">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-3">
-                              <div className="rounded-lg bg-blue-100 dark:bg-blue-900/40 p-2 shrink-0">
-                                <Icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-2">
-                                  <p className="text-sm font-semibold text-foreground">{s.title}</p>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 cursor-help" />
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="max-w-xs text-xs">{s.message}</TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{s.message}</p>
-                                <div className="mt-2 flex justify-end">
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-7 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => dismiss(s.id)}
-                                  >
-                                    <CheckCircle2 className="h-3 w-3 mr-1" /> {t("suggestionsOptimized")}
-                                  </Button>
-                                </div>
-                              </div>
+                  {freeAlternatives.map(({ subscription: sub, alternatives }, i) => (
+                    <motion.div key={sub.id} custom={i} variants={cardVariants} initial="hidden" animate="visible" exit="hidden" layout>
+                      <Card className="border-blue-200 dark:border-blue-800/40 shadow-sm hover:shadow-md transition-shadow group">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">Instead of {sub.name}</p>
+                              <p className="text-xs text-muted-foreground">try one of these free options:</p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    );
-                  })}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                              onClick={() => dismiss(`alt-${sub.id}`)}
+                            >
+                              <CheckCircle2 className="h-3 w-3 mr-1" /> Got it
+                            </Button>
+                          </div>
+                          <div className="space-y-2">
+                            {alternatives.map((alt) => (
+                              
+                                key={alt.name}
+                                href={alt.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center justify-between rounded-lg border border-blue-100 dark:border-blue-800/30 bg-blue-50/50 dark:bg-blue-900/20 px-3 py-2 hover:border-blue-300 hover:bg-blue-100/50 transition-colors"
+                              >
+                                <div>
+                                  <p className="text-xs font-medium text-foreground">{alt.name}</p>
+                                  <p className="text-[11px] text-muted-foreground">{alt.description}</p>
+                                </div>
+                                <ExternalLink className="h-3 w-3 text-blue-500 shrink-0 ml-2" />
+                              </a>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
                 </AnimatePresence>
               </div>
             )}
           </CollapsibleContent>
         </Collapsible>
 
-        {/* ═══ Time Machine ═══ */}
+        {/* Time Machine */}
         <Collapsible open={timeOpen} onOpenChange={setTimeOpen}>
           <CollapsibleTrigger asChild>
             <button className="flex w-full items-center justify-between rounded-lg bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-left">
