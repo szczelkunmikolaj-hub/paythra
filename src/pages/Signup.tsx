@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,9 +16,14 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
+
+  // If already logged in, go straight to dashboard
+  useEffect(() => {
+    if (user) navigate("/dashboard", { replace: true });
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,11 +34,22 @@ const Signup = () => {
       try {
         await signIn(email, password);
       } catch {
-        // If auto sign-in fails (e.g. email confirmation required), still redirect
+        // sign-in after signup failed silently
       }
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (err: any) {
-      toast({ title: t("signupFailed"), description: err.message, variant: "destructive" });
+      // If account already exists, try signing in instead
+      if (err.message?.toLowerCase().includes("already") || err.message?.toLowerCase().includes("exists")) {
+        try {
+          await signIn(email, password);
+          toast({ title: "Welcome back!", description: "You already have an account. Logging you in." });
+          navigate("/dashboard", { replace: true });
+        } catch {
+          toast({ title: t("loginFailed"), description: "Account exists but password is wrong. Try logging in.", variant: "destructive" });
+        }
+      } else {
+        toast({ title: t("signupFailed"), description: err.message, variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }
@@ -41,7 +57,7 @@ const Signup = () => {
 
   const handleOAuth = async (provider: "google" | "apple") => {
     const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin,
+      redirect_uri: window.location.origin + "/dashboard",
     });
     if (error) {
       toast({ title: t("signupFailed"), description: String(error), variant: "destructive" });
@@ -70,13 +86,11 @@ const Signup = () => {
               {t("continueWithApple")}
             </Button>
           </div>
-
           <div className="flex items-center gap-3">
             <Separator className="flex-1" />
             <span className="text-xs text-muted-foreground">{t("or")}</span>
             <Separator className="flex-1" />
           </div>
-
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="name">{t("fullName")}</Label>
