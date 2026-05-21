@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import CSVImport from "@/components/dashboard/CSVImport";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,7 +65,6 @@ const Settings = () => {
     }
     setCurrencyCode(code === "auto" ? getActiveCurrencyCode(i18n.language) : code);
     toast({ title: t("currencyUpdated") });
-    // Force re-render across app
     window.dispatchEvent(new Event("currency-changed"));
   };
 
@@ -138,8 +136,6 @@ const Settings = () => {
             </Button>
           </CardContent>
         </Card>
-
-        <CSVImport />
 
         <Card className="shadow-card">
           <CardHeader>
