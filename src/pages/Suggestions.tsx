@@ -316,7 +316,7 @@ const Suggestions = () => {
                           </div>
                           <div className="space-y-2">
                             {alternatives.map((alt) => (
-                              
+                              <a
                                 key={alt.name}
                                 href={alt.url}
                                 target="_blank"
