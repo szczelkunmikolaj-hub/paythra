@@ -7,10 +7,10 @@ import { motion } from "framer-motion";
 
 const PremiumButton = () => {
   const { t } = useTranslation();
-  const { hasValidDiscount, isTestMode } = useUserPlan();
+  const { hasValidDiscount } = useUserPlan();
   const [modalOpen, setModalOpen] = useState(false);
 
-  const isActive = hasValidDiscount || isTestMode;
+  const isActive = hasValidDiscount;
 
   return (
     <>
