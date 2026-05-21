@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import posthog from "posthog-js";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -31,6 +32,7 @@ const Success = () => {
         return;
       }
       queryClient.invalidateQueries({ queryKey: ["user_plan"] });
+      posthog.capture("premium_upgrade_completed", { plan: "premium", price_usd: 89.99 });
       setStatus("success");
     };
     verify();

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import posthog from "posthog-js";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +25,7 @@ const Login = () => {
     setLoading(true);
     try {
       await signIn(email, password);
+      posthog.capture("user_logged_in", { login_method: "email" });
       navigate("/dashboard");
     } catch (err: any) {
       toast({ title: t("loginFailed"), description: err.message, variant: "destructive" });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import posthog from "posthog-js";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +31,7 @@ const Signup = () => {
     setLoading(true);
     try {
       await signUp(email, password, name);
+      posthog.capture("user_signed_up", { signup_method: "email" });
       // Auto sign-in immediately after signup
       try {
         await signIn(email, password);

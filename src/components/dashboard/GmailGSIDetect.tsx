@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import posthog from "posthog-js";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -368,6 +369,11 @@ const GmailGSIDetect = () => {
         if (!byDomain.has(o.domain)) byDomain.set(o.domain, o);
       }
       setSavings(Array.from(byDomain.values()));
+      posthog.capture("gmail_scan_completed", {
+        detected_count: all.length,
+        accounts_scanned: list.length,
+        savings_opportunities: byDomain.size,
+      });
       toast({
         title: "Scan complete",
         description: `Detected ${all.length} service${all.length === 1 ? "" : "s"} across ${list.length} account${list.length === 1 ? "" : "s"}`,
@@ -404,6 +410,10 @@ const GmailGSIDetect = () => {
                 )
               : [...accounts, { email, token: resp.access_token }];
             persistAccounts(next);
+            posthog.capture("gmail_connected", {
+              reconnected: !!existing,
+              total_accounts: next.length,
+            });
             toast({ title: existing ? `${email} reconnected` : `${email} connected` });
             scanAll(next);
           } catch (e: any) {
@@ -490,6 +500,12 @@ const GmailGSIDetect = () => {
         status: "active",
       });
       setDismissed((s) => new Set(s).add(addModal.domain));
+      posthog.capture("detected_subscription_added", {
+        subscription_name: addModal.name,
+        billing_cycle: addModal.billing_cycle,
+        category: addModal.category,
+        detection_source: "gmail",
+      });
       toast({ title: `${addModal.name} added` });
       setAddModal(null);
     } catch (e: any) {

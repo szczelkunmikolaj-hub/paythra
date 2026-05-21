@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import posthog from "posthog-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -35,9 +36,15 @@ export const useSubscriptions = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       toast({ title: "Subscription added" });
+      posthog.capture("subscription_added", {
+        subscription_name: data.name,
+        billing_cycle: data.billing_cycle,
+        category: data.category,
+        is_trial: data.is_trial,
+      });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -61,10 +68,15 @@ export const useSubscriptions = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       queryClient.invalidateQueries({ queryKey: ["price_history"] });
       toast({ title: "Subscription updated" });
+      posthog.capture("subscription_updated", {
+        subscription_name: data.name,
+        billing_cycle: data.billing_cycle,
+        category: data.category,
+      });
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
@@ -77,6 +89,7 @@ export const useSubscriptions = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       toast({ title: "Subscription deleted" });
+      posthog.capture("subscription_deleted");
     },
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });

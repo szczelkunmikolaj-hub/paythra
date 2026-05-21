@@ -1,4 +1,5 @@
 import { useState } from "react";
+import posthog from "posthog-js";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
@@ -59,6 +60,7 @@ const Pricing = () => {
       const { data, error } = await supabase.functions.invoke("create-checkout");
       if (error) throw error;
       if (!data?.url) throw new Error("No checkout URL returned");
+      posthog.capture("checkout_initiated", { plan: "premium", price_usd: 89.99 });
       window.location.href = data.url;
     } catch (err) {
       toast({
@@ -81,6 +83,10 @@ const Pricing = () => {
     await new Promise((r) => setTimeout(r, 600));
     setSubmitting(false);
     setContactOpen(false);
+    posthog.capture("business_quote_requested", {
+      company: form.company || undefined,
+      team_size: form.users,
+    });
     setForm({ name: "", company: "", email: "", users: "", message: "" });
     toast({
       title: "Request received",
