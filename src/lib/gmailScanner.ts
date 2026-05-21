@@ -240,7 +240,7 @@ export interface DetectedSubscription {
   domain: string;
   amount: number;
   currency: string;
-  frequency: "monthly" | "yearly" | "unknown";
+  frequency: "monthly" | "yearly" | "quarterly" | "unknown";
   occurrences: number;
   confidence: number;
   lastSeen: Date;
