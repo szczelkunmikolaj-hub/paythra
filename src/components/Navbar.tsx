@@ -63,7 +63,7 @@ const Navbar = () => {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link to="/" className="flex items-center">
+          <Link to="/demo" className="flex items-center">
             <img src={paythraLogo} alt="Paythra" className="h-10 w-10 rounded-lg" />
           </Link>
         </div>
