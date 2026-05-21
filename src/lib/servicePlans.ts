@@ -563,6 +563,131 @@ const planData: ServicePlanData[] = [
     ],
   },
 ];
+{
+    serviceKey: "Revolut Premium",
+    countries: [
+      GBP([{ name: "Plus", price: 2.99, billingCycle: m }, { name: "Premium", price: 6.99, billingCycle: m }, { name: "Metal", price: 12.99, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Plus", price: 3.99, billingCycle: m }, { name: "Premium", price: 7.99, billingCycle: m }, { name: "Metal", price: 13.99, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "Plus", price: 3.99, billingCycle: m }, { name: "Premium", price: 7.99, billingCycle: m }, { name: "Metal", price: 13.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Plus", price: 3.99, billingCycle: m }, { name: "Premium", price: 7.99, billingCycle: m }, { name: "Metal", price: 13.99, billingCycle: m }]),
+      PLN([{ name: "Plus", price: 17.99, billingCycle: m }, { name: "Premium", price: 39.99, billingCycle: m }, { name: "Metal", price: 59.99, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "iCloud+",
+    countries: [
+      USD([{ name: "50GB", price: 0.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      GBP([{ name: "50GB", price: 0.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 8.99, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "50GB", price: 0.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "50GB", price: 0.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "50GB", price: 0.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      BRL([{ name: "50GB", price: 3.90, billingCycle: m }, { name: "200GB", price: 10.90, billingCycle: m }, { name: "2TB", price: 34.90, billingCycle: m }]),
+      INR([{ name: "50GB", price: 75, billingCycle: m }, { name: "200GB", price: 219, billingCycle: m }, { name: "2TB", price: 749, billingCycle: m }]),
+      JPY([{ name: "50GB", price: 130, billingCycle: m }, { name: "200GB", price: 400, billingCycle: m }, { name: "2TB", price: 1300, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Google One",
+    countries: [
+      USD([{ name: "100GB", price: 1.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      GBP([{ name: "100GB", price: 1.59, billingCycle: m }, { name: "200GB", price: 2.49, billingCycle: m }, { name: "2TB", price: 7.99, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "100GB", price: 1.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "100GB", price: 1.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "100GB", price: 1.99, billingCycle: m }, { name: "200GB", price: 2.99, billingCycle: m }, { name: "2TB", price: 9.99, billingCycle: m }]),
+      BRL([{ name: "100GB", price: 6.99, billingCycle: m }, { name: "200GB", price: 9.99, billingCycle: m }, { name: "2TB", price: 34.99, billingCycle: m }]),
+      INR([{ name: "100GB", price: 130, billingCycle: m }, { name: "200GB", price: 210, billingCycle: m }, { name: "2TB", price: 650, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Twitch",
+    countries: [
+      USD([{ name: "Tier 1 Sub", price: 4.99, billingCycle: m }, { name: "Tier 2 Sub", price: 9.99, billingCycle: m }, { name: "Tier 3 Sub", price: 24.99, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Tier 1", price: 4.99, billingCycle: m }, { name: "Tier 2", price: 9.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Tier 1", price: 4.99, billingCycle: m }, { name: "Tier 2", price: 9.99, billingCycle: m }]),
+      GBP([{ name: "Tier 1", price: 3.99, billingCycle: m }, { name: "Tier 2", price: 7.99, billingCycle: m }]),
+      BRL([{ name: "Tier 1", price: 12.90, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "EA Play",
+    countries: [
+      USD([{ name: "EA Play", price: 4.99, billingCycle: m }, { name: "EA Play Pro", price: 14.99, billingCycle: m }]),
+      GBP([{ name: "EA Play", price: 3.99, billingCycle: m }, { name: "EA Play Pro", price: 11.99, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "EA Play", price: 3.99, billingCycle: m }, { name: "EA Play Pro", price: 11.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "EA Play", price: 3.99, billingCycle: m }, { name: "EA Play Pro", price: 11.99, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "EA Play", price: 3.99, billingCycle: m }, { name: "EA Play Pro", price: 11.99, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Skillshare",
+    countries: [
+      USD([{ name: "Membership", price: 19, billingCycle: m }, { name: "Annual", price: 99, billingCycle: y }]),
+      GBP([{ name: "Membership", price: 16, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Membership", price: 16, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Membership", price: 16, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Audible",
+    countries: [
+      USD([{ name: "Plus", price: 7.95, billingCycle: m }, { name: "Premium Plus", price: 14.95, billingCycle: m }]),
+      GBP([{ name: "Plus", price: 7.99, billingCycle: m }, { name: "Premium Plus", price: 14.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Audible Plus", price: 9.95, billingCycle: m }, { name: "Premium Plus", price: 9.95, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "Premium Plus", price: 9.95, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Premium Plus", price: 9.99, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Peloton",
+    countries: [
+      USD([{ name: "App One", price: 12.99, billingCycle: m }, { name: "App+", price: 24, billingCycle: m }]),
+      GBP([{ name: "App One", price: 12.99, billingCycle: m }, { name: "App+", price: 24, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "App One", price: 12.99, billingCycle: m }, { name: "App+", price: 24, billingCycle: m }]),
+      CAD([{ name: "App One", price: 16.99, billingCycle: m }, { name: "App+", price: 32.99, billingCycle: m }]),
+      AUD([{ name: "App One", price: 19.99, billingCycle: m }, { name: "App+", price: 36.99, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "1Password",
+    countries: [
+      USD([{ name: "Individual", price: 2.99, billingCycle: m }, { name: "Families", price: 4.99, billingCycle: m }]),
+      GBP([{ name: "Individual", price: 2.65, billingCycle: m }, { name: "Families", price: 4.49, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Individual", price: 2.99, billingCycle: m }, { name: "Families", price: 4.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Individual", price: 2.99, billingCycle: m }, { name: "Families", price: 4.99, billingCycle: m }]),
+      CAD([{ name: "Individual", price: 3.99, billingCycle: m }, { name: "Families", price: 6.99, billingCycle: m }]),
+      AUD([{ name: "Individual", price: 4.99, billingCycle: m }, { name: "Families", price: 7.99, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Dashlane",
+    countries: [
+      USD([{ name: "Premium", price: 4.99, billingCycle: m }, { name: "Friends & Family", price: 7.49, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Premium", price: 4.99, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "Premium", price: 4.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Premium", price: 4.99, billingCycle: m }]),
+      GBP([{ name: "Premium", price: 4.49, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Zoom",
+    countries: [
+      USD([{ name: "Pro", price: 13.32, billingCycle: m }, { name: "Business", price: 18.32, billingCycle: m }]),
+      GBP([{ name: "Pro", price: 11.99, billingCycle: m }, { name: "Business", price: 15.99, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Pro", price: 13.32, billingCycle: m }, { name: "Business", price: 18.32, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Pro", price: 13.32, billingCycle: m }, { name: "Business", price: 18.32, billingCycle: m }]),
+      AUD([{ name: "Pro", price: 20.99, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "Slack",
+    countries: [
+      USD([{ name: "Pro", price: 7.25, billingCycle: m }, { name: "Business+", price: 12.50, billingCycle: m }]),
+      GBP([{ name: "Pro", price: 5.75, billingCycle: m }, { name: "Business+", price: 9.75, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Pro", price: 6.75, billingCycle: m }, { name: "Business+", price: 11.75, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Pro", price: 6.75, billingCycle: m }, { name: "Business+", price: 11.75, billingCycle: m }]),
+      EUR("France", "FR", [{ name: "Pro", price: 6.75, billingCycle: m }, { name: "Business+", price: 11.75, billingCycle: m }]),
+    ],
+  },
 
 export const SERVICE_PLANS = planData;
 
