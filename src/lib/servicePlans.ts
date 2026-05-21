@@ -86,7 +86,6 @@ const TRY = (plans: Omit<ServicePlan, "currency">[]) => ({
 });
 
 const planData: ServicePlanData[] = [
-  // ── STREAMING VIDEO ──────────────────────────────────────────────────────────
   {
     serviceKey: "Netflix",
     countries: [
@@ -133,6 +132,7 @@ const planData: ServicePlanData[] = [
       SEK([{ name: "Individual", price: 129, billingCycle: m }, { name: "Duo", price: 169, billingCycle: m }, { name: "Familj", price: 209, billingCycle: m }]),
       TRY([{ name: "Bireysel", price: 44.99, billingCycle: m }, { name: "İkili", price: 59.99, billingCycle: m }, { name: "Aile", price: 74.99, billingCycle: m }]),
       CHF([{ name: "Individual", price: 12.95, billingCycle: m }, { name: "Duo", price: 17.95, billingCycle: m }, { name: "Family", price: 21.95, billingCycle: m }]),
+      KRW([{ name: "Individual", price: 10900, billingCycle: m }, { name: "Duo", price: 14900, billingCycle: m }, { name: "Family", price: 17900, billingCycle: m }]),
     ],
   },
   {
@@ -145,6 +145,7 @@ const planData: ServicePlanData[] = [
       EUR("Germany", "DE", [{ name: "Standard", price: 5.99, billingCycle: m }, { name: "Premium", price: 11.99, billingCycle: m }]),
       EUR("Italy", "IT", [{ name: "Standard", price: 5.99, billingCycle: m }, { name: "Premium", price: 11.99, billingCycle: m }]),
       EUR("Netherlands", "NL", [{ name: "Standaard", price: 5.99, billingCycle: m }, { name: "Premium", price: 11.99, billingCycle: m }]),
+      EUR("Portugal", "PT", [{ name: "Standard", price: 5.99, billingCycle: m }, { name: "Premium", price: 11.99, billingCycle: m }]),
       PLN([{ name: "Standard", price: 28.99, billingCycle: m }, { name: "Premium", price: 49.99, billingCycle: m }]),
       CAD([{ name: "Basic (with Ads)", price: 7.99, billingCycle: m }, { name: "Premium", price: 13.99, billingCycle: m }]),
       AUD([{ name: "Standard", price: 13.99, billingCycle: m }, { name: "Premium", price: 17.99, billingCycle: m }]),
@@ -186,6 +187,7 @@ const planData: ServicePlanData[] = [
       BRL([{ name: "Mensal", price: 21.90, billingCycle: m }]),
       INR([{ name: "Monthly", price: 99, billingCycle: m }]),
       JPY([{ name: "月額", price: 900, billingCycle: m }]),
+      MXN([{ name: "Mensual", price: 99, billingCycle: m }]),
     ],
   },
   {
@@ -196,12 +198,14 @@ const planData: ServicePlanData[] = [
       EUR("Spain", "ES", [{ name: "Individual", price: 13.99, billingCycle: m }, { name: "Familia", price: 22.99, billingCycle: m }, { name: "Estudiante", price: 7.99, billingCycle: m }]),
       EUR("France", "FR", [{ name: "Individuel", price: 13.99, billingCycle: m }, { name: "Famille", price: 22.99, billingCycle: m }]),
       EUR("Germany", "DE", [{ name: "Individual", price: 13.99, billingCycle: m }, { name: "Familie", price: 22.99, billingCycle: m }]),
+      EUR("Italy", "IT", [{ name: "Individual", price: 13.99, billingCycle: m }, { name: "Family", price: 22.99, billingCycle: m }]),
       PLN([{ name: "Individual", price: 23.99, billingCycle: m }, { name: "Family", price: 37.99, billingCycle: m }]),
       BRL([{ name: "Individual", price: 23.90, billingCycle: m }, { name: "Família", price: 37.90, billingCycle: m }]),
       INR([{ name: "Individual", price: 129, billingCycle: m }, { name: "Family", price: 189, billingCycle: m }]),
       JPY([{ name: "個人", price: 1280, billingCycle: m }, { name: "ファミリー", price: 2280, billingCycle: m }]),
       MXN([{ name: "Individual", price: 139, billingCycle: m }, { name: "Familiar", price: 219, billingCycle: m }]),
       TRY([{ name: "Bireysel", price: 39.99, billingCycle: m }, { name: "Aile", price: 64.99, billingCycle: m }]),
+      KRW([{ name: "Individual", price: 14900, billingCycle: m }, { name: "Family", price: 22900, billingCycle: m }]),
     ],
   },
   {
@@ -219,7 +223,6 @@ const planData: ServicePlanData[] = [
       NOK([{ name: "Standard", price: 69, billingCycle: m }, { name: "Premium", price: 109, billingCycle: m }]),
     ],
   },
-  // ── MUSIC ────────────────────────────────────────────────────────────────────
   {
     serviceKey: "Apple Music",
     countries: [
@@ -228,12 +231,14 @@ const planData: ServicePlanData[] = [
       EUR("Spain", "ES", [{ name: "Individual", price: 11.99, billingCycle: m }, { name: "Familia", price: 17.99, billingCycle: m }, { name: "Estudiante", price: 5.99, billingCycle: m }]),
       EUR("France", "FR", [{ name: "Individuel", price: 11.99, billingCycle: m }, { name: "Famille", price: 17.99, billingCycle: m }, { name: "Étudiant", price: 5.99, billingCycle: m }]),
       EUR("Germany", "DE", [{ name: "Individual", price: 11.99, billingCycle: m }, { name: "Familie", price: 17.99, billingCycle: m }, { name: "Student", price: 5.99, billingCycle: m }]),
+      EUR("Italy", "IT", [{ name: "Individual", price: 11.99, billingCycle: m }, { name: "Family", price: 17.99, billingCycle: m }]),
       PLN([{ name: "Individual", price: 23.99, billingCycle: m }, { name: "Rodzinny", price: 37.99, billingCycle: m }]),
       BRL([{ name: "Individual", price: 21.90, billingCycle: m }, { name: "Família", price: 34.90, billingCycle: m }]),
       INR([{ name: "Individual", price: 99, billingCycle: m }, { name: "Family", price: 149, billingCycle: m }]),
       JPY([{ name: "個人", price: 1080, billingCycle: m }, { name: "ファミリー", price: 1680, billingCycle: m }]),
       MXN([{ name: "Individual", price: 129, billingCycle: m }, { name: "Familiar", price: 199, billingCycle: m }]),
       TRY([{ name: "Bireysel", price: 34.99, billingCycle: m }, { name: "Aile", price: 54.99, billingCycle: m }]),
+      KRW([{ name: "Individual", price: 9900, billingCycle: m }, { name: "Family", price: 14900, billingCycle: m }]),
     ],
   },
   {
@@ -259,7 +264,6 @@ const planData: ServicePlanData[] = [
       NOK([{ name: "Individual", price: 129, billingCycle: m }, { name: "HiFi Plus", price: 249, billingCycle: m }]),
     ],
   },
-  // ── AI ───────────────────────────────────────────────────────────────────────
   {
     serviceKey: "ChatGPT Plus",
     countries: [
@@ -275,6 +279,7 @@ const planData: ServicePlanData[] = [
       BRL([{ name: "Plus", price: 104, billingCycle: m }]),
       JPY([{ name: "Plus", price: 3000, billingCycle: m }]),
       TRY([{ name: "Plus", price: 649.99, billingCycle: m }]),
+      KRW([{ name: "Plus", price: 27000, billingCycle: m }]),
     ],
   },
   {
@@ -285,19 +290,21 @@ const planData: ServicePlanData[] = [
       EUR("Spain", "ES", [{ name: "Pro", price: 18, billingCycle: m }]),
       EUR("France", "FR", [{ name: "Pro", price: 18, billingCycle: m }]),
       EUR("Germany", "DE", [{ name: "Pro", price: 18, billingCycle: m }]),
+      EUR("Italy", "IT", [{ name: "Pro", price: 18, billingCycle: m }]),
       CAD([{ name: "Pro", price: 25, billingCycle: m }]),
       AUD([{ name: "Pro", price: 30, billingCycle: m }]),
+      JPY([{ name: "Pro", price: 3000, billingCycle: m }]),
     ],
   },
   {
     serviceKey: "Midjourney",
     countries: [
       USD([{ name: "Basic", price: 10, billingCycle: m }, { name: "Standard", price: 30, billingCycle: m }, { name: "Pro", price: 60, billingCycle: m }, { name: "Mega", price: 120, billingCycle: m }]),
-      EUR("Spain", "ES", [{ name: "Basic", price: 10, billingCycle: m }, { name: "Standard", price: 30, billingCycle: m }, { name: "Pro", price: 60, billingCycle: m }]),
       GBP([{ name: "Basic", price: 10, billingCycle: m }, { name: "Standard", price: 30, billingCycle: m }, { name: "Pro", price: 60, billingCycle: m }]),
+      EUR("Spain", "ES", [{ name: "Basic", price: 10, billingCycle: m }, { name: "Standard", price: 30, billingCycle: m }, { name: "Pro", price: 60, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Basic", price: 10, billingCycle: m }, { name: "Standard", price: 30, billingCycle: m }, { name: "Pro", price: 60, billingCycle: m }]),
     ],
   },
-  // ── PRODUCTIVITY ─────────────────────────────────────────────────────────────
   {
     serviceKey: "Microsoft 365",
     countries: [
@@ -307,6 +314,7 @@ const planData: ServicePlanData[] = [
       EUR("Germany", "DE", [{ name: "Single", price: 7, billingCycle: m }, { name: "Family", price: 10, billingCycle: m }]),
       EUR("France", "FR", [{ name: "Personnel", price: 7, billingCycle: m }, { name: "Famille", price: 10, billingCycle: m }]),
       EUR("Italy", "IT", [{ name: "Personal", price: 7, billingCycle: m }, { name: "Family", price: 10, billingCycle: m }]),
+      EUR("Netherlands", "NL", [{ name: "Personal", price: 7, billingCycle: m }, { name: "Family", price: 10, billingCycle: m }]),
       PLN([{ name: "Personal", price: 37.99, billingCycle: m }, { name: "Rodzinny", price: 54.99, billingCycle: m }]),
       CAD([{ name: "Personal", price: 8.25, billingCycle: m }, { name: "Family", price: 11, billingCycle: m }]),
       AUD([{ name: "Personal", price: 9, billingCycle: m }, { name: "Family", price: 12.50, billingCycle: m }]),
@@ -320,23 +328,25 @@ const planData: ServicePlanData[] = [
     serviceKey: "Notion",
     countries: [
       USD([{ name: "Plus", price: 10, billingCycle: m }, { name: "Business", price: 18, billingCycle: m }]),
+      GBP([{ name: "Plus", price: 8, billingCycle: m }, { name: "Business", price: 15, billingCycle: m }]),
       EUR("Spain", "ES", [{ name: "Plus", price: 10, billingCycle: m }, { name: "Business", price: 18, billingCycle: m }]),
       EUR("Germany", "DE", [{ name: "Plus", price: 10, billingCycle: m }, { name: "Business", price: 18, billingCycle: m }]),
       EUR("France", "FR", [{ name: "Plus", price: 10, billingCycle: m }, { name: "Business", price: 18, billingCycle: m }]),
-      GBP([{ name: "Plus", price: 8, billingCycle: m }, { name: "Business", price: 15, billingCycle: m }]),
+      EUR("Italy", "IT", [{ name: "Plus", price: 10, billingCycle: m }, { name: "Business", price: 18, billingCycle: m }]),
       BRL([{ name: "Plus", price: 54, billingCycle: m }, { name: "Business", price: 100, billingCycle: m }]),
       JPY([{ name: "Plus", price: 1650, billingCycle: m }, { name: "Business", price: 2500, billingCycle: m }]),
+      KRW([{ name: "Plus", price: 16000, billingCycle: m }, { name: "Business", price: 25000, billingCycle: m }]),
     ],
   },
   {
     serviceKey: "Canva",
     countries: [
       USD([{ name: "Pro", price: 14.99, billingCycle: m }, { name: "Teams", price: 29.99, billingCycle: m }]),
+      GBP([{ name: "Pro", price: 10.99, billingCycle: m }, { name: "Teams", price: 21.99, billingCycle: m }]),
       EUR("Spain", "ES", [{ name: "Pro", price: 11.99, billingCycle: m }, { name: "Equipos", price: 23.99, billingCycle: m }]),
       EUR("Germany", "DE", [{ name: "Pro", price: 11.99, billingCycle: m }, { name: "Teams", price: 23.99, billingCycle: m }]),
       EUR("France", "FR", [{ name: "Pro", price: 11.99, billingCycle: m }, { name: "Équipes", price: 23.99, billingCycle: m }]),
       EUR("Italy", "IT", [{ name: "Pro", price: 11.99, billingCycle: m }, { name: "Teams", price: 23.99, billingCycle: m }]),
-      GBP([{ name: "Pro", price: 10.99, billingCycle: m }, { name: "Teams", price: 21.99, billingCycle: m }]),
       AUD([{ name: "Pro", price: 17.99, billingCycle: m }, { name: "Teams", price: 39.99, billingCycle: m }]),
       BRL([{ name: "Pro", price: 34.90, billingCycle: m }, { name: "Equipes", price: 69.90, billingCycle: m }]),
       INR([{ name: "Pro", price: 499, billingCycle: m }, { name: "Teams", price: 999, billingCycle: m }]),
@@ -368,7 +378,6 @@ const planData: ServicePlanData[] = [
       BRL([{ name: "Plus", price: 55.99, billingCycle: m }]),
     ],
   },
-  // ── SECURITY & VPN ───────────────────────────────────────────────────────────
   {
     serviceKey: "NordVPN",
     countries: [
@@ -393,7 +402,6 @@ const planData: ServicePlanData[] = [
       AUD([{ name: "Monthly", price: 16.99, billingCycle: m }]),
     ],
   },
-  // ── GAMING ───────────────────────────────────────────────────────────────────
   {
     serviceKey: "Xbox Game Pass",
     countries: [
@@ -429,7 +437,7 @@ const planData: ServicePlanData[] = [
   {
     serviceKey: "Nintendo Switch Online",
     countries: [
-      USD([{ name: "Individual (3 months)", price: 7.99, billingCycle: m }, { name: "Individual (12 months)", price: 19.99, billingCycle: y }, { name: "Family (12 months)", price: 34.99, billingCycle: y }]),
+      USD([{ name: "Individual (12 months)", price: 19.99, billingCycle: y }, { name: "Family (12 months)", price: 34.99, billingCycle: y }]),
       GBP([{ name: "Individual (12 months)", price: 17.99, billingCycle: y }, { name: "Family (12 months)", price: 31.49, billingCycle: y }]),
       EUR("Spain", "ES", [{ name: "Individual (12 meses)", price: 19.99, billingCycle: y }, { name: "Familiar (12 meses)", price: 34.99, billingCycle: y }]),
       EUR("Germany", "DE", [{ name: "Einzel (12 Monate)", price: 19.99, billingCycle: y }, { name: "Familie (12 Monate)", price: 34.99, billingCycle: y }]),
@@ -439,7 +447,6 @@ const planData: ServicePlanData[] = [
       CAD([{ name: "Individual (12 months)", price: 24.99, billingCycle: y }]),
     ],
   },
-  // ── HEALTH & FITNESS ─────────────────────────────────────────────────────────
   {
     serviceKey: "Headspace",
     countries: [
@@ -454,7 +461,7 @@ const planData: ServicePlanData[] = [
   {
     serviceKey: "Calm",
     countries: [
-      USD([{ name: "Monthly", price: 14.99, billingCycle: m }, { name: "Annual", price: 69.99, billingCycle: y }, { name: "Lifetime", price: 399.99, billingCycle: y }]),
+      USD([{ name: "Monthly", price: 14.99, billingCycle: m }, { name: "Annual", price: 69.99, billingCycle: y }]),
       GBP([{ name: "Monthly", price: 12.99, billingCycle: m }, { name: "Annual", price: 54.99, billingCycle: y }]),
       EUR("Spain", "ES", [{ name: "Mensual", price: 14.99, billingCycle: m }, { name: "Anual", price: 69.99, billingCycle: y }]),
       EUR("Germany", "DE", [{ name: "Monatlich", price: 14.99, billingCycle: m }, { name: "Jährlich", price: 69.99, billingCycle: y }]),
@@ -466,15 +473,14 @@ const planData: ServicePlanData[] = [
   {
     serviceKey: "Strava",
     countries: [
-      USD([{ name: "Subscription", price: 11.99, billingCycle: m }, { name: "Annual", price: 79.99, billingCycle: y }]),
-      GBP([{ name: "Subscription", price: 9.99, billingCycle: m }, { name: "Annual", price: 59.99, billingCycle: y }]),
-      EUR("Spain", "ES", [{ name: "Suscripción", price: 9.99, billingCycle: m }, { name: "Anual", price: 59.99, billingCycle: y }]),
-      EUR("Germany", "DE", [{ name: "Abo", price: 9.99, billingCycle: m }, { name: "Jährlich", price: 59.99, billingCycle: y }]),
-      EUR("France", "FR", [{ name: "Abonnement", price: 9.99, billingCycle: m }, { name: "Annuel", price: 59.99, billingCycle: y }]),
-      AUD([{ name: "Subscription", price: 14.99, billingCycle: m }]),
+      USD([{ name: "Monthly", price: 11.99, billingCycle: m }, { name: "Annual", price: 79.99, billingCycle: y }]),
+      GBP([{ name: "Monthly", price: 9.99, billingCycle: m }, { name: "Annual", price: 59.99, billingCycle: y }]),
+      EUR("Spain", "ES", [{ name: "Mensual", price: 9.99, billingCycle: m }, { name: "Anual", price: 59.99, billingCycle: y }]),
+      EUR("Germany", "DE", [{ name: "Monatlich", price: 9.99, billingCycle: m }, { name: "Jährlich", price: 59.99, billingCycle: y }]),
+      EUR("France", "FR", [{ name: "Mensuel", price: 9.99, billingCycle: m }, { name: "Annuel", price: 59.99, billingCycle: y }]),
+      AUD([{ name: "Monthly", price: 14.99, billingCycle: m }]),
     ],
   },
-  // ── EDUCATION ────────────────────────────────────────────────────────────────
   {
     serviceKey: "Duolingo",
     countries: [
@@ -501,26 +507,6 @@ const planData: ServicePlanData[] = [
     ],
   },
   {
-    serviceKey: "Skillshare",
-    countries: [
-      USD([{ name: "Membership", price: 19, billingCycle: m }, { name: "Annual", price: 99, billingCycle: y }]),
-      GBP([{ name: "Membership", price: 16, billingCycle: m }]),
-      EUR("Spain", "ES", [{ name: "Membership", price: 16, billingCycle: m }]),
-    ],
-  },
-  // ── SPORT ────────────────────────────────────────────────────────────────────
-  {
-    serviceKey: "DAZN",
-    countries: [
-      EUR("Spain", "ES", [{ name: "Start", price: 9.99, billingCycle: m }, { name: "Standard", price: 24.99, billingCycle: m }, { name: "Total", price: 34.99, billingCycle: m }]),
-      EUR("Italy", "IT", [{ name: "Start", price: 14.99, billingCycle: m }, { name: "Standard", price: 40.99, billingCycle: m }, { name: "Plus", price: 59.99, billingCycle: m }]),
-      EUR("Germany", "DE", [{ name: "Super Sports", price: 44.99, billingCycle: m }]),
-      EUR("Portugal", "PT", [{ name: "Start", price: 9.99, billingCycle: m }, { name: "Standard", price: 18.99, billingCycle: m }]),
-      CAD([{ name: "Monthly", price: 24.99, billingCycle: m }, { name: "Annual", price: 199.99, billingCycle: y }]),
-      JPY([{ name: "Standard", price: 3700, billingCycle: m }]),
-    ],
-  },
-  {
     serviceKey: "LinkedIn Premium",
     countries: [
       USD([{ name: "Career", price: 29.99, billingCycle: m }, { name: "Business", price: 59.99, billingCycle: m }]),
@@ -530,6 +516,17 @@ const planData: ServicePlanData[] = [
       EUR("France", "FR", [{ name: "Carrière", price: 29.99, billingCycle: m }, { name: "Business", price: 54.99, billingCycle: m }]),
       AUD([{ name: "Career", price: 39.99, billingCycle: m }]),
       INR([{ name: "Career", price: 1599, billingCycle: m }]),
+    ],
+  },
+  {
+    serviceKey: "DAZN",
+    countries: [
+      EUR("Spain", "ES", [{ name: "Start", price: 9.99, billingCycle: m }, { name: "Standard", price: 24.99, billingCycle: m }, { name: "Total", price: 34.99, billingCycle: m }]),
+      EUR("Italy", "IT", [{ name: "Start", price: 14.99, billingCycle: m }, { name: "Standard", price: 40.99, billingCycle: m }, { name: "Plus", price: 59.99, billingCycle: m }]),
+      EUR("Germany", "DE", [{ name: "Super Sports", price: 44.99, billingCycle: m }]),
+      EUR("Portugal", "PT", [{ name: "Start", price: 9.99, billingCycle: m }, { name: "Standard", price: 18.99, billingCycle: m }]),
+      CAD([{ name: "Monthly", price: 24.99, billingCycle: m }, { name: "Annual", price: 199.99, billingCycle: y }]),
+      JPY([{ name: "Standard", price: 3700, billingCycle: m }]),
     ],
   },
   {
