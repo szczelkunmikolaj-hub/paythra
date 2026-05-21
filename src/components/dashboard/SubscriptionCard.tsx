@@ -2,10 +2,11 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, XCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import type { Subscription } from "@/hooks/useSubscriptions";
 import SubscriptionIcon from "./SubscriptionIcon";
+import { getCancelUrl } from "@/lib/serviceRegistry";
 
 interface SubscriptionCardProps {
   subscription: Subscription;
@@ -18,6 +19,14 @@ const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionC
   const daysUntilBilling = Math.ceil(
     (new Date(sub.next_billing_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   );
+
+  const cancelUrl = getCancelUrl(sub.name);
+
+  const handleCancel = () => {
+    if (cancelUrl) {
+      window.open(cancelUrl, "_blank", "noopener,noreferrer");
+    }
+  };
 
   return (
     <Card className="group shadow-card transition-all duration-200 hover:shadow-elevated hover:-translate-y-0.5 overflow-hidden">
@@ -50,13 +59,27 @@ const SubscriptionCard = ({ subscription: sub, onEdit, onDelete }: SubscriptionC
           <div className="text-xs text-muted-foreground">/{sub.billing_cycle === "monthly" ? "mo" : "yr"}</div>
         </div>
 
-        <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onEdit(sub)}>
-            <Edit2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(sub.id)}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          {cancelUrl && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={handleCancel}
+              title={t("cancelSubscription")}
+            >
+              <XCircle className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t("cancel")}</span>
+            </Button>
+          )}
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onEdit(sub)}>
+              <Edit2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => onDelete(sub.id)}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
