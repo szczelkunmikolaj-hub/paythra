@@ -562,7 +562,6 @@ const planData: ServicePlanData[] = [
       MXN([{ name: "Fan", price: 139, billingCycle: m }, { name: "Mega Fan", price: 209, billingCycle: m }]),
     ],
   },
-  },
   {
     serviceKey: "Revolut Premium",
     countries: [
