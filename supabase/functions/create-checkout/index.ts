@@ -1,4 +1,4 @@
-// Creates a Stripe Checkout Session for Paythra Premium (one-time €24.99).
+// Creates a Stripe Checkout Session for Paythra Premium (one-time $89.99).
 // The user must be authenticated. Secret key never leaves the server.
 import Stripe from "https://esm.sh/stripe@17.5.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.99.1";
@@ -58,12 +58,12 @@ Deno.serve(async (req) => {
       line_items: [
         {
           price_data: {
-            currency: "eur",
+            currency: "usd",
             product_data: {
               name: "Paythra Premium",
               description: "Lifetime access — pay once, own forever.",
             },
-            unit_amount: 2499,
+            unit_amount: 8999,
           },
           quantity: 1,
         },

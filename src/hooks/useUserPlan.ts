@@ -1,15 +1,8 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type PlanType = "free" | "premium" | "business";
-
-const TEST_MODE_KEY = "paythra_test_mode";
-// Test mode is a developer-only convenience and must NEVER be available
-// in production builds — it would otherwise allow any signed-in user to
-// gain premium access from the browser console.
-const TEST_MODE_ALLOWED = import.meta.env.DEV;
 
 export interface PlanLimits {
   maxSubscriptions: number;
@@ -51,11 +44,6 @@ export const useUserPlan = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [isTestMode, setIsTestMode] = useState(() => {
-    if (!TEST_MODE_ALLOWED) return false;
-    try { return localStorage.getItem(TEST_MODE_KEY) === "true"; } catch { return false; }
-  });
-
   const query = useQuery({
     queryKey: ["user_plan", user?.id],
     queryFn: async () => {
@@ -74,9 +62,7 @@ export const useUserPlan = () => {
 
   const plan: PlanType = hasValidDiscount
     ? "business"
-    : isTestMode
-      ? "premium"
-      : ((query.data?.plan as PlanType) ?? "free");
+    : ((query.data?.plan as PlanType) ?? "free");
 
   const limits = PLAN_LIMITS[plan];
 
@@ -111,20 +97,6 @@ export const useUserPlan = () => {
     queryClient.invalidateQueries({ queryKey: ["user_plan"] });
   };
 
-  const activateTestMode = async () => {
-    if (!TEST_MODE_ALLOWED) {
-      console.warn("Test mode is disabled in production builds.");
-      return;
-    }
-    localStorage.setItem(TEST_MODE_KEY, "true");
-    setIsTestMode(true);
-  };
-
-  const deactivateTestMode = async () => {
-    localStorage.removeItem(TEST_MODE_KEY);
-    setIsTestMode(false);
-  };
-
   return {
     plan,
     limits,
@@ -134,8 +106,10 @@ export const useUserPlan = () => {
     hasValidDiscount,
     applyDiscountCode,
     removeDiscountCode,
-    isTestMode,
-    activateTestMode,
-    deactivateTestMode,
+    // Deprecated — kept as no-ops for backward compat with any stale callers.
+    isTestMode: false,
+    activateTestMode: async () => {},
+    deactivateTestMode: async () => {},
   };
 };
+

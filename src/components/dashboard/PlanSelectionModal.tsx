@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useUserPlan, PlanType, PLAN_LIMITS } from "@/hooks/useUserPlan";
+import { useUserPlan, PlanType } from "@/hooks/useUserPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
@@ -13,8 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Check, Star, Zap, Building2, Tag, ShieldCheck, FlaskConical, PartyPopper } from "lucide-react";
+import { Check, Star, Zap, Building2, Tag, ShieldCheck, PartyPopper } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -33,25 +32,11 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
     isUpgrading,
     hasValidDiscount,
     applyDiscountCode,
-    isTestMode,
-    activateTestMode,
-    deactivateTestMode,
   } = useUserPlan();
   const [discountInput, setDiscountInput] = useState("");
   const [applyingCode, setApplyingCode] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-
-  const handleTestModeToggle = async (enabled: boolean) => {
-    if (enabled) {
-      await activateTestMode();
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 3000);
-      toast({ title: t("testModeActivated"), description: t("testModeDesc") });
-    } else {
-      await deactivateTestMode();
-      toast({ title: t("testModeDeactivated") });
-    }
-  };
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const handleSelect = async (plan: PlanType) => {
     if (!user) {
@@ -62,7 +47,7 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
     if (plan === currentPlan) return;
 
     if (plan === "premium") {
-      // Premium requires payment — redirect to Stripe Checkout
+      setCheckoutLoading(true);
       try {
         const { supabase } = await import("@/integrations/supabase/client");
         const { data, error } = await supabase.functions.invoke("create-checkout");
@@ -75,6 +60,7 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
           description: (err as Error).message,
           variant: "destructive",
         });
+        setCheckoutLoading(false);
       }
       return;
     }
@@ -110,8 +96,8 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
   };
 
   const plans = [
-    { id: "free" as PlanType, icon: Zap, name: t("planFree"), price: "€0", priceNote: t("planMonth"), features: [t("planFreeF1"), t("planFreeF2"), t("planFreeF3")] },
-    { id: "premium" as PlanType, icon: Star, name: "Premium", price: "€24.99", priceNote: "one-time", popular: true, features: [t("planPremiumF1"), t("planPremiumF2"), t("planPremiumF3"), t("planPremiumF4"), t("planPremiumF5")] },
+    { id: "free" as PlanType, icon: Zap, name: t("planFree"), price: "$0", priceNote: t("planMonth"), features: [t("planFreeF1"), t("planFreeF2"), t("planFreeF3")] },
+    { id: "premium" as PlanType, icon: Star, name: "Premium", price: "$89.99", priceNote: "one-time", popular: true, features: [t("planPremiumF1"), t("planPremiumF2"), t("planPremiumF3"), t("planPremiumF4"), t("planPremiumF5")] },
     { id: "business" as PlanType, icon: Building2, name: "Business", price: "Custom", priceNote: "contact us", features: [t("planBusinessF1"), t("planBusinessF2"), t("planBusinessF3"), t("planBusinessF4"), t("planBusinessF5"), t("planBusinessF6")] },
   ];
 
@@ -123,7 +109,6 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
           <DialogDescription className="text-center">{t("pricingSubtitle")}</DialogDescription>
         </DialogHeader>
 
-        {/* Confetti animation */}
         <AnimatePresence>
           {showConfetti && (
             <motion.div
@@ -140,61 +125,34 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
           )}
         </AnimatePresence>
 
-        {/* Test Mode & Status Banners */}
-        <div className="space-y-3">
-          {/* Test Mode Toggle */}
-          {!hasValidDiscount && (
-            <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-4">
-              <div className="flex items-center gap-3">
-                <FlaskConical className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-700 dark:text-amber-300">{t("testMode")}</p>
-                  <p className="text-xs text-amber-600/70 dark:text-amber-400/70">{t("testModeHint")}</p>
-                </div>
-              </div>
-              <Switch checked={isTestMode} onCheckedChange={handleTestModeToggle} />
+        {hasValidDiscount && (
+          <div className="flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-4">
+            <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <div>
+              <p className="text-sm font-semibold text-green-700 dark:text-green-300">
+                {t("fullAccessActive")}
+              </p>
+              <p className="text-xs text-green-600/70 dark:text-green-400/70">
+                {`Business · $0/${t("planMonth")}`}
+              </p>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Active status */}
-          {(isTestMode || hasValidDiscount) && (
-            <div className="flex items-center gap-3 rounded-xl border border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/30 p-4">
-              <ShieldCheck className="h-5 w-5 text-green-600 dark:text-green-400" />
-              <div>
-                <p className="text-sm font-semibold text-green-700 dark:text-green-300">
-                  {hasValidDiscount ? t("fullAccessActive") : t("testModeActive")}
-                </p>
-                <p className="text-xs text-green-600/70 dark:text-green-400/70">
-                  {hasValidDiscount ? `Business · €0/${t("planMonth")}` : `Premium · ${t("testMode")}`}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Plan Cards */}
         <div className="grid gap-4 md:grid-cols-3">
           {plans.map((p) => {
             const isCurrent = currentPlan === p.id;
             const isOverridden = hasValidDiscount && p.id === "business";
-            const isTestPremium = isTestMode && !hasValidDiscount && p.id === "premium";
             return (
               <div
                 key={p.id}
                 className={`relative flex flex-col rounded-xl border p-4 transition-all ${
                   p.popular && !hasValidDiscount ? "border-primary ring-2 ring-primary/20" : ""
-                } ${isOverridden ? "border-green-400 ring-2 ring-green-300/30" : ""} ${
-                  isTestPremium ? "border-amber-400 ring-2 ring-amber-300/30" : ""
-                }`}
+                } ${isOverridden ? "border-green-400 ring-2 ring-green-300/30" : ""}`}
               >
-                {p.popular && !hasValidDiscount && !isTestMode && (
+                {p.popular && !hasValidDiscount && (
                   <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-primary text-white text-xs">
                     {t("mostPopular")}
-                  </Badge>
-                )}
-                {isTestPremium && (
-                  <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs">
-                    {t("testMode")}
                   </Badge>
                 )}
                 <div className="text-center mb-3">
@@ -203,7 +161,7 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
                   </div>
                   <p className="font-display font-bold">{p.name}</p>
                   <p className="text-2xl font-extrabold text-foreground mt-1">
-                    {isOverridden ? <><span className="text-green-600">€0</span><span className="ml-1 text-sm text-muted-foreground line-through">{p.price}</span></> : p.price}
+                    {isOverridden ? <><span className="text-green-600">$0</span><span className="ml-1 text-sm text-muted-foreground line-through">{p.price}</span></> : p.price}
                     <span className="ml-1 text-sm font-normal text-muted-foreground">{p.priceNote}</span>
                   </p>
                 </div>
@@ -219,18 +177,17 @@ const PlanSelectionModal = ({ open, onOpenChange }: PlanSelectionModalProps) => 
                   size="sm"
                   className={`w-full ${p.popular && !hasValidDiscount ? "bg-gradient-primary hover:opacity-90" : ""}`}
                   variant={p.popular && !hasValidDiscount ? "default" : "outline"}
-                  disabled={isCurrent || isUpgrading || hasValidDiscount || isTestMode}
+                  disabled={isCurrent || isUpgrading || hasValidDiscount || checkoutLoading}
                   onClick={() => handleSelect(p.id)}
                 >
-                  {isCurrent ? t("currentPlan") : t("selectPlan")}
+                  {isCurrent ? t("currentPlan") : (p.id === "premium" && checkoutLoading ? t("sending") : t("selectPlan"))}
                 </Button>
               </div>
             );
           })}
         </div>
 
-        {/* Discount Code */}
-        {!hasValidDiscount && !isTestMode && (
+        {!hasValidDiscount && (
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
             <Input

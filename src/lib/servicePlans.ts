@@ -562,8 +562,7 @@ const planData: ServicePlanData[] = [
       MXN([{ name: "Fan", price: 139, billingCycle: m }, { name: "Mega Fan", price: 209, billingCycle: m }]),
     ],
   },
-];
-{
+  {
     serviceKey: "Revolut Premium",
     countries: [
       GBP([{ name: "Plus", price: 2.99, billingCycle: m }, { name: "Premium", price: 6.99, billingCycle: m }, { name: "Metal", price: 12.99, billingCycle: m }]),
@@ -688,6 +687,7 @@ const planData: ServicePlanData[] = [
       EUR("France", "FR", [{ name: "Pro", price: 6.75, billingCycle: m }, { name: "Business+", price: 11.75, billingCycle: m }]),
     ],
   },
+];
 
 export const SERVICE_PLANS = planData;
 
