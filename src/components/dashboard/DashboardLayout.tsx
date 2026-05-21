@@ -6,9 +6,10 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun, Sparkles, LineChart } from "lucide-react";
+import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun, Sparkles } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import PremiumButton from "./PremiumButton";
+import FeedbackButton from "./FeedbackButton";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import paythraLogo from "@/assets/paythra-logo.png";
 
@@ -26,7 +27,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { to: "/subscriptions", icon: CreditCard, label: t("subscriptions") },
     { to: "/calendar", icon: CalendarDays, label: t("calendar") },
     { to: "/analytics", icon: BarChart3, label: t("analytics") },
-    { to: "/price-history", icon: LineChart, label: "Price History" },
     { to: "/suggestions", icon: Sparkles, label: t("suggestions") },
     { to: "/notifications", icon: Bell, label: t("notifications") },
     { to: "/settings", icon: Settings, label: t("settings") },
@@ -94,6 +94,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           <div className="flex items-center gap-2">
             <PremiumButton />
             <LanguageSwitcher />
+            <FeedbackButton />
             <Button
               variant="ghost"
               size="icon"
