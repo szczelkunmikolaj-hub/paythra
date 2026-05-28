@@ -1,30 +1,30 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { formatCurrency } from "@/lib/currency";
 import type { Tables } from "@/integrations/supabase/types";
 import { getDatabaseEntryByName, getDatabasePriceEUR } from "@/data/subscriptionDatabase";
 
 type Subscription = Tables<"subscriptions">;
 
-/**
- * Compares each user subscription's saved price to the current price in the
- * master subscription database. If they differ, records the change in
- * subscription_price_history and creates a notification.
- *
- * Runs once per dashboard mount.
- */
 export const useDatabasePriceCheck = (subscriptions: Subscription[]) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const hasRun = useRef(false);
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
 
   useEffect(() => {
     if (!user || subscriptions.length === 0 || hasRun.current) return;
     hasRun.current = true;
+    let cancelled = false;
 
     (async () => {
       for (const sub of subscriptions) {
+        if (cancelled) return;
+
         const entry = getDatabaseEntryByName(sub.name);
         if (!entry) continue;
 
@@ -33,10 +33,8 @@ export const useDatabasePriceCheck = (subscriptions: Subscription[]) => {
         if (dbPrice == null) continue;
 
         const diff = Math.abs(dbPrice - sub.price);
-        // Ignore tiny rounding noise
         if (diff < 0.01) continue;
 
-        // Skip if we already notified for this exact change recently (24h)
         const direction = dbPrice > sub.price ? "increased" : "decreased";
         const { data: existing } = await supabase
           .from("notifications")
@@ -47,6 +45,7 @@ export const useDatabasePriceCheck = (subscriptions: Subscription[]) => {
           .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
           .limit(1);
 
+        if (cancelled) return;
         if (existing && existing.length > 0) continue;
 
         await supabase.from("subscription_price_history").insert({
@@ -60,11 +59,15 @@ export const useDatabasePriceCheck = (subscriptions: Subscription[]) => {
           user_id: user.id,
           subscription_id: sub.id,
           type: direction === "increased" ? "price_increase" : "price_decrease",
-          message: `Price change detected: ${sub.name} ${direction} from €${sub.price.toFixed(2)} to €${dbPrice.toFixed(2)}`,
+          message: `Price change detected: ${sub.name} ${direction} from ${formatCurrency(sub.price, lang)} to ${formatCurrency(dbPrice, lang)}`,
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      if (!cancelled) {
+        queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+      }
     })();
-  }, [user, subscriptions, queryClient]);
+
+    return () => { cancelled = true; };
+  }, [user, subscriptions, queryClient, lang]);
 };

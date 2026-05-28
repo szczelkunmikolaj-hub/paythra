@@ -36,7 +36,7 @@ export const useTransactions = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions", user?.id] });
       toast({ title: "Transaction added" });
     },
   });

@@ -225,7 +225,7 @@ const fr = {
   planUpdated: "Plan mis à jour !",
   planUpdatedDesc: "Votre plan a été modifié avec succès.",
   upgradeRequired: "Nécessite le plan {{plan}} ou supérieur",
-  upgradNow: "Passer au Supérieur",
+  upgradeNow: "Passer au Supérieur",
   upgradeToTrackMore: "Passez au supérieur pour suivre plus d'abonnements",
   planFreeF1: "Jusqu'à 5 abonnements",
   planFreeF2: "Suivi manuel uniquement",

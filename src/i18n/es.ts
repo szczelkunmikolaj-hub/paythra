@@ -225,7 +225,7 @@ const es: Record<string, string> = {
   planUpdated: "¡Plan actualizado!",
   planUpdatedDesc: "Tu plan ha sido cambiado exitosamente.",
   upgradeRequired: "Requiere plan {{plan}} o superior",
-  upgradNow: "Mejorar Ahora",
+  upgradeNow: "Mejorar Ahora",
   upgradeToTrackMore: "Mejora para rastrear más suscripciones",
   planFreeF1: "Hasta 5 suscripciones",
   planFreeF2: "Solo seguimiento manual",

@@ -359,13 +359,16 @@ const CSVImport = () => {
     setImporting(true);
     try {
       // Import all transactions
-      let imported = 0;
+      let txImported = 0;
+      let txFailed = 0;
       for (const tx of parsed) {
-        try { await addTransaction(tx); imported++; } catch { /* skip */ }
+        try { await addTransaction(tx); txImported++; } catch { txFailed++; }
       }
 
       // Add selected detected subscriptions
       const selected = detected.filter((d) => d.selected && d.cycle !== "unknown");
+      let subImported = 0;
+      let subFailed = 0;
       for (const sub of selected) {
         const today = new Date();
         const nextBilling = new Date(today);
@@ -380,12 +383,18 @@ const CSVImport = () => {
             category: sub.category,
             next_billing_date: nextBilling.toISOString().split("T")[0],
           });
-        } catch { /* skip */ }
+          subImported++;
+        } catch { subFailed++; }
       }
 
+      const failureParts: string[] = [];
+      if (txFailed > 0) failureParts.push(`${txFailed} transaction${txFailed > 1 ? "s" : ""} failed`);
+      if (subFailed > 0) failureParts.push(`${subFailed} subscription${subFailed > 1 ? "s" : ""} failed`);
+
       toast({
-        title: t("importedTransactions", { count: imported }),
-        description: selected.length > 0 ? t("addedSubscriptions", { count: selected.length }) : undefined,
+        title: `${txImported} transaction${txImported !== 1 ? "s" : ""} imported successfully${subImported > 0 ? `, ${subImported} subscription${subImported !== 1 ? "s" : ""} added` : ""}`,
+        description: failureParts.length > 0 ? failureParts.join(", ") : undefined,
+        variant: failureParts.length > 0 ? "destructive" : "default",
       });
       resetAll();
     } catch (err: any) {

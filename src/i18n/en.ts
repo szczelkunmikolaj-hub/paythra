@@ -136,6 +136,7 @@ const en = {
   // Sidebar nav
   dashboard: "Dashboard",
   subscriptions: "Subscriptions",
+  sharePlan: "Share",
   calendar: "Calendar",
   analytics: "Analytics",
   notifications: "Notifications",
@@ -261,7 +262,7 @@ const en = {
   planUpdated: "Plan updated!",
   planUpdatedDesc: "Your plan has been changed successfully.",
   upgradeRequired: "Requires {{plan}} plan or higher",
-  upgradNow: "Upgrade Now",
+  upgradeNow: "Upgrade Now",
   upgradeToTrackMore: "Upgrade to track more subscriptions",
   planFreeF1: "Up to 5 subscriptions",
   planFreeF2: "Manual tracking only",

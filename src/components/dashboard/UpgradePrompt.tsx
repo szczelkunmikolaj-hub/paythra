@@ -26,7 +26,7 @@ const UpgradePrompt = ({ feature, requiredPlan }: UpgradePromptProps) => {
           className="bg-gradient-primary hover:opacity-90"
           onClick={() => navigate("/pricing")}
         >
-          {t("upgradNow")}
+          {t("upgradeNow")}
         </Button>
       </CardContent>
     </Card>

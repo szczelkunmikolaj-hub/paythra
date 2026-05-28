@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun, Sparkles } from "lucide-react";
+import { LayoutDashboard, CreditCard, BarChart3, Bell, Settings, LogOut, Menu, CalendarDays, Moon, Sun, Sparkles, Users } from "lucide-react";
 import NotificationBell from "./NotificationBell";
 import PremiumButton from "./PremiumButton";
 import FeedbackButton from "./FeedbackButton";
@@ -25,6 +25,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const navItems = [
     { to: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
     { to: "/subscriptions", icon: CreditCard, label: t("subscriptions") },
+    { to: "/share-plan", icon: Users, label: t("sharePlan") },
     { to: "/calendar", icon: CalendarDays, label: t("calendar") },
     { to: "/analytics", icon: BarChart3, label: t("analytics") },
     { to: "/suggestions", icon: Sparkles, label: t("suggestions") },

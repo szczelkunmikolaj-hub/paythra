@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatCurrency } from "@/lib/currency";
 
 export interface PriceChange {
   id: string;
@@ -37,7 +38,8 @@ export const recordPriceChange = async (
   userId: string,
   subscriptionId: string,
   oldPrice: number,
-  newPrice: number
+  newPrice: number,
+  lang = "en"
 ) => {
   if (oldPrice === newPrice) return;
   await supabase.from("subscription_price_history").insert({
@@ -53,7 +55,7 @@ export const recordPriceChange = async (
       user_id: userId,
       subscription_id: subscriptionId,
       type: "price_increase",
-      message: `Price increase detected: €${oldPrice.toFixed(2)} → €${newPrice.toFixed(2)}`,
+      message: `Price increase detected: ${formatCurrency(oldPrice, lang)} → ${formatCurrency(newPrice, lang)}`,
     });
   }
 };

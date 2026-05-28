@@ -11,6 +11,7 @@ export const useUnusedDetection = (subscriptions: Subscription[], transactions: 
 
   useEffect(() => {
     if (!user || subscriptions.length === 0) return;
+    let cancelled = false;
 
     const detect = async () => {
       const now = new Date();
@@ -18,13 +19,14 @@ export const useUnusedDetection = (subscriptions: Subscription[], transactions: 
       const active = subscriptions.filter((s) => s.status === "active" && !s.is_unused);
 
       for (const sub of active) {
+        if (cancelled) return;
+
         const recentTx = transactions.some(
           (tx) =>
             tx.merchant.toLowerCase().includes(sub.name.toLowerCase()) &&
             new Date(tx.date) >= sixtyDaysAgo
         );
 
-        // Only flag as unused if we have transactions at all and none recent
         if (transactions.length > 0 && !recentTx) {
           const hasOlderTx = transactions.some(
             (tx) => tx.merchant.toLowerCase().includes(sub.name.toLowerCase())
@@ -35,16 +37,19 @@ export const useUnusedDetection = (subscriptions: Subscription[], transactions: 
               .update({ is_unused: true })
               .eq("id", sub.id);
 
-            // Check for existing notification
-            const today = new Date().toISOString().split("T")[0];
+            if (cancelled) return;
+
+            const todayStart = new Date().toISOString().split("T")[0] + "T00:00:00.000Z";
             const { data: existing } = await supabase
               .from("notifications")
               .select("id")
               .eq("user_id", user.id)
               .eq("subscription_id", sub.id)
               .eq("type", "unused_subscription")
-              .gte("created_at", today)
+              .gte("created_at", todayStart)
               .limit(1);
+
+            if (cancelled) return;
 
             if (!existing || existing.length === 0) {
               await supabase.from("notifications").insert({
@@ -54,13 +59,17 @@ export const useUnusedDetection = (subscriptions: Subscription[], transactions: 
                 message: `${sub.name} appears unused — no transactions in the last 60 days.`,
               });
             }
-            queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
-            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+            if (!cancelled) {
+              queryClient.invalidateQueries({ queryKey: ["subscriptions", user.id] });
+              queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+            }
           }
         }
       }
     };
 
     detect();
+    return () => { cancelled = true; };
   }, [user, subscriptions.length, transactions.length, queryClient]);
 };

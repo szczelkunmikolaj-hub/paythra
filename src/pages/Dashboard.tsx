@@ -7,6 +7,7 @@ import SubscriptionForm from "@/components/dashboard/SubscriptionForm";
 import ConnectAccounts from "@/components/dashboard/ConnectAccounts";
 import CSVImport from "@/components/dashboard/CSVImport";
 import GmailGSIDetect from "@/components/dashboard/GmailGSIDetect";
+import PaythraEmailBeta from "@/components/dashboard/PaythraEmailBeta";
 import { useSubscriptions, type Subscription } from "@/hooks/useSubscriptions";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useTrialGuardian } from "@/hooks/useTrialGuardian";
@@ -17,10 +18,11 @@ import { useUpcomingChargeNotifications } from "@/hooks/useUpcomingChargeNotific
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { usePaythraEmailRequest } from "@/hooks/usePaythraEmailRequest";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, CreditCard, Zap, Link2, Bell, Lock, Search } from "lucide-react";
+import { Plus, CreditCard, Zap, Link2, Bell, Lock, Search, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -35,6 +37,9 @@ const Dashboard = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [sendingTest, setSendingTest] = useState(false);
+
+  const { request: emailRequest } = usePaythraEmailRequest();
+  const showEmailBeta = emailRequest?.status !== "created";
 
   const atLimit = subscriptions.filter(s => s.status === "active").length >= limits.maxSubscriptions;
 
@@ -117,35 +122,60 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-3xl mx-auto">
-                <Card className="shadow-card">
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="rounded-xl bg-primary/10 p-3"><CreditCard className="h-6 w-6 text-primary" /></div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("monthlySpend")}</p>
-                      <p className="text-2xl font-bold text-foreground">{formatCurrency(monthly, lang)}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-card">
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="rounded-xl bg-primary/10 p-3"><Zap className="h-6 w-6 text-primary" /></div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("activeSubscriptions")}</p>
-                      <p className="text-2xl font-bold text-foreground">{active.length}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="shadow-card sm:col-span-2 lg:col-span-1">
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="rounded-xl bg-primary/10 p-3"><Link2 className="h-6 w-6 text-primary" /></div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("connectedAccounts")}</p>
-                      <p className="text-2xl font-bold text-foreground">0</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {subscriptions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-16 text-center">
+                  <CreditCard className="mb-3 h-10 w-10 text-muted-foreground" />
+                  <p className="font-medium text-foreground">{t("noSubsYet")}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("addFirstSub")}</p>
+                  <div className="mt-4 flex gap-3">
+                    <Button
+                      onClick={() => { setEditing(null); setFormOpen(true); }}
+                      className="bg-gradient-primary hover:opacity-90 transition-opacity"
+                    >
+                      <Plus className="mr-2 h-4 w-4" /> {t("addSubscription")}
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/subscriptions")}>
+                      <Upload className="mr-2 h-4 w-4" /> {t("importCSV")}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-3xl mx-auto">
+                  <Card className="shadow-card">
+                    <CardContent className="flex items-center gap-4 p-6">
+                      <div className="rounded-xl bg-primary/10 p-3"><CreditCard className="h-6 w-6 text-primary" /></div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("monthlySpend")}</p>
+                        <p className="text-2xl font-bold text-foreground">{formatCurrency(monthly, lang)}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-card">
+                    <CardContent className="flex items-center gap-4 p-6">
+                      <div className="rounded-xl bg-primary/10 p-3"><Zap className="h-6 w-6 text-primary" /></div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("activeSubscriptions")}</p>
+                        <p className="text-2xl font-bold text-foreground">{active.length}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="shadow-card sm:col-span-2 lg:col-span-1">
+                    <CardContent className="flex items-center gap-4 p-6">
+                      <div className="rounded-xl bg-primary/10 p-3"><Link2 className="h-6 w-6 text-primary" /></div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("connectedAccounts")}</p>
+                        <p className="text-2xl font-bold text-foreground">0</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {showEmailBeta && (
+                <div className="max-w-lg mx-auto w-full">
+                  <PaythraEmailBeta />
+                </div>
+              )}
 
               <div className="flex justify-center">
                 <Button variant="outline" size="sm" onClick={sendTestNotification} disabled={sendingTest} className="gap-2">

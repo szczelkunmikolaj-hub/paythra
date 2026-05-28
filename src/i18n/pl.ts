@@ -225,7 +225,7 @@ const pl = {
   planUpdated: "Plan zaktualizowany!",
   planUpdatedDesc: "Twój plan został pomyślnie zmieniony.",
   upgradeRequired: "Wymaga planu {{plan}} lub wyższego",
-  upgradNow: "Ulepsz Teraz",
+  upgradeNow: "Ulepsz Teraz",
   upgradeToTrackMore: "Ulepsz, aby śledzić więcej subskrypcji",
   planFreeF1: "Do 5 subskrypcji",
   planFreeF2: "Tylko ręczne śledzenie",

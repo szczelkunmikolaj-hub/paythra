@@ -23,11 +23,13 @@ import Suggestions from "./pages/Suggestions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AuthCallback from "./pages/AuthCallback";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import TrackSubscriptions from "./pages/TrackSubscriptions";
 import CancelSubscriptions from "./pages/CancelSubscriptions";
 import SubscriptionManager from "./pages/SubscriptionManager";
 import ReduceSubscriptionCosts from "./pages/ReduceSubscriptionCosts";
 import SubscriptionTracker from "./pages/SubscriptionTracker";
+import SharePlan from "./pages/SharePlan";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +41,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <ErrorBoundary>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -50,6 +53,7 @@ const App = () => (
             <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
             <Route path="/suggestions" element={<ProtectedRoute><Suggestions /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+            <Route path="/share-plan" element={<ProtectedRoute><SharePlan /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/pricing" element={<Pricing />} />
@@ -65,6 +69,7 @@ const App = () => (
             <Route path="/subscription-tracker" element={<SubscriptionTracker />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </ErrorBoundary>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

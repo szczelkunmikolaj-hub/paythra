@@ -9,17 +9,18 @@ import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import {
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
-  addDays, addMonths, subMonths, isSameMonth, isToday, differenceInDays,
+  addDays, addMonths, addYears, subMonths, isSameMonth, isToday, differenceInDays,
 } from "date-fns";
 
 function billingDatesInRange(sub: Subscription, rangeStart: Date, rangeEnd: Date): Date[] {
   const dates: Date[] = [];
   let cursor = new Date(sub.next_billing_date);
-  const stepMonths = sub.billing_cycle === "yearly" ? 12 : 1;
-  while (cursor > rangeStart) cursor = addMonths(cursor, -stepMonths);
+  const isYearly = sub.billing_cycle === "yearly";
+  const step = (d: Date, n: number) => isYearly ? addYears(d, n) : addMonths(d, n);
+  while (cursor > rangeStart) cursor = step(cursor, -1);
   while (cursor <= rangeEnd) {
     if (cursor >= rangeStart) dates.push(new Date(cursor));
-    cursor = addMonths(cursor, stepMonths);
+    cursor = step(cursor, 1);
   }
   return dates;
 }
@@ -79,101 +80,103 @@ const Calendar = () => {
       <div className="space-y-6">
         <h1 className="font-display text-2xl font-bold text-foreground">{t("paymentCalendar")}</h1>
 
-        {upcoming.length > 0 && (
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-display text-sm font-semibold text-foreground">{t("upcomingPayments")}</h2>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                💸 {formatCurrency(weekTotal, lang)} {t("thisWeek")}
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {upcoming.slice(0, 6).map((entry, i) => {
-                const daysAway = differenceInDays(entry.date, new Date());
-                const label = daysAway === 0 ? t("today") : daysAway === 1 ? t("tomorrow") : t("inDays", { count: daysAway });
-                return (
-                  <div key={i} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
-                    <SubscriptionIcon name={entry.subscription.name} category={entry.subscription.category} size="sm" />
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{entry.subscription.name}</p>
-                      <p className="text-xs text-muted-foreground">{formatCurrency(entry.subscription.price, lang)} · {label}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <Button variant="outline" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="font-display text-lg font-semibold text-foreground">{format(currentMonth, "MMMM yyyy")}</h2>
-          <Button variant="outline" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
         ) : (
-          <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-            <div className="grid grid-cols-7 border-b border-border">
-              {weekDays.map((d) => (
-                <div key={d} className="py-3 text-center text-xs font-medium text-muted-foreground">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {calendarDays.map((date, idx) => {
-                const key = format(date, "yyyy-MM-dd");
-                const entries = dayMap.get(key) ?? [];
-                const inMonth = isSameMonth(date, currentMonth);
-                const todayCheck = isToday(date);
-                const total = entries.reduce((s, e) => s + e.subscription.price, 0);
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => entries.length > 0 && setSelectedDate(date)}
-                    className={`relative flex min-h-[88px] flex-col border-b border-r border-border p-2 text-left transition-all duration-200 hover:bg-accent/30 ${
-                      !inMonth ? "opacity-30" : ""
-                    } ${todayCheck ? "bg-primary/5" : ""} ${entries.length > 0 ? "cursor-pointer" : "cursor-default"}`}
-                  >
-                    <span className={`mb-1 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold ${
-                      todayCheck ? "bg-primary text-primary-foreground" : "text-foreground"
-                    }`}>
-                      {format(date, "d")}
-                    </span>
-                    {entries.length > 0 && (
-                      <>
-                        <div className="flex flex-wrap gap-0.5">
-                          {entries.slice(0, 3).map((e, j) => (
-                            <SubscriptionIcon key={j} name={e.subscription.name} category={e.subscription.category} size="sm" />
-                          ))}
-                          {entries.length > 3 && (
-                            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-[10px] font-medium text-muted-foreground">
-                              +{entries.length - 3}
-                            </span>
-                          )}
+          <>
+            {upcoming.length > 0 && (
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="font-display text-sm font-semibold text-foreground">{t("upcomingPayments")}</h2>
+                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                    💸 {formatCurrency(weekTotal, lang)} {t("thisWeek")}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {upcoming.slice(0, 6).map((entry, i) => {
+                    const daysAway = differenceInDays(entry.date, new Date());
+                    const label = daysAway === 0 ? t("today") : daysAway === 1 ? t("tomorrow") : t("inDays", { count: daysAway });
+                    return (
+                      <div key={i} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+                        <SubscriptionIcon name={entry.subscription.name} category={entry.subscription.category} size="sm" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{entry.subscription.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatCurrency(entry.subscription.price, lang)} · {label}</p>
                         </div>
-                        <span className="mt-auto text-[10px] font-bold text-primary">{formatCurrency(total, lang)}</span>
-                      </>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-        {!isLoading && subscriptions.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center">
-            <CalendarDays className="mb-3 h-10 w-10 text-muted-foreground" />
-            <p className="font-medium text-foreground">{t("noUpcomingPayments")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{t("addFirstSubCalendar")}</p>
-          </div>
+            <div className="flex items-center justify-between">
+              <Button variant="outline" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <h2 className="font-display text-lg font-semibold text-foreground">{format(currentMonth, "MMMM yyyy")}</h2>
+              <Button variant="outline" size="icon" className="rounded-xl" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {subscriptions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-12 text-center">
+                <CalendarDays className="mb-3 h-10 w-10 text-muted-foreground" />
+                <p className="font-medium text-foreground">{t("noUpcomingPayments")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("addFirstSubCalendar")}</p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+                <div className="grid grid-cols-7 border-b border-border">
+                  {weekDays.map((d) => (
+                    <div key={d} className="py-3 text-center text-xs font-medium text-muted-foreground">{d}</div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7">
+                  {calendarDays.map((date, idx) => {
+                    const key = format(date, "yyyy-MM-dd");
+                    const entries = dayMap.get(key) ?? [];
+                    const inMonth = isSameMonth(date, currentMonth);
+                    const todayCheck = isToday(date);
+                    const total = entries.reduce((s, e) => s + e.subscription.price, 0);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => entries.length > 0 && setSelectedDate(date)}
+                        className={`relative flex min-h-[88px] flex-col border-b border-r border-border p-2 text-left transition-all duration-200 hover:bg-accent/30 ${
+                          !inMonth ? "opacity-30" : ""
+                        } ${todayCheck ? "bg-primary/5" : ""} ${entries.length > 0 ? "cursor-pointer" : "cursor-default"}`}
+                      >
+                        <span className={`mb-1 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-semibold ${
+                          todayCheck ? "bg-primary text-primary-foreground" : "text-foreground"
+                        }`}>
+                          {format(date, "d")}
+                        </span>
+                        {entries.length > 0 && (
+                          <>
+                            <div className="flex flex-wrap gap-0.5">
+                              {entries.slice(0, 3).map((e, j) => (
+                                <SubscriptionIcon key={j} name={e.subscription.name} category={e.subscription.category} size="sm" />
+                              ))}
+                              {entries.length > 3 && (
+                                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-[10px] font-medium text-muted-foreground">
+                                  +{entries.length - 3}
+                                </span>
+                              )}
+                            </div>
+                            <span className="mt-auto text-[10px] font-bold text-primary">{formatCurrency(total, lang)}</span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         <Dialog open={!!selectedDate} onOpenChange={() => setSelectedDate(null)}>

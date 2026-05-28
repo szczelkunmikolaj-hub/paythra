@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 
 export type Notification = Tables<"notifications">;
@@ -28,7 +29,11 @@ export const useNotifications = () => {
       const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] }),
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+      toast({ title: "Failed to mark notification as read", variant: "destructive" });
+    },
   });
 
   const markAllAsRead = useMutation({
@@ -40,7 +45,7 @@ export const useNotifications = () => {
         .eq("is_read", false);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] }),
   });
 
   const unreadCount = (query.data ?? []).filter((n) => !n.is_read).length;

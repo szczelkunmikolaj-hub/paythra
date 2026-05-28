@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import posthog from "posthog-js";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -12,6 +13,8 @@ export type SubscriptionInsert = Omit<TablesInsert<"subscriptions">, "user_id">;
 export const useSubscriptions = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { i18n } = useTranslation();
+  const lang = i18n.language;
 
   const query = useQuery({
     queryKey: ["subscriptions", user?.id],
@@ -55,7 +58,7 @@ export const useSubscriptions = () => {
       if (updates.price !== undefined && user) {
         const existing = query.data?.find((s) => s.id === id);
         if (existing && existing.price !== updates.price) {
-          await recordPriceChange(user.id, id, existing.price, updates.price);
+          await recordPriceChange(user.id, id, existing.price, updates.price, lang);
         }
       }
 

@@ -35,10 +35,15 @@ const Signup = () => {
       // Auto sign-in immediately after signup
       try {
         await signIn(email, password);
+        navigate("/dashboard", { replace: true });
       } catch {
-        // sign-in after signup failed silently
+        toast({
+          title: "Account created",
+          description: "Automatic login failed — please log in manually.",
+          variant: "destructive",
+        });
+        navigate("/login", { replace: true });
       }
-      navigate("/dashboard", { replace: true });
     } catch (err: any) {
       // If account already exists, try signing in instead
       if (err.message?.toLowerCase().includes("already") || err.message?.toLowerCase().includes("exists")) {
@@ -62,7 +67,7 @@ const Signup = () => {
       redirect_uri: window.location.origin + "/dashboard",
     });
     if (error) {
-      toast({ title: t("signupFailed"), description: String(error), variant: "destructive" });
+      toast({ title: t("signupFailed"), description: (error as any)?.message ?? String(error), variant: "destructive" });
     }
   };
 
@@ -104,7 +109,8 @@ const Signup = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">{t("password")}</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+              <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
             </div>
             <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90 transition-opacity" disabled={loading}>
               {loading ? t("creatingAccount") : t("createAccount")}

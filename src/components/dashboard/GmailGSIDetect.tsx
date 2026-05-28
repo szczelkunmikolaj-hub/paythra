@@ -3,6 +3,7 @@ import posthog from "posthog-js";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ToastAction } from "@/components/ui/toast";
 import { Mail, Search, Unplug, CheckCircle2, Loader2, Plus, X, ChevronDown, ChevronUp, ShieldCheck, HelpCircle, MinusCircle, Sparkles, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -236,6 +237,33 @@ const GmailGSIDetect = () => {
     });
   }, []);
 
+  // Resolve legacy "Connected account" placeholders to real email addresses.
+  // If the token is expired the account is removed so the user can reconnect cleanly.
+  useEffect(() => {
+    const legacy = accounts.filter((a) => a.email === "Connected account");
+    if (legacy.length === 0) return;
+    legacy.forEach(async (acc) => {
+      try {
+        const email = await fetchEmailForToken(acc.token);
+        setAccounts((prev) => {
+          const updated = prev.map((a) =>
+            a.email === "Connected account" && a.token === acc.token ? { ...a, email } : a
+          );
+          writeAccounts(updated);
+          return updated;
+        });
+      } catch {
+        // Token is expired — remove the stale account so the user is prompted to reconnect
+        setAccounts((prev) => {
+          const updated = prev.filter((a) => !(a.email === "Connected account" && a.token === acc.token));
+          writeAccounts(updated);
+          return updated;
+        });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const persistAccounts = (next: GmailAccount[]) => {
     writeAccounts(next);
     setAccounts(next);
@@ -354,8 +382,13 @@ const GmailGSIDetect = () => {
           persistAccounts(current);
           toast({
             title: `${acc.email} session expired`,
-            description: "Please reconnect this account",
+            description: "Your Gmail session has expired.",
             variant: "destructive",
+            action: (
+              <ToastAction altText="Reconnect" onClick={() => connect()}>
+                Reconnect
+              </ToastAction>
+            ),
           });
         });
         if (!ok) continue;
