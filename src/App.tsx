@@ -16,7 +16,6 @@ import Analytics from "./pages/Analytics";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import Calendar from "./pages/Calendar";
-import Secret from "./pages/Secret";
 import Pricing from "./pages/Pricing";
 import Success from "./pages/Success";
 import Demo from "./pages/Demo";
@@ -64,7 +63,6 @@ const App = () => (
             <Route path="/subscription-manager" element={<SubscriptionManager />} />
             <Route path="/reduce-subscription-costs" element={<ReduceSubscriptionCosts />} />
             <Route path="/subscription-tracker" element={<SubscriptionTracker />} />
-            <Route path="/secret" element={<Secret />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

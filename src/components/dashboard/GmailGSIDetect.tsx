@@ -16,8 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { getActiveCurrencyCode, convertFromEUR, CURRENCIES, convertToEUR } from "@/lib/currency";
 
-const CLIENT_ID =
-  "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 const SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 const ACCOUNTS_KEY = "gmail_accounts";
 const LEGACY_TOKEN_KEY = "gmail_access_token";

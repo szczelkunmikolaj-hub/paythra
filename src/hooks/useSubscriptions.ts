@@ -37,7 +37,7 @@ export const useSubscriptions = () => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
       toast({ title: "Subscription added" });
       posthog.capture("subscription_added", {
         subscription_name: data.name,
@@ -69,7 +69,7 @@ export const useSubscriptions = () => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["price_history"] });
       toast({ title: "Subscription updated" });
       posthog.capture("subscription_updated", {
@@ -87,7 +87,7 @@ export const useSubscriptions = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["subscriptions", user?.id] });
       toast({ title: "Subscription deleted" });
       posthog.capture("subscription_deleted");
     },

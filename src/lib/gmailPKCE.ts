@@ -3,8 +3,7 @@
 // so the client secret never reaches the browser.
 import { supabase } from "@/integrations/supabase/client";
 
-export const GOOGLE_CLIENT_ID =
-  "640863753608-e2g9mvhohjvh6p6q9nee5tpv5vq1bce5.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
 
 const SS_VERIFIER = "gmail_pkce_verifier";
