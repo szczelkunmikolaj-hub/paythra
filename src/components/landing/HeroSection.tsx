@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const HeroSection = () => {
@@ -38,15 +38,6 @@ const HeroSection = () => {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              className="px-8 text-base"
-              onClick={() => window.open("https://youtu.be/TL07Nw0V6Ls", "_blank", "noopener,noreferrer")}
-            >
-              <Play className="mr-1 h-4 w-4" />
-              {t("seeDemo")}
-            </Button>
           </div>
         </motion.div>
 
@@ -56,33 +47,15 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mx-auto mt-16 max-w-4xl"
         >
-          <div className="rounded-2xl border border-border bg-card p-2 shadow-elevated">
-            <div className="rounded-xl bg-muted/50 p-6">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <div className="h-3 w-32 rounded-full bg-foreground/10" />
-                  <div className="mt-2 h-2 w-20 rounded-full bg-foreground/5" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-8 w-20 rounded-lg bg-primary/10" />
-                  <div className="h-8 w-8 rounded-lg bg-primary/10" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {["€47.94/mo", "€575.28/yr", "6 Active"].map((label, i) => (
-                  <div key={i} className="rounded-xl border border-border bg-card p-4">
-                    <div className="h-2 w-16 rounded-full bg-foreground/5 mb-2" />
-                    <div className="font-display text-lg font-bold text-foreground">{label}</div>
-                  </div>
-                ))}
-              </div>
-              <div className="h-32 rounded-xl border border-border bg-card p-4">
-                <div className="flex h-full items-end gap-2">
-                  {[40, 55, 35, 70, 50, 65, 45, 80, 60, 75, 55, 70].map((h, i) => (
-                    <div key={i} className="flex-1 rounded-t-md bg-gradient-primary opacity-60" style={{ height: `${h}%` }} />
-                  ))}
-                </div>
-              </div>
+          <div className="rounded-2xl border border-border overflow-hidden shadow-elevated">
+            <div className="relative aspect-video">
+              <iframe
+                src="https://www.youtube.com/embed/TL07Nw0V6Ls"
+                title="Paythra demo"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 h-full w-full"
+              />
             </div>
           </div>
         </motion.div>
