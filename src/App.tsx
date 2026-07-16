@@ -30,6 +30,7 @@ import SubscriptionManager from "./pages/SubscriptionManager";
 import ReduceSubscriptionCosts from "./pages/ReduceSubscriptionCosts";
 import SubscriptionTracker from "./pages/SubscriptionTracker";
 import SharePlan from "./pages/SharePlan";
+import Creator from "./pages/Creator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/subscription-manager" element={<SubscriptionManager />} />
             <Route path="/reduce-subscription-costs" element={<ReduceSubscriptionCosts />} />
             <Route path="/subscription-tracker" element={<SubscriptionTracker />} />
+            <Route path="/creator" element={<Creator />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </ErrorBoundary>

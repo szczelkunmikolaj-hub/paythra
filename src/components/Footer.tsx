@@ -32,6 +32,12 @@ const Footer = () => {
             <p className="text-xs text-muted-foreground">
               © {new Date().getFullYear()} Paythra. {t("allRightsReserved")}
             </p>
+            <p className="text-xs text-muted-foreground">
+              Built by{' '}
+              <a href="https://nico-portfolio-gold.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                Mikołaj Szczełkun
+              </a>
+            </p>
           </div>
         </div>
       </div>
