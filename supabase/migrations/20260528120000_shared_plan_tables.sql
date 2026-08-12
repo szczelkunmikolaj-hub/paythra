@@ -34,7 +34,33 @@ CREATE TABLE public.shared_plan_requests (
   updated_at              TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
+-- ============================================================
+-- shared_plan_members — one row per user per plan
+-- Create BEFORE shared_plan_requests policies so the cross-
+-- referencing USING clause (SELECT plan_id FROM shared_plan_members)
+-- resolves at policy-creation time.
+-- ============================================================
+CREATE TABLE public.shared_plan_members (
+  id         UUID    NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  plan_id    UUID    NOT NULL REFERENCES public.shared_plan_requests(id) ON DELETE CASCADE,
+  user_id    UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_email TEXT    NOT NULL,
+  status     TEXT    NOT NULL DEFAULT 'pending'
+               CHECK (status IN ('pending', 'confirmed', 'left')),
+  joined_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  UNIQUE (plan_id, user_id)
+);
+
+-- ============================================================
+-- Enable RLS on both tables
+-- ============================================================
 ALTER TABLE public.shared_plan_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.shared_plan_members ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================
+-- Policies for shared_plan_requests
+-- (shared_plan_members now exists so the subquery resolves)
+-- ============================================================
 
 -- Owners always see their own plans.
 -- All authenticated users can browse 'waiting' plans to find ones to join.
@@ -67,21 +93,8 @@ CREATE POLICY "Users can delete own plan requests"
   USING (auth.uid() = user_id);
 
 -- ============================================================
--- shared_plan_members — one row per user per plan
+-- Policies for shared_plan_members
 -- ============================================================
-CREATE TABLE public.shared_plan_members (
-  id         UUID    NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
-  plan_id    UUID    NOT NULL REFERENCES public.shared_plan_requests(id) ON DELETE CASCADE,
-  user_id    UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  user_email TEXT    NOT NULL,
-  status     TEXT    NOT NULL DEFAULT 'pending'
-               CHECK (status IN ('pending', 'confirmed', 'left')),
-  joined_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  UNIQUE (plan_id, user_id)
-);
-
-ALTER TABLE public.shared_plan_members ENABLE ROW LEVEL SECURITY;
-
 CREATE POLICY "Users can view own memberships and members of own plans"
   ON public.shared_plan_members FOR SELECT
   TO authenticated

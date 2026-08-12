@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,11 +64,23 @@ const Signup = () => {
   };
 
   const handleOAuth = async (provider: "google" | "apple") => {
-    const { error } = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin + "/dashboard",
-    });
-    if (error) {
-      toast({ title: t("signupFailed"), description: (error as any)?.message ?? String(error), variant: "destructive" });
+    if (provider === "google") {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/dashboard",
+        },
+      });
+      if (error) {
+        toast({ title: t("signupFailed"), description: error.message, variant: "destructive" });
+      }
+    } else {
+      const { error } = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: window.location.origin + "/dashboard",
+      });
+      if (error) {
+        toast({ title: t("signupFailed"), description: (error as any)?.message ?? String(error), variant: "destructive" });
+      }
     }
   };
 

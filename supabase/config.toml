@@ -1,4 +1,4 @@
-project_id = "aywkcmvvsqbxfnrfnwar"
+project_id = "jvzlalekikagifnrfoia"
 
 [functions.gmail-token-exchange]
 verify_jwt = false
